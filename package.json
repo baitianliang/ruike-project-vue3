@@ -14,9 +14,11 @@
     "dhtmlx-gantt": "^9.0.11",
     "echarts": "^5.6.0",
     "element-plus": "^2.10.2",
+    "file-saver": "^2.0.5",
     "pinia": "^3.0.3",
     "vue": "^3.2.13",
-    "vue-router": "^4.5.1"
+    "vue-router": "^4.5.1",
+    "xlsx": "^0.18.5"
   },
   "devDependencies": {
     "@babel/core": "^7.12.16",
@@ -26,6 +28,7 @@
     "@vue/cli-service": "~5.0.0",
     "eslint": "^7.32.0",
     "eslint-plugin-vue": "^8.0.3",
+    "postcss-pxtorem": "^6.1.0",
     "sass": "^1.89.2",
     "sass-loader": "^16.0.5"
   },

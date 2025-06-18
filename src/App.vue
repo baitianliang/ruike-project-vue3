@@ -2,11 +2,16 @@
   <router-view></router-view>
 </template>
 
-<script>
-
-export default {
-  name: 'App',
-}
+<script setup>
+import { onMounted } from "vue";
+onMounted(() => {
+  // 跳转单点登录（判断是否通过iframe嵌套此项目）
+  if(window === window.parent) {
+  //   return window.location.href = `https://dls.4dlp.com.cn:7102/unifier`
+  } else {
+    console.log(window.parent._P.projectId)
+  }
+})
 </script>
 
 <style lang="scss">

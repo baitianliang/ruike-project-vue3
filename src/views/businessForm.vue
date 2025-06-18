@@ -1,5 +1,8 @@
 <template>
-  <div id="business_form">
+  <div id="business_form" v-loading="loading">
+    <!-- <el-affix target="#business_form" :offset="10">
+      <el-button>Target container</el-button>
+    </el-affix> -->
     <el-tabs
       v-model="activeName"
       tab-position="left"
@@ -7,14 +10,14 @@
       ref="tabs">
       <el-tab-pane label="Reference" name="reference">
         <el-table
-          v-if="firstTable.show"
+          v-if="firstTable.show && activeName==='reference'"
           :data="firstTable.tableData"
+          @scroll="handleScroll"
           border
           style="width: 100%"
           height="100%"
           row-key="id"
-          default-expand-all
-        >
+          lazy>
           <el-table-column
             v-for="(item, index) in firstTable.tableColumn"
             :key="index"
@@ -24,10 +27,10 @@
           </el-table-column>
         </el-table>
       </el-tab-pane>
-      <el-tab-pane label="Matrix" name="matrix">
+      <el-tab-pane v-if="secondTable.show" label="Matrix" name="matrix">
         <el-table
-          v-if="secondTable.show"
-          :data="secondTable.tableData"
+          v-if="secondTable.show && activeName==='matrix'"
+          :data="tableData"
           border
           class="custom-border-table"
           style="width: 100%"
@@ -36,6 +39,7 @@
           :cell-style="handleCellStyle"
           :cell-class-name="handleCellClass"
           @cell-click="handleCellClick"
+          v-el-table-infinite-scroll="loadMore"
         >
           <el-table-column
             v-for="(item, index) in secondTable.tableColumn"
@@ -188,6 +192,43 @@ onMounted(() => {
   getThirdTableData()
 })
 
+const vElTableInfiniteScroll = {
+  mounted(el, binding) {
+    const scrollWrap = el.querySelector('.el-scrollbar__wrap')
+    console.log(scrollWrap)
+    if (!scrollWrap) return
+    scrollWrap.addEventListener('scroll', function() {
+      if (scrollWrap.scrollHeight - scrollWrap.scrollTop <= scrollWrap.clientHeight + 100) {
+        binding.value()
+      }
+    })
+  }
+}
+// 当前页数
+const page = ref(1)
+const size = 10
+// 表格数据
+const tableData = ref([])
+// 加载状态
+const loading = ref(false)
+// 加载数据
+const loadData = async () => {
+  loading.value = true
+  const newData = secondTable.tableData.slice((page.value-1)*size, page.value*size)
+  tableData.value = [...tableData.value, ...newData]
+  page.value++
+  nextTick(() => {
+    loading.value = false
+  })
+}
+// 滚动加载更多
+const loadMore = () => {
+  console.log(111)
+  if (!loading.value) {
+    loadData()
+  }
+}
+
 async function getFirstTableList() {
   const res = await axios.getFirstTableList()
   firstTable.dataList = res.data.data
@@ -285,7 +326,10 @@ async function getSecondData() {
     secondTable.tableData.find(_el => {return _el.secondLevel === el.CRRC_PIR_04})[el.CRRC_PIR_03] = el.CRRC_PIR_07
   })
   secondTable.tableData = JSON.parse(JSON.stringify(secondTable.tableData))
-  secondTable.show = true
+  nextTick(() => {
+    secondTable.show = true
+    loadMore()
+  })
 }
 
 function objectSpanMethod({ row, rowIndex, columnIndex }) {
@@ -343,7 +387,7 @@ function handleCellClick(row, column) {
 
 async function getThirdTableData() {
   const res = await axios.getThirdTableData()
-  thirdTable.tableData = [...res.data.data]
+  thirdTable.tableData = [...res.data.data, ...res.data.data]
   thirdTable.tableData = JSON.parse(JSON.stringify(thirdTable.tableData))
   thirdTable.show = true
 }
@@ -354,6 +398,13 @@ async function getThirdTableData() {
 #business_form {
   margin: 20px;
   height: calc(100vh - 40px);
+  .el-affix {
+    >div {
+      text-align: right;
+      // bottom: 100px;
+      // margin-right: 50px;
+    }
+  }
   .el-tabs {
     height: 100%;
     .el-tabs__content {
