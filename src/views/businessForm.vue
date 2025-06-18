@@ -195,7 +195,6 @@ onMounted(() => {
 const vElTableInfiniteScroll = {
   mounted(el, binding) {
     const scrollWrap = el.querySelector('.el-scrollbar__wrap')
-    console.log(scrollWrap)
     if (!scrollWrap) return
     scrollWrap.addEventListener('scroll', function() {
       if (scrollWrap.scrollHeight - scrollWrap.scrollTop <= scrollWrap.clientHeight + 100) {
@@ -223,7 +222,6 @@ const loadData = async () => {
 }
 // 滚动加载更多
 const loadMore = () => {
-  console.log(111)
   if (!loading.value) {
     loadData()
   }
