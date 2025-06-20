@@ -27,9 +27,10 @@
           </el-table-column>
         </el-table>
       </el-tab-pane>
-      <el-tab-pane v-if="secondTable.show" label="Matrix" name="matrix">
+      <el-tab-pane label="Matrix" name="matrix">
+        <div id="tableContainer" style="position: absolute; width: calc(100% - 40px); height: calc(100% - 40px);"></div>
         <el-table
-          v-if="secondTable.show && activeName==='matrix'"
+          v-if="secondTable.show && activeName==='matrix' && false"
           :data="tableData"
           border
           class="custom-border-table"
@@ -103,6 +104,7 @@
 </template>
 
 <script setup>
+import { PivotTable } from '@visactor/vtable';
 import { nextTick, onMounted, reactive, ref, useTemplateRef } from "vue";
 import axios from "../assets/axios/BusinessForm.js";
 
@@ -115,12 +117,15 @@ const firstTable = reactive({
 })
 const secondTable = reactive({
   dataList: [],
-  tableColumn: [
-    { prop: "firstLevel" },
-    { prop: "secondLevelName" },
-    { prop: "secondLevel" }
-  ],
+  // tableColumn: [
+  //   { prop: "firstLevel" },
+  //   { prop: "secondLevelName" },
+  //   { prop: "secondLevel" }
+  // ],
+  tableColumn: [],
+  indicators: [],
   tableData: [],
+  colorList: {},
   show: false,
 })
 const thirdTable = reactive({
@@ -187,50 +192,60 @@ const thirdTable = reactive({
   show: false,
 })
 const thirdTableDom = useTemplateRef('thirdTableDom')
+const colorList = [ 'rgb(255, 0, 0)',
+                    'rgb(255, 192, 0)',
+                    'rgb(255, 255, 0)',
+                    'rgb(146, 208, 80)',
+                    'rgb(0, 176, 80)',
+                    'rgb(0, 176, 240)',
+                    'rgb(239, 148, 159)',
+                    'rgb(112, 48, 160)',
+                    'rgb(36, 142, 135)',
+                    'rgb(197, 92, 16)',
+                    'rgb(254, 219, 97)']
 onMounted(() => {
   getFirstTableList()
   getThirdTableData()
 })
 
-const vElTableInfiniteScroll = {
-  mounted(el, binding) {
-    const scrollWrap = el.querySelector('.el-scrollbar__wrap')
-    if (!scrollWrap) return
-    scrollWrap.addEventListener('scroll', function() {
-      if (scrollWrap.scrollHeight - scrollWrap.scrollTop <= scrollWrap.clientHeight + 100) {
-        binding.value()
-      }
-    })
-  }
-}
-// 当前页数
-const page = ref(1)
-const size = 10
-// 表格数据
-const tableData = ref([])
-// 加载状态
-const loading = ref(false)
-// 加载数据
-const loadData = async () => {
-  loading.value = true
-  const newData = secondTable.tableData.slice((page.value-1)*size, page.value*size)
-  tableData.value = [...tableData.value, ...newData]
-  page.value++
-  nextTick(() => {
-    loading.value = false
-  })
-}
-// 滚动加载更多
-const loadMore = () => {
-  if (!loading.value) {
-    loadData()
-  }
-}
+// const vElTableInfiniteScroll = {
+//   mounted(el, binding) {
+//     const scrollWrap = el.querySelector('.el-scrollbar__wrap')
+//     if (!scrollWrap) return
+//     scrollWrap.addEventListener('scroll', function() {
+//       if (scrollWrap.scrollHeight - scrollWrap.scrollTop <= scrollWrap.clientHeight + 100) {
+//         binding.value()
+//       }
+//     })
+//   }
+// }
+// // 当前页数
+// const page = ref(1)
+// const size = 10
+// // 表格数据
+// const tableData = ref([])
+// // 加载状态
+// const loading = ref(false)
+// // 加载数据
+// const loadData = async () => {
+//   loading.value = true
+//   const newData = secondTable.tableData.slice((page.value-1)*size, page.value*size)
+//   tableData.value = [...tableData.value, ...newData]
+//   page.value++
+//   nextTick(() => {
+//     loading.value = false
+//   })
+// }
+// // 滚动加载更多
+// const loadMore = () => {
+//   if (!loading.value) {
+//     loadData()
+//   }
+// }
 
 async function getFirstTableList() {
   const res = await axios.getFirstTableList()
   firstTable.dataList = res.data.data
-  let CRRC_SPS_NUMBER_L1 = ''
   let firstTableColumn = [{
     prop: "levelName",
     label: "",
@@ -238,17 +253,19 @@ async function getFirstTableList() {
   let firstTableData = []
   let obj = {}
   firstTable.dataList.forEach(el => {
-    if(!firstTableColumn.find(_el => _el.label === el.CRRC_SWP_GZBMC)) {
+    if(el.CRRC_SWP_GZBMC && !firstTableColumn.find(_el => _el.label === el.CRRC_SWP_GZBMC)) {
       firstTableColumn.push({prop: el.CRRC_SWP_GZBMC, label: el.CRRC_SWP_GZBMC})
     }
-    if(firstTableData.length && el.CRRC_SPS_NAME_L1 === firstTableData[firstTableData.length - 1].firstLevel) {
-      if(el.CRRC_SPS_NAME_L2 === firstTableData[firstTableData.length - 1].secondLevel) {
+    let objFind = firstTableData.find(_el => el.CRRC_SPS_NAME_L1 === _el.firstLevel)
+    if(objFind) {
+      if(el.CRRC_SPS_NAME_L2 === objFind.secondLevel) {
         obj[el.CRRC_SWP_GZBMC] = el.CRRC_SPS_JKJS_PD
       } else {
-        firstTableData[firstTableData.length - 1].secondLevel = el.CRRC_SPS_NAME_L2
-        firstTableData[firstTableData.length - 1].children.push(obj)
+        objFind.secondLevel = el.CRRC_SPS_NAME_L2
+        objFind.children.push(obj)
         obj = JSON.parse(JSON.stringify({
           id: firstTableData.length + 1 + '-1',
+          firstLevel: el.CRRC_SPS_NAME_L1,
           levelName: el.CRRC_SPS_NAME_L2,
           [el.CRRC_SWP_GZBMC]: el.CRRC_SPS_JKJS_PD
         }))
@@ -256,7 +273,7 @@ async function getFirstTableList() {
     } else {
       // CRRC_SPS_NUMBER_L1 = el.CRRC_SPS_NUMBER_L1
       if(firstTableData.length) {
-        firstTableData[firstTableData.length - 1].children.push(obj)
+        firstTableData.find(_el => obj.firstLevel === _el.firstLevel).children.push(obj)
       }
       firstTableData.push({
         id: firstTableData.length + 1,
@@ -268,30 +285,78 @@ async function getFirstTableList() {
       obj = JSON.parse(JSON.stringify({
         id: firstTableData.length + 1 + '-1',
         levelName: el.CRRC_SPS_NAME_L2,
+        firstLevel: el.CRRC_SPS_NAME_L1,
         [el.CRRC_SWP_GZBMC]: el.CRRC_SPS_JKJS_PD
       }))
     }
-    if(el.CRRC_SPS_NUMBER_L1 === CRRC_SPS_NUMBER_L1) {
-      secondTable.tableColumn[secondTable.tableColumn.length - 1].children.push({
-        id: `${secondTable.tableColumn[secondTable.tableColumn.length - 1].id}-${(secondTable.tableColumn[secondTable.tableColumn.length - 1].children.length + 1)}`,
-        level: el.CRRC_SPS_NUMBER_L2,
-        levelName: el.CRRC_SPS_NAME_L2,
-        name: el.CRRC_SWP_GZBMC,
-        pd: el.CRRC_SPS_JKJS_PD,
-      })
-    } else {
-      CRRC_SPS_NUMBER_L1 = el.CRRC_SPS_NUMBER_L1
-      secondTable.tableColumn.push({
-        id: secondTable.tableColumn.length + 1,
-        level: el.CRRC_SPS_NUMBER_L1,
-        levelName: el.CRRC_SPS_NAME_L1,
-        children: [{
-          id: secondTable.tableColumn.length + 1 + '-1',
-          level: el.CRRC_SPS_NUMBER_L2,
-          levelName: el.CRRC_SPS_NAME_L2,
-          name: el.CRRC_SWP_GZBMC,
-          pd: el.CRRC_SPS_JKJS_PD,
-        }]
+
+
+
+    // if(firstTableData.length && el.CRRC_SPS_NAME_L1 === firstTableData[firstTableData.length - 1].firstLevel) {
+    //   if(el.CRRC_SPS_NAME_L2 === firstTableData[firstTableData.length - 1].secondLevel) {
+    //     obj[el.CRRC_SWP_GZBMC] = el.CRRC_SPS_JKJS_PD
+    //   } else {
+    //     firstTableData[firstTableData.length - 1].secondLevel = el.CRRC_SPS_NAME_L2
+    //     firstTableData[firstTableData.length - 1].children.push(obj)
+    //     obj = JSON.parse(JSON.stringify({
+    //       id: firstTableData.length + 1 + '-1',
+    //       levelName: el.CRRC_SPS_NAME_L2,
+    //       [el.CRRC_SWP_GZBMC]: el.CRRC_SPS_JKJS_PD
+    //     }))
+    //   }
+    // } else {
+    //   // CRRC_SPS_NUMBER_L1 = el.CRRC_SPS_NUMBER_L1
+    //   if(firstTableData.length) {
+    //     firstTableData[firstTableData.length - 1].children.push(obj)
+    //   }
+    //   firstTableData.push({
+    //     id: firstTableData.length + 1,
+    //     firstLevel: el.CRRC_SPS_NAME_L1,
+    //     secondLevel: el.CRRC_SPS_NAME_L2,
+    //     levelName: el.CRRC_SPS_NAME_L1,
+    //     children: []
+    //   })
+    //   obj = JSON.parse(JSON.stringify({
+    //     id: firstTableData.length + 1 + '-1',
+    //     levelName: el.CRRC_SPS_NAME_L2,
+    //     [el.CRRC_SWP_GZBMC]: el.CRRC_SPS_JKJS_PD
+    //   }))
+    // }
+    // if(el.CRRC_SPS_NUMBER_L1 === CRRC_SPS_NUMBER_L1) {
+    //   secondTable.tableColumn[secondTable.tableColumn.length - 1].children.push({
+    //     id: `${secondTable.tableColumn[secondTable.tableColumn.length - 1].id}-${(secondTable.tableColumn[secondTable.tableColumn.length - 1].children.length + 1)}`,
+    //     level: el.CRRC_SPS_NUMBER_L2,
+    //     levelName: el.CRRC_SPS_NAME_L2,
+    //     name: el.CRRC_SWP_GZBMC,
+    //     pd: el.CRRC_SPS_JKJS_PD,
+    //   })
+    // } else {
+    //   CRRC_SPS_NUMBER_L1 = el.CRRC_SPS_NUMBER_L1
+    //   secondTable.tableColumn.push({
+    //     id: secondTable.tableColumn.length + 1,
+    //     level: el.CRRC_SPS_NUMBER_L1,
+    //     levelName: el.CRRC_SPS_NAME_L1,
+    //     children: [{
+    //       id: secondTable.tableColumn.length + 1 + '-1',
+    //       level: el.CRRC_SPS_NUMBER_L2,
+    //       levelName: el.CRRC_SPS_NAME_L2,
+    //       name: el.CRRC_SWP_GZBMC,
+    //       pd: el.CRRC_SPS_JKJS_PD,
+    //     }]
+    //   })
+    // }
+    if(!secondTable.indicators.find(_el => _el.title === el.CRRC_SPS_NUMBER_L2)) {
+      secondTable.indicators.push({
+        indicatorKey: 'CRRC_SPS_NUMBER_L2',
+        title: el.CRRC_SPS_NUMBER_L2,
+        width: 'auto',
+        showSort: false,
+        // style: {
+        //   writingMode: "sideways-lr",
+        //   textAlign: "center",
+        //   whiteSpace: "nowrap",
+        //   margin: "0 auto",
+        // },
       })
     }
   });
@@ -305,28 +370,183 @@ async function getFirstTableList() {
 }
 
 function getSecondTable() {
-  // this.secondTableColumn = [ ...this.secondTableColumn, ...this.secondTableColumn ]
   firstTable.dataList.forEach(el => {
-    let obj = {
-      firstLevel: el.CRRC_SPS_NAME_L1,
-      secondLevelName: el.CRRC_SPS_NAME_L2,
-      secondLevel: el.CRRC_SPS_NUMBER_L2
+    if(!secondTable.tableData.find(_el => _el.secondLevel === el.CRRC_SPS_NUMBER_L2)) {
+      let obj = {
+        firstLevel: el.CRRC_SPS_NAME_L1,
+        secondLevelName: el.CRRC_SPS_NAME_L2,
+        secondLevel: el.CRRC_SPS_NUMBER_L2,
+        CRRC_SPS_NAME_L1: el.CRRC_SPS_NAME_L1,
+        CRRC_SPS_NAME_L2: el.CRRC_SPS_NAME_L2,
+        CRRC_SPS_NUMBER_L2: el.CRRC_SPS_NUMBER_L2,
+        dataIndex: -1
+      }
+      secondTable.tableData.push(obj)
     }
-    secondTable.tableData.push(obj)
+    if(!secondTable.colorList[el.CRRC_SPS_NAME_L1]) {
+      secondTable.colorList[el.CRRC_SPS_NAME_L1] = colorList[Object.keys(secondTable.colorList).length % 11]
+    }
   })
   secondTable.tableData = JSON.parse(JSON.stringify(secondTable.tableData))
   getSecondData()
 }
 async function getSecondData() {
   const res = await axios.getSecondData()
-  secondTable.dataList = res.data.data
-  secondTable.dataList.forEach(el => {
-    secondTable.tableData.find(_el => {return _el.secondLevel === el.CRRC_PIR_04})[el.CRRC_PIR_03] = el.CRRC_PIR_07
+  res.data.data.forEach((el, index) => {
+    // secondTable.tableData.find(_el => {return _el.secondLevel === el.CRRC_PIR_04}).data = el.CRRC_PIR_07
+    if(secondTable.tableData.find(_el => {return _el.secondLevel === el.CRRC_PIR_04 && _el.CRRC_SPS_NUMBER_L2 === el.CRRC_PIR_03})) {
+      secondTable.tableData.find(_el => {return _el.secondLevel === el.CRRC_PIR_04 && _el.CRRC_SPS_NUMBER_L2 === el.CRRC_PIR_03}).dataIndex = index
+    } else {
+      let obj = {}
+      const objFind1 = secondTable.tableData.find(_el => {return _el.secondLevel === el.CRRC_PIR_04})
+      const objFind2 = secondTable.tableData.find(_el => {return _el.CRRC_SPS_NUMBER_L2 === el.CRRC_PIR_03})
+      const { firstLevel, secondLevel, secondLevelName } = objFind1
+      const { CRRC_SPS_NAME_L1, CRRC_SPS_NAME_L2, CRRC_SPS_NUMBER_L2 } = objFind2
+      obj = { firstLevel, secondLevel, secondLevelName, CRRC_SPS_NAME_L1, CRRC_SPS_NAME_L2, CRRC_SPS_NUMBER_L2, dataIndex: index }
+      secondTable.tableData.push(obj)
+    }
+    secondTable.dataList.push(el.CRRC_PIR_07)
   })
+  
   secondTable.tableData = JSON.parse(JSON.stringify(secondTable.tableData))
+  const option = {
+    records: secondTable.tableData,
+    // records: [{ data: 'R2-R10' }],
+    // records: [],
+    // rowTree: secondTable.tableColumn,
+    rows: [
+      {
+        dimensionKey: 'firstLevel',
+        width: 'auto',
+        headerStyle: {
+          borderColor: 'black',
+          bgColor(arg) {
+            return secondTable.colorList[arg.dataValue]
+          }
+        }
+      },
+      {
+        dimensionKey: 'secondLevelName',
+        width: 'auto',
+        headerStyle: {
+          borderColor: 'black',
+          bgColor(arg) {
+            return secondTable.colorList[arg.cellHeaderPaths.rowHeaderPaths[0].value]
+          }
+        }
+      },
+      {
+        dimensionKey: 'secondLevel',
+        width: 'auto',
+        headerStyle: {
+          borderColor: 'black',
+          bgColor(arg) {
+            return secondTable.colorList[arg.cellHeaderPaths.rowHeaderPaths[0].value]
+          }
+        }
+      }
+    ],
+    // rows: ['firstLevel', 'secondLevelName', 'secondLevel'],
+    corner: {
+      titleOnDimension: 'row'
+    },
+    // columnTree: secondTable.tableColumn,
+    columns: [
+      {
+        dimensionKey: 'CRRC_SPS_NAME_L1',
+        width: 'auto',
+        headerStyle: {
+          borderColor: 'black',
+          color: 'black',
+          bgColor(arg) {
+            return secondTable.colorList[arg.dataValue]
+          }
+        }
+      },
+      {
+        dimensionKey: 'CRRC_SPS_NAME_L2',
+        width: 'auto',
+        headerStyle: {
+          borderColor: 'black',
+          color: 'black',
+          bgColor(arg) {
+            return secondTable.colorList[arg.cellHeaderPaths.colHeaderPaths[0].value]
+          }
+        }
+      },
+      {
+        dimensionKey: 'CRRC_SPS_NUMBER_L2',
+        width: 'auto',
+        headerStyle: {
+          borderColor: 'black',
+          color: 'black',
+          bgColor(arg) {
+            return secondTable.colorList[arg.cellHeaderPaths.colHeaderPaths[0].value]
+          }
+        },
+      },
+    ],
+    indicators: [{
+      indicatorKey: 'dataIndex',
+      title: (args) => {
+        return args
+      },
+      width: 'auto',
+      format: value => {
+        return secondTable.dataList[value] || '';
+      },
+      style: (arg) => {
+        const hasData = !!secondTable.dataList[arg.dataValue];
+        return {
+          color: hasData ? 'teal' : undefined,
+          cursor: hasData ? 'pointer' : 'default',
+          fontWeight: hasData ? 'bold' : 'normal',
+        }
+      },
+    }],
+    // theme: {
+    //   indicatorHeader: {
+    //     visible: false,       // 隐藏指标表头
+    //     height: 0             // 确保不占空间
+    //   }
+    // },
+    // theme: {
+    //   // indicatorCell: {
+    //   //   visible: false // 隐藏指标单元格
+    //   // },
+    //   indicatorHeader: {
+    //     visible: false // 隐藏指标表头
+    //   }
+    // },
+    hideIndicatorName: true,
+    widthMode: 'standard'
+  };
+  const tableInstance = new PivotTable(document.getElementById('tableContainer'), option);
+  // 添加点击事件监听
+  tableInstance.on('click_cell', (args) => {
+    if(args.col > 2 && args.row > 2  && args.value) {
+      activeName.value = 'register'
+      let obj = thirdTable.tableData.find(el => el.CRRC_PIR_07 === args.value)
+      thirdTableDom.value.setCurrentRow(obj);
+      nextTick(() => {
+        const tableRef = thirdTableDom.value;
+        if (tableRef) {
+          // 获取表格的滚动容器
+          const scrollBody = tableRef.$el.querySelector('.el-table__body-wrapper');
+          if (scrollBody) {
+            const rowEl = scrollBody.querySelector(`tr:nth-child(${thirdTable.tableData.indexOf(obj) + 1})`);
+            scrollBody.scrollTo({
+              top: rowEl.offsetTop, // 使用行的 offsetTop
+              behavior: 'smooth'
+            });
+          }
+        }
+      });
+    }
+  });
   nextTick(() => {
-    secondTable.show = true
-    loadMore()
+    // secondTable.show = true
+    // loadMore()
   })
 }
 
@@ -385,7 +605,7 @@ function handleCellClick(row, column) {
 
 async function getThirdTableData() {
   const res = await axios.getThirdTableData()
-  thirdTable.tableData = [...res.data.data, ...res.data.data]
+  thirdTable.tableData = [...res.data.data]
   thirdTable.tableData = JSON.parse(JSON.stringify(thirdTable.tableData))
   thirdTable.show = true
 }
@@ -393,6 +613,11 @@ async function getThirdTableData() {
 
 
 <style lang="scss">
+
+.vtable-indicator-header {
+  display: none !important;
+}
+
 #business_form {
   margin: 20px;
   height: calc(100vh - 40px);

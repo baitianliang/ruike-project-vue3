@@ -38,11 +38,6 @@ const tasks = reactive({
 })
 
 onMounted(() => {
-    Gantt.i18n.setLocale("cn");
-    Gantt.config.scale_unit = "day";
-    Gantt.config.date_scale = "%Y年%m月%d日";
-    Gantt.init(ganttDom.value);
-    Gantt.parse(tasks)
     _initGanttEvents()
 })
 onUnmounted(() => {
@@ -53,6 +48,42 @@ onUnmounted(() => {
 })
 
 function _initGanttEvents() {
+    Gantt.i18n.setLocale("cn");
+    Gantt.config.scale_unit = "day";
+    Gantt.config.date_scale = "%Y年%m月%d日";
+    // 配置表格列
+    Gantt.config.columns = [
+        { name: "projectId", label: "项目ID", tree: true },
+        { name: "start_date", label: "开始时间", align: "center" },
+        { name: "duration", label: "持续时间", align: "center" },
+        { name: "wbsCode", label: "WBS编码", align: "center" },
+        { name: "taskCode", label: "作业编码", align: "center" },
+        { name: "taskName", label: "作业名称", align: "center" },
+        { name: "taskType", label: "作业类型", align: "center" },
+        { name: "taskMilestoneType", label: "里程碑类型", align: "center" },
+        { name: "taskConstraintType", label: "作业约束类型", align: "center" },
+        { name: "taskConstraintDate", label: "作业约束日期", align: "center" },
+        { name: "taskStatus", label: "作业状态", align: "center" },
+        { name: "taskPhase", label: "作业阶段", align: "center" },
+        { name: "taskPosition", label: "作业负责岗位", align: "center" },
+        { name: "taskOwner", label: "作业负责人", align: "center" },
+        { name: "targetStartDate", label: "计划开始", align: "center" },
+        { name: "targetDrtnHrCnt", label: "计划工期", align: "center" },
+        { name: "targetEndDate", label: "计划完成", align: "center" },
+        { name: "actStartDate", label: "实际开始", align: "center" },
+        { name: "actWorkQty", label: "实际工期", align: "center" },
+        { name: "remainDrtnHrCnt", label: "尚需工期", align: "center" },
+        { name: "actEndDate", label: "实际完成", align: "center" },
+        { name: "freeFloatHrCnt", label: "自由浮时", align: "center" },
+        { name: "totalFloatHrCnt", label: "总浮时", align: "center" },
+
+        { name: "taskComplete", label: "完成百分比", align: "center", template: function(obj) {
+            return Math.round(obj.progress * 100) + "%";
+        }},
+        { name: "add", label: "" }
+    ];
+    Gantt.init(ganttDom.value);
+    Gantt.parse(tasks)
     // if (gantt.$_eventsInitialized) return;
     // gantt.attachEvent("onTaskSelected", (id) => {
     //     let task = gantt.getTask(id);
