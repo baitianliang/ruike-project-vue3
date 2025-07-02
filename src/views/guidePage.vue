@@ -3,7 +3,7 @@
   <!-- 任务总览引导页 -->
   <div id="guide">
     <el-container>
-      <el-header style="background-color: rgb(197, 4, 34); height: 64px">
+      <el-header v-if="false" style="background-color: rgb(197, 4, 34); height: 64px">
         <el-button class="header_button" type="text" @click="changePage(1)">
           项目管理系统功能引导
         </el-button>
@@ -99,7 +99,7 @@
               <div v-else class="explanation_status status_un">未开始</div>
             </div>
             <!-- 关键里程碑 -->
-            <div class="key_milestone" v-if="showContent === 2">
+            <div class="key_milestone" v-if="showContent === 2 && false">
               <div class="base_title">关键里程碑</div>
               <div
                 class="key_milestone_block"
@@ -121,7 +121,7 @@
               </div>
             </div>
             <!-- 资源分配 -->
-            <div class="resource_allocation" v-if="showContent === 2">
+            <div class="resource_allocation" v-if="showContent === 2 && false">
               <div class="base_title">资源分配</div>
               <div
                 class="personnel"
@@ -132,7 +132,7 @@
               </div>
             </div>
             <!-- 风险概况 -->
-            <div class="key_milestone" v-if="showContent === 2">
+            <div class="key_milestone" v-if="showContent === 2 && false">
               <div class="base_title">风险概况</div>
               <div class="key_milestone_block">
                 <div class="race_condition">投标竞争激烈</div>
@@ -141,7 +141,7 @@
               </div>
             </div>
             <!-- 任务状态 -->
-            <div class="task_status" v-if="showContent === 2">
+            <div class="task_status" v-if="showContent === 2 && false">
               <div class="base_title">任务状态</div>
               <div
                 ref="taskStatus"
@@ -405,7 +405,7 @@ const page1 = reactive({
 })
 onMounted(() => {
   getMenuList()
-  initTaskChart();
+  // initTaskChart();
 })
 onUnmounted(() => {
   // 组件销毁时移除监听并销毁图表
@@ -464,7 +464,6 @@ async function getPageData(val) {
   table.taskList[3].percentage = table.taskList[3].value === 0 ? '0%' : '100%'
   stageDescription.value = table.tableData.length > 0 ? table.tableData[0].CRRC_PFG_JDSM || "" : ""
   nextTick(() => {
-    console.log(rightChartDom.value)
     rightChartDom.value.initChart();
   });
 }
@@ -709,9 +708,9 @@ function changePage(val) {
     stageStatus.value = val.status
     showContent.value = 2;
     title.value = val.name;
-    nextTick(() => {
-      initTaskChart();
-    });
+    // nextTick(() => {
+    //   initTaskChart();
+    // });
   } else {
     getPageData(val)
     stageStatus.value = val.status
@@ -725,6 +724,11 @@ function changePage(val) {
 #guide {
   height: 100%;
   overflow: hidden;
+  .el-button, .el-button.is-round {
+      padding: 12px 23px;
+      padding-right: 14px;
+      height: auto;
+  }
 }
 .jump_link {
   cursor: pointer;
@@ -751,15 +755,18 @@ function changePage(val) {
     }
   }
   .left_aside {
-    height: calc(100vh - 64px);
+    // height: calc(100vh - 64px);
+    height: 100vh;
     width: 320px !important;
   }
   .el-container {
-    height: calc(100% - 64px);
+    // height: calc(100% - 64px);
+    height: 100vh;
   }
   .el-main {
     // background-color: #2c3e50;
-    height: calc(100vh - 64px);
+    // height: calc(100vh - 64px);
+    height: 100vh;
     padding: 0px;
     .el-card {
       margin: 24px;

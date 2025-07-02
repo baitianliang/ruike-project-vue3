@@ -18,6 +18,11 @@
           height="100%"
           row-key="id"
           lazy>
+          <template #empty>
+            <div class="flex items-center justify-center h-100%">
+              <el-empty description="暂无数据！" />
+            </div>
+          </template>
           <el-table-column
             v-for="(item, index) in firstTable.tableColumn"
             :key="index"
@@ -86,6 +91,11 @@
           highlight-current-row
           ref="thirdTableDom"
         >
+        <template #empty>
+          <div class="flex items-center justify-center h-100%">
+            <el-empty description="暂无数据！" />
+          </div>
+        </template>
           <el-table-column
             v-for="(item, index) in thirdTable.tableColumn"
             :key="index"
@@ -107,6 +117,7 @@
 import { PivotTable } from '@visactor/vtable';
 import { nextTick, onMounted, reactive, ref, useTemplateRef } from "vue";
 import axios from "../assets/axios/BusinessForm.js";
+import { ElMessage } from 'element-plus'
 
 const activeName = ref("reference")
 const firstTable = reactive({
@@ -123,7 +134,6 @@ const secondTable = reactive({
   //   { prop: "secondLevel" }
   // ],
   tableColumn: [],
-  indicators: [],
   tableData: [],
   colorList: {},
   show: false,
@@ -245,6 +255,11 @@ onMounted(() => {
 
 async function getFirstTableList() {
   const res = await axios.getFirstTableList()
+  if(res.data.code !== 200)
+  return ElMessage({
+    message: '暂无数据！',
+    type: 'warning',
+  });
   firstTable.dataList = res.data.data
   let firstTableColumn = [{
     prop: "levelName",
@@ -345,20 +360,6 @@ async function getFirstTableList() {
     //     }]
     //   })
     // }
-    if(!secondTable.indicators.find(_el => _el.title === el.CRRC_SPS_NUMBER_L2)) {
-      secondTable.indicators.push({
-        indicatorKey: 'CRRC_SPS_NUMBER_L2',
-        title: el.CRRC_SPS_NUMBER_L2,
-        width: 'auto',
-        showSort: false,
-        // style: {
-        //   writingMode: "sideways-lr",
-        //   textAlign: "center",
-        //   whiteSpace: "nowrap",
-        //   margin: "0 auto",
-        // },
-      })
-    }
   });
   firstTableData[firstTableData.length - 1].children.push(obj)
   firstTable.tableColumn = JSON.parse(JSON.stringify(firstTableColumn))
@@ -391,6 +392,7 @@ function getSecondTable() {
   getSecondData()
 }
 async function getSecondData() {
+  const fontSize = (Math.min(document.documentElement.clientWidth, 1920) / 1920) * 12
   const res = await axios.getSecondData()
   res.data.data.forEach((el, index) => {
     // secondTable.tableData.find(_el => {return _el.secondLevel === el.CRRC_PIR_04}).data = el.CRRC_PIR_07
@@ -411,78 +413,85 @@ async function getSecondData() {
   secondTable.tableData = JSON.parse(JSON.stringify(secondTable.tableData))
   const option = {
     records: secondTable.tableData,
-    // records: [{ data: 'R2-R10' }],
-    // records: [],
-    // rowTree: secondTable.tableColumn,
     rows: [
       {
         dimensionKey: 'firstLevel',
         width: 'auto',
         headerStyle: {
-          borderColor: 'black',
-          bgColor(arg) {
-            return secondTable.colorList[arg.dataValue]
-          }
+          color: '#606266',
+          fontSize
+          // borderColor: 'black',
+          // bgColor(arg) {
+          //   return secondTable.colorList[arg.dataValue]
+          // }
         }
       },
       {
         dimensionKey: 'secondLevelName',
         width: 'auto',
         headerStyle: {
-          borderColor: 'black',
-          bgColor(arg) {
-            return secondTable.colorList[arg.cellHeaderPaths.rowHeaderPaths[0].value]
-          }
+          color: '#606266',
+          fontSize
+          // borderColor: 'black',
+          // bgColor(arg) {
+          //   return secondTable.colorList[arg.cellHeaderPaths.rowHeaderPaths[0].value]
+          // }
         }
       },
       {
         dimensionKey: 'secondLevel',
         width: 'auto',
         headerStyle: {
-          borderColor: 'black',
-          bgColor(arg) {
-            return secondTable.colorList[arg.cellHeaderPaths.rowHeaderPaths[0].value]
-          }
+          color: '#606266',
+          fontSize
+          // borderColor: 'black',
+          // bgColor(arg) {
+          //   return secondTable.colorList[arg.cellHeaderPaths.rowHeaderPaths[0].value]
+          // }
         }
       }
     ],
-    // rows: ['firstLevel', 'secondLevelName', 'secondLevel'],
     corner: {
       titleOnDimension: 'row'
     },
-    // columnTree: secondTable.tableColumn,
     columns: [
       {
         dimensionKey: 'CRRC_SPS_NAME_L1',
         width: 'auto',
         headerStyle: {
-          borderColor: 'black',
-          color: 'black',
-          bgColor(arg) {
-            return secondTable.colorList[arg.dataValue]
-          }
+          color: '#606266',
+          fontSize
+          // borderColor: 'black',
+          // color: 'black',
+          // bgColor(arg) {
+          //   return secondTable.colorList[arg.dataValue]
+          // }
         }
       },
       {
         dimensionKey: 'CRRC_SPS_NAME_L2',
         width: 'auto',
         headerStyle: {
-          borderColor: 'black',
-          color: 'black',
-          bgColor(arg) {
-            return secondTable.colorList[arg.cellHeaderPaths.colHeaderPaths[0].value]
-          }
+          color: '#606266',
+          fontSize
+          // borderColor: 'black',
+          // color: 'black',
+          // bgColor(arg) {
+          //   return secondTable.colorList[arg.cellHeaderPaths.colHeaderPaths[0].value]
+          // }
         }
       },
       {
         dimensionKey: 'CRRC_SPS_NUMBER_L2',
         width: 'auto',
         headerStyle: {
-          borderColor: 'black',
-          color: 'black',
-          bgColor(arg) {
-            return secondTable.colorList[arg.cellHeaderPaths.colHeaderPaths[0].value]
-          }
+          color: '#606266',
+          fontSize
+          // borderColor: 'black',
+          // color: 'black',
+          // bgColor(arg) {
+          //   return secondTable.colorList[arg.cellHeaderPaths.colHeaderPaths[0].value]
+          // }
         },
       },
     ],
@@ -504,20 +513,6 @@ async function getSecondData() {
         }
       },
     }],
-    // theme: {
-    //   indicatorHeader: {
-    //     visible: false,       // 隐藏指标表头
-    //     height: 0             // 确保不占空间
-    //   }
-    // },
-    // theme: {
-    //   // indicatorCell: {
-    //   //   visible: false // 隐藏指标单元格
-    //   // },
-    //   indicatorHeader: {
-    //     visible: false // 隐藏指标表头
-    //   }
-    // },
     hideIndicatorName: true,
     widthMode: 'standard'
   };
@@ -550,58 +545,58 @@ async function getSecondData() {
   })
 }
 
-function objectSpanMethod({ row, rowIndex, columnIndex }) {
-  if (columnIndex === 0) {
-    if (rowIndex > 0 && row.firstLevel === secondTable.tableData[rowIndex - 1].firstLevel) {
-      return [0, 0]; // 当前单元格不显示（被合并）
-    } else {
-      // 计算相同姓名的行数
-      let rowspan = 1;
-      for (let i = rowIndex + 1; i < secondTable.tableData.length; i++) {
-        if (secondTable.tableData[i].firstLevel === row.firstLevel) rowspan++;
-        else break;
-      }
-      return [rowspan, 1]; // 合并 rowspan 行，1 列
-    }
-  }
-}
-function handleCellStyle({ row, column, columnIndex }) {
-  if(columnIndex > 2 && row[column.property]) {
-    return {
-      // backgroundColor: '',
-      color: 'teal',
-      cursor: 'pointer',
-      fontWeight: 'bold'
-    };
-  }
-}
-function handleCellClass({ row, columnIndex }) {
-  if(columnIndex < 3) {
-    const index = firstTable.tableData.findIndex(el => el.firstLevel === row.firstLevel)
-    return `header-group-${index}`
-  }
-}
-function handleCellClick(row, column) {
-  if(row[column.property] && !['firstLevel', 'secondLevelName', 'secondLevel'].includes(column.property)) {
-    activeName.value = 'register'
-    let obj = thirdTable.tableData.find(el => el.CRRC_PIR_07 === row[column.property])
-    thirdTableDom.value.setCurrentRow(obj);
-    nextTick(() => {
-      const tableRef = thirdTableDom.value;
-      if (tableRef) {
-        // 获取表格的滚动容器
-        const scrollBody = tableRef.$el.querySelector('.el-table__body-wrapper');
-        if (scrollBody) {
-          const rowEl = scrollBody.querySelector(`tr:nth-child(${thirdTable.tableData.indexOf(obj) + 1})`);
-          scrollBody.scrollTo({
-            top: rowEl.offsetTop, // 使用行的 offsetTop
-            behavior: 'smooth'
-          });
-        }
-      }
-    });
-  }
-}
+// function objectSpanMethod({ row, rowIndex, columnIndex }) {
+//   if (columnIndex === 0) {
+//     if (rowIndex > 0 && row.firstLevel === secondTable.tableData[rowIndex - 1].firstLevel) {
+//       return [0, 0]; // 当前单元格不显示（被合并）
+//     } else {
+//       // 计算相同姓名的行数
+//       let rowspan = 1;
+//       for (let i = rowIndex + 1; i < secondTable.tableData.length; i++) {
+//         if (secondTable.tableData[i].firstLevel === row.firstLevel) rowspan++;
+//         else break;
+//       }
+//       return [rowspan, 1]; // 合并 rowspan 行，1 列
+//     }
+//   }
+// }
+// function handleCellStyle({ row, column, columnIndex }) {
+//   if(columnIndex > 2 && row[column.property]) {
+//     return {
+//       // backgroundColor: '',
+//       color: 'teal',
+//       cursor: 'pointer',
+//       fontWeight: 'bold'
+//     };
+//   }
+// }
+// function handleCellClass({ row, columnIndex }) {
+//   if(columnIndex < 3) {
+//     const index = firstTable.tableData.findIndex(el => el.firstLevel === row.firstLevel)
+//     return `header-group-${index}`
+//   }
+// }
+// function handleCellClick(row, column) {
+//   if(row[column.property] && !['firstLevel', 'secondLevelName', 'secondLevel'].includes(column.property)) {
+//     activeName.value = 'register'
+//     let obj = thirdTable.tableData.find(el => el.CRRC_PIR_07 === row[column.property])
+//     thirdTableDom.value.setCurrentRow(obj);
+//     nextTick(() => {
+//       const tableRef = thirdTableDom.value;
+//       if (tableRef) {
+//         // 获取表格的滚动容器
+//         const scrollBody = tableRef.$el.querySelector('.el-table__body-wrapper');
+//         if (scrollBody) {
+//           const rowEl = scrollBody.querySelector(`tr:nth-child(${thirdTable.tableData.indexOf(obj) + 1})`);
+//           scrollBody.scrollTo({
+//             top: rowEl.offsetTop, // 使用行的 offsetTop
+//             behavior: 'smooth'
+//           });
+//         }
+//       }
+//     });
+//   }
+// }
 
 async function getThirdTableData() {
   const res = await axios.getThirdTableData()
@@ -613,10 +608,6 @@ async function getThirdTableData() {
 
 
 <style lang="scss">
-
-.vtable-indicator-header {
-  display: none !important;
-}
 
 #business_form {
   margin: 20px;
@@ -635,53 +626,53 @@ async function getThirdTableData() {
       height: calc(100% - 40px);
       .el-tab-pane {
         height: 100%;
-        .custom-border-table {
-          --el-table-border-color: black;
-          .header-group-0 {
-            background-color: rgb(255, 0, 0);
-            color: black;
-          }
-          .header-group-1 {
-            background-color: rgb(255, 192, 0);
-            color: black;
-          }
-          .header-group-2 {
-            background-color: rgb(255, 255, 0);
-            color: black;
-          }
-          .header-group-3 {
-            background-color: rgb(146, 208, 80);
-            color: black;
-          }
-          .header-group-4 {
-            background-color: rgb(0, 176, 80);
-            color: black;
-          }
-          .header-group-5 {
-            background-color: rgb(0, 176, 240);
-            color: black;
-          }
-          .header-group-6 {
-            background-color: rgb(239, 148, 159);
-            color: black;
-          }
-          .header-group-7 {
-            background-color: rgb(112, 48, 160);
-            color: black;
-          }
-          .header-group-8 {
-            background-color: rgb(36, 142, 135);
-            color: black;
-          }
-          .header-group-9 {
-            background-color: rgb(197, 92, 16);
-            color: black;
-          }
-          .header-group-10 {
-            background-color: rgb(254, 219, 97);
-            color: black;
-          }
-        }
+        // .custom-border-table {
+        //   --el-table-border-color: black;
+        //   .header-group-0 {
+        //     background-color: rgb(255, 0, 0);
+        //     color: black;
+        //   }
+        //   .header-group-1 {
+        //     background-color: rgb(255, 192, 0);
+        //     color: black;
+        //   }
+        //   .header-group-2 {
+        //     background-color: rgb(255, 255, 0);
+        //     color: black;
+        //   }
+        //   .header-group-3 {
+        //     background-color: rgb(146, 208, 80);
+        //     color: black;
+        //   }
+        //   .header-group-4 {
+        //     background-color: rgb(0, 176, 80);
+        //     color: black;
+        //   }
+        //   .header-group-5 {
+        //     background-color: rgb(0, 176, 240);
+        //     color: black;
+        //   }
+        //   .header-group-6 {
+        //     background-color: rgb(239, 148, 159);
+        //     color: black;
+        //   }
+        //   .header-group-7 {
+        //     background-color: rgb(112, 48, 160);
+        //     color: black;
+        //   }
+        //   .header-group-8 {
+        //     background-color: rgb(36, 142, 135);
+        //     color: black;
+        //   }
+        //   .header-group-9 {
+        //     background-color: rgb(197, 92, 16);
+        //     color: black;
+        //   }
+        //   .header-group-10 {
+        //     background-color: rgb(254, 219, 97);
+        //     color: black;
+        //   }
+        // }
         .vertical-header {
           writing-mode: sideways-lr; 
           // transform: rotate(180deg); /* 旋转180度使文字正立 */

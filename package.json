@@ -18,6 +18,7 @@
     "file-saver": "^2.0.5",
     "pinia": "^3.0.3",
     "vue": "^3.2.13",
+    "vue-advanced-chat": "^2.1.0",
     "vue-router": "^4.5.1",
     "xlsx": "^0.18.5"
   },
