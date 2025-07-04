@@ -9,7 +9,7 @@ onMounted(() => {
   if(window === window.parent) {
   //   return window.location.href = `https://dls.4dlp.com.cn:7102/unifier`
   } else {
-    console.log(window.parent._P.projectId)
+    console.log(window.parent._P)
   }
 })
 </script>
