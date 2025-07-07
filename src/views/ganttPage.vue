@@ -997,7 +997,7 @@ function _inConfigColumns() {
             var currentValue = this.get_value(id, column, node);
             const dataForm = Gantt.getTask(id)
             dataForm.duration = currentValue
-            dataForm.targetEndDate = new Date(new Date(dataForm.targetStartDate).getTime() + (currentValue * 24 * 60 * 60 * 1000))
+            dataForm.targetEndDate = new Date(new Date(`${dataForm.targetStartDate} 00:00:00`).getTime() + (currentValue * 24 * 60 * 60 * 1000))
             dataForm.end_date = dataForm.targetEndDate
             Gantt.updateTask(id)
             return value !== currentValue;
@@ -1021,7 +1021,7 @@ function _inConfigColumns() {
     }
 }
 
-const projectCode = "A-DLS-1-01"
+const projectCode = window.parent._P && window.parent._P.shell_info && window.parent._P.shell_info.shellnumber || "A-DLS-1-01"
 // 表格框修改数据
 function wbsCodeLabel(task) {
     return projectCode + task.wbsCode
