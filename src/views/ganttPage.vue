@@ -1223,6 +1223,7 @@ function updateParent(id) {
 const projectCode = window.parent._P && window.parent._P.shell_info && window.parent._P.shell_info.shellnumber || "A-DLS-1-01"
 // 表格框修改数据
 function firstItemLabel(task) {
+    task.wbsCode = task.wbsCode || ""
     return `${task.taskCode && `A${task.taskCode.padStart(4, '0')}` || projectCode + (task.wbsCode && task.wbsCode || "") }`
 }
 function wbsCodeLabel(task) {
