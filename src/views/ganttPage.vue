@@ -151,13 +151,16 @@ async function getGanttData() {
     tasks.data = res.data.data.data
     tasks.baselines = res.data.data.baselines
     tasks.links = res.data.data.links
+    // tasks.data = []
+    // tasks.baselines = []
+    // tasks.links = []
     if(tasks.data.length < 1) {
         tasks.data.push({
             id: 1,
             text: "新项目",
             open: true,
             type: "project",
-            wbsCode: ".1",
+            wbsCode: "",
             taskCode: "",
             taskType: "WBS",
             taskMilestoneType: "",
@@ -246,10 +249,38 @@ function _initGanttEvents() {
     // Gantt.config.drag_move = false;
     Gantt.locale.labels.section_priority = "Priority";
     Gantt.config.multiselect = true;
-    Gantt.config.click_drag = {
-        callback: onDragEnd,
-        singleRow: true
-    }
+    // 鼠标拖动新增数据
+    // Gantt.config.click_drag = {
+    //     callback: onDragEnd,
+    //     singleRow: true
+    // }
+    // Gantt.sort((a,b) => {
+    //     if(a.type === "project" && b.type !== "project") {
+    //         return -1
+    //     } else {
+    //         return 0
+    //     }
+    // })
+
+    Gantt.config.order_branch = true;
+    // Gantt.config.work_time = false
+    // Gantt.config.validate_task = function(task){
+    //     // 允许空/无效日期
+    //     if(task.start_date === "" || task.end_date === "") return true;
+    //     // 其他验证逻辑...
+    //     return Gantt.config.validate_task_default(task);
+    // };
+    // Gantt.editors.date = {
+    //     ...Gantt.editors.date,
+    //     set_value: function(value, node){
+    //         node.querySelector("input").value = value ? 
+    //             Gantt.templates.date_grid(value) : "";
+    //     },
+    //     get_value: function(node){
+    //         var value = node.querySelector("input").value;
+    //         return value ? Gantt.date.str_to_date(Gantt.config.date_grid)(value) : null;
+    //     }
+    // };
     Gantt.config.grid_elastic_columns = true;
     // Gantt.locale.labels["complete_button"] = "Complete";
     // 清除删除按钮
@@ -268,11 +299,12 @@ function _initGanttEvents() {
     Gantt.init(ganttDom.value);
     // 填入数据
     Gantt.parse(tasks)
+    Gantt.sort("type", true)
     loading.value = false
-    nextTick(() => {
+    // nextTick(() => {
         // 删除表头添加按钮
-        document.querySelector(".gantt_grid_head_add").style.display = "none";
-    })
+        // document.querySelector(".gantt_grid_head_add").style.display = "none";
+    // })
 }
 
 // 动态配置表头
@@ -284,10 +316,10 @@ function _inConfigColumnsShow() {
 		contextMenu.data.removeAll()
 		contextMenu.data.parse(generateMenuItems(columnName));
 		contextMenu.showAt(event.target, "bottom");
-        nextTick(() => {
-            // 删除表头添加按钮
-            document.querySelector(".gantt_grid_head_add").style.display = "none";
-        })
+        // nextTick(() => {
+        //     // 删除表头添加按钮
+        //     document.querySelector(".gantt_grid_head_add").style.display = "none";
+        // })
 		return false;
 	});
 	contextMenu.events.on("click", function (id, e) {
@@ -299,10 +331,10 @@ function _inConfigColumnsShow() {
             contextMenu.paint()
             Gantt.render();
         }
-        nextTick(() => {
-            // 删除表头添加按钮
-            document.querySelector(".gantt_grid_head_add").style.display = "none";
-        })
+        // nextTick(() => {
+        //     // 删除表头添加按钮
+        //     document.querySelector(".gantt_grid_head_add").style.display = "none";
+        // })
 	});
 	contextMenu.events.on("beforeHide", function (id, event) {
 		return id === "main" || event.type === "mouseleave";
@@ -455,10 +487,11 @@ function linkTypeToString(linkType) {
 
 // 作业类型
 const taskTypeOptions = [
-    {key: "WBS", label: "WBS"},
-    {key: "任务相关", label: "任务相关"},
-    {key: "开始里程碑", label: "开始里程碑"},
-    {key: "完成里程碑", label: "完成里程碑"}
+    // {key: "project", label: "WBS"},
+    {key: "task", label: "任务相关"},
+    {key: "milestone", label: "项目里程碑"},
+    // {key: "开始里程碑", label: "开始里程碑"},
+    // {key: "完成里程碑", label: "完成里程碑"}
 ]
 // 里程碑类型
 const taskMilestoneTypeOptions = [
@@ -505,6 +538,8 @@ function _inBaselines() {
 		// { name: "时间段", type: "duration", map_to: "auto" },
 		{ name: "基线数据", height: 100, type: "baselines", map_to: "baselines" },
 	];
+    // Gantt.config.lightbox.project_sections = []
+    Gantt.config.lightbox.project_sections = Gantt.config.lightbox.project_sections.filter(el => el.name !== "type")
 	Gantt.config.resize_rows = true;
 	Gantt.config.row_height = 30;
 	Gantt.config.min_task_grid_row_height = 10;
@@ -644,6 +679,9 @@ function deleteLink(){
 function dynamicData() {
     // 添加新任务
     // Gantt.attachEvent("onTaskCreated", function(task){
+    //     if(task.parent < 1) {
+    //         return false
+    //     }
     //     const taskList = Gantt.serialize().data
     //     let taskCodeList = taskList.map(el => Number(el.taskCode) + 10 || 0)
     //     // task.projectId = projectId.value
@@ -715,6 +753,13 @@ function dynamicData() {
     //     return true
     // });
     Gantt.attachEvent("onAfterTaskAdd", function(id,task){
+        // 拦截表头添加数据
+        if(task.parent < 1) {
+            nextTick(() => {
+                Gantt.deleteTask(id)
+            })
+            return ;
+        }
         const taskList = Gantt.serialize().data
         if(task.type === "project") {
             task.text = "新项目"
@@ -733,7 +778,8 @@ function dynamicData() {
             let taskCodeList = taskList.map(el => Number(el.taskCode) + 10 || 0)
             // task.projectId = projectId.value
             task.text = "新任务"
-            task.taskType = "任务相关"
+            // task.taskType = "任务相关"
+            task.type = "task"
             task.taskMilestoneType = "项目里程碑"
             task.taskStatus = "未开始"
             task.taskPhase = ""
@@ -763,7 +809,7 @@ function dynamicData() {
                     dataForm.parentTaskCode = dataForm.taskCode
                     dataForm.text = dataForm.text === "新任务" ? '新项目' : dataForm.text
                     dataForm.taskCode = ""
-                    dataForm.taskType = "WBS"
+                    // dataForm.taskType = "WBS"
                     dataForm.taskMilestoneType = ""
                     dataForm.taskStatus = ""
                     dataForm.taskPhase = ""
@@ -801,22 +847,24 @@ function dynamicData() {
                 task.targetEndDate = new Date(new Date(task.targetStartDate).getTime() + (task.targetDrtnHrCnt * 24 * 60 * 60 * 1000))
             }
             task.taskCode = `${Math.max(...taskCodeList)}`
-            nextTick(() => {
-                // 删除表头添加按钮
-                document.querySelector(".gantt_grid_head_add").style.display = "none";
-            })
+            // nextTick(() => {
+            //     // 删除表头添加按钮
+            //     document.querySelector(".gantt_grid_head_add").style.display = "none";
+            // })
         }
+        Gantt.sort("type", true)
         //在这里放置任何自定义逻辑
     });
     // 删除数据后
     Gantt.attachEvent("onAfterTaskDelete", function(id, item){
         const obj = Gantt.serialize().data.find(el => el.parent === item.parent);
-        if(!obj) {
+        if(item.parent > 0 && !obj) {
             const dataForm = Gantt.getTask(item.parent)
             if(dataForm.parent > 0) {
                 dataForm.wbsCode = Gantt.getTask(dataForm.parent).wbsCode
                 dataForm.taskCode = item.taskCode || item.parentTaskCode
-                dataForm.taskType = "任务相关"
+                // dataForm.taskType = "任务相关"
+                dataForm.type = "task"
                 dataForm.taskMilestoneType = "项目里程碑"
                 dataForm.taskStatus = "未开始"
                 dataForm.taskPhase = ""
@@ -825,15 +873,15 @@ function dynamicData() {
                 dataForm.targetStartDate = dataForm.start_date
                 dataForm.targetDrtnHrCnt = dataForm.duration
                 dataForm.targetEndDate = dataForm.end_date
-                dataForm.type = ""
+                // dataForm.type = ""
                 dataForm.constraint_type = "asap"
                 Gantt.updateTask(item.parent)
             }
         }
-        nextTick(() => {
-            // 删除表头添加按钮
-            document.querySelector(".gantt_grid_head_add").style.display = "none";
-        })
+        // nextTick(() => {
+        //     // 删除表头添加按钮
+        //     document.querySelector(".gantt_grid_head_add").style.display = "none";
+        // })
     });
     // // 取消新增
     // Gantt.attachEvent("onLightboxCancel", function(id, type){
@@ -875,26 +923,26 @@ function dynamicData() {
     });
     // 拖拽行修改行高
     Gantt.attachEvent("onBeforeRowResizeEnd", function(id, parent, tindex){
-        nextTick(() => {
-            // 删除表头添加按钮
-            document.querySelector(".gantt_grid_head_add").style.display = "none";
-        })
+        // nextTick(() => {
+        //     // 删除表头添加按钮
+        //     document.querySelector(".gantt_grid_head_add").style.display = "none";
+        // })
         return true;
     });
     // 拖拽列
     Gantt.attachEvent("onColumnResizeEnd", function(index, column, new_width){
-        nextTick(() => {
-            // 删除表头添加按钮
-            document.querySelector(".gantt_grid_head_add").style.display = "none";
-        })
+        // nextTick(() => {
+        //     // 删除表头添加按钮
+        //     document.querySelector(".gantt_grid_head_add").style.display = "none";
+        // })
         return true;
     });
     // 拖拽表格
     Gantt.attachEvent("onGridResizeEnd", function(old_width, new_width){
-        nextTick(() => {
-            // 删除表头添加按钮
-            document.querySelector(".gantt_grid_head_add").style.display = "none";
-        })
+        // nextTick(() => {
+        //     // 删除表头添加按钮
+        //     document.querySelector(".gantt_grid_head_add").style.display = "none";
+        // })
         return true;  
     });
 }
@@ -916,8 +964,10 @@ function _inConfigColumns() {
         const startDate = task.start_date
         const endDate = task.end_date
         task.targetStartDate = `${startDate.getFullYear()}-${(startDate.getMonth()+1).toString().padStart(2, '0')}-${startDate.getDate().toString().padStart(2, '0')}`
-        task.targetDrtnHrCnt = task.duration != task.targetDrtnHrCnt ? task.duration : task.targetDrtnHrCnt
         task.targetEndDate = `${endDate.getFullYear()}-${(endDate.getMonth()+1).toString().padStart(2, '0')}-${endDate.getDate().toString().padStart(2, '0')}`
+        task.targetDrtnHrCnt = task.duration = (new Date(task.targetEndDate).getTime() - new Date(task.targetStartDate).getTime()) / (24 * 60 * 60 * 1000)
+        if(task.parent > 0) updateParent(task.parent)
+        // task.targetDrtnHrCnt = task.duration != task.targetDrtnHrCnt ? task.duration : task.targetDrtnHrCnt
         // task.targetStartDate = task.start_date != new Date(task.targetStartDate) ? task.start_date : task.targetStartDate
         // task.targetEndDate = task.end_date != new Date(task.targetEndDate) ? task.end_date : task.targetEndDate
         // Gantt.updateTask(id)
@@ -925,23 +975,27 @@ function _inConfigColumns() {
         return true;
     });
     Gantt.config.columns = [
+        { name: "add", label: "" },
         // { name: "projectId", label: "项目ID", tree: true },
         // editor: {type: "text", map_to: "wbsCode"}   表格编辑框
         { name: "firstItem", label: "编码", align: "center", template: firstItemLabel, tree: true, resize: true },
-        { name: "wbsCode", label: "WBS编码", align: "center", template: wbsCodeLabel, resize: true },
-        { name: "taskCode", label: "作业编码", align: "center", template: taskCodeLabel, resize: true },
+        // { name: "wbsCode", label: "WBS编码", align: "center", template: wbsCodeLabel, resize: true },
+        // { name: "taskCode", label: "作业编码", align: "center", template: taskCodeLabel, resize: true },
         // { name: "wbs", label: "WBS", template: Gantt.getWBSCode }, // 插件自带WBS编码
         { name: "text", label: "作业名称", editor: {type: "text", map_to: "text"}, resize: true },
+        // { name: "taskType", label: "作业类型", align: "center", editor: {type: "taskTypeSelect", map_to: "taskType", options:Gantt.serverList("taskTypeOptions")}, resize: true },
+        // { name: "type", label: "作业类型", align: "center", resize: true },
+        { name: "type", label: "作业类型", align: "center", editor: {type: "typeSelect", map_to: "type", options:Gantt.serverList("taskTypeOptions")}, template: typeLabel, resize: true },
+        { name: "taskStatus", label: "作业状态", align: "center", editor: {type: "select", map_to: "taskStatus", options:Gantt.serverList("taskStatusOptions")}, resize: true },
         { name: "start_date", label: "开始时间", align: "center", hide: true, resize: true },
         { name: "duration", label: "持续时间", align: "center", hide: true, resize: true },
-        { name: "taskType", label: "作业类型", align: "center", editor: {type: "taskTypeSelect", map_to: "taskType", options:Gantt.serverList("taskTypeOptions")}, resize: true },
+        { name: "end_date", label: "完成时间", align: "center", hide: true, resize: true },
+        { name: "taskOwner", label: "作业负责人", align: "center", editor: {type: "select", map_to: "taskOwner", options:Gantt.serverList("taskOwnerOptions")}, template: taskOwnerLabel, resize: true },
+        { name: "taskPosition", label: "作业负责岗位", align: "center", resize: true },
         { name: "taskMilestoneType", label: "里程碑类型", align: "center", editor: {type: "select", map_to: "taskMilestoneType", options:Gantt.serverList("taskMilestoneTypeOptions")}, resize: true },
         { name: "constraint_type", label: "作业约束类型", align: "center", editor: {type: "select", map_to: "constraint_type", options:Gantt.serverList("constraint_type_option")}, template: constraint_type_label, resize: true },
         { name: "constraint_date", label: "作业约束日期", align: "center", editor: {type: "date", map_to: "constraint_date", min: new Date(2025, 1, 1), max: new Date(2026, 1, 1)}, resize: true },
-        { name: "taskStatus", label: "作业状态", align: "center", editor: {type: "select", map_to: "taskStatus", options:Gantt.serverList("taskStatusOptions")}, resize: true },
         { name: "taskPhase", label: "作业阶段", align: "center", editor: {type: "select", map_to: "taskPhase", options:Gantt.serverList("taskPhaseOptions")}, resize: true },
-        { name: "taskOwner", label: "作业负责人", align: "center", editor: {type: "select", map_to: "taskOwner", options:Gantt.serverList("taskOwnerOptions")}, template: taskOwnerLabel, resize: true },
-        { name: "taskPosition", label: "作业负责岗位", align: "center", resize: true },
         { name: "targetStartDate", label: "计划开始", align: "center", editor: {type: "targetStartDate", map_to: "targetStartDate", min: new Date(2025, 1, 1), max: new Date(2026, 1, 1)}, resize: true },
         { name: "targetDrtnHrCnt", label: "计划工期", align: "center", editor: {type: "targetDrtnHrCnt", map_to: "targetDrtnHrCnt"}, resize: true },
         { name: "targetEndDate", label: "计划完成", align: "center", resize: true },
@@ -952,18 +1006,33 @@ function _inConfigColumns() {
         { name: "freeFloatHrCnt", label: "自由浮时", align: "center", hide: true, resize: true, template: freeFloatHrCntLabel },
         { name: "totalFloatHrCnt", label: "总浮时", align: "center", hide: true, resize: true, template: totalFloatHrCntLabel },
         // taskComplete
-        { name: "progress", label: "完成百分比", align: "center", template: function(obj) {
-            return obj.progress;
-        }, editor: {type: "number", map_to: "progress", min:0, max: 1}},
-        { name: "add", label: "" }
+        { name: "progress", label: "完成百分比", align: "center", template: function(task) {
+            return Math.round(task.progress * 100) + "%";
+        }, editor: {type: "number", map_to: "progress", min:0, max: 100}},
         // { name: "add", label: "", hide: true }
     ];
+    Gantt.ext.inlineEditors.attachEvent("onEditStart", function (state) {
+        if (state.columnName == "progress") {
+            const node = Gantt.ext.inlineEditors._placeholder.firstChild.firstChild
+            node.value = parseInt(node.value * 100);
+        }
+    });
+
+    Gantt.ext.inlineEditors.attachEvent("onBeforeSave", function (state) {
+        if (state.columnName == "progress") {
+            state.newValue /= 100;
+        }
+        return true;
+    });
     Gantt.templates.grid_row_class = ( start, end, task ) => {
         if (task.type === "milestone") {
             return "nested_task"
         }
         return "";
     };
+    Gantt.config.editor_types.date.is_valid = function(value, id, column, node) {
+        return true
+    }
     Gantt.config.editor_types.taskTypeSelect = {
         show: function (id, column, config, placeholder) {
             let task = Gantt.getTask(id);
@@ -1004,6 +1073,59 @@ function _inConfigColumns() {
         },
         is_changed: function (value, id, column, node) {
             var currentValue = this.get_value(id, column, node);
+            return value !== currentValue;
+        },
+        is_valid: function (value, id, column, node) {
+            return true
+        },
+        focus: function (node) {
+            var input = node.querySelector("select");
+            if (!input) { return; }
+            if (input.focus) { input.focus(); }
+            if (input.select) { input.select(); }
+        }
+    }
+    Gantt.config.editor_types.typeSelect = {
+        show: function (id, column, config, placeholder) {
+            let task = Gantt.getTask(id);
+            if(task.type !== "project") {
+                let node = document.createElement("div");
+                node.className = "gantt-task-type-editor";
+                // 创建select元素
+                let select = document.createElement("select");
+                select.className = "gantt-task-type-select";
+                select.name = column.name
+                // 添加任务类型选项
+                let options = config.options || [
+                    {key: "task", label: "任务"},
+                    {key: "milestone", label: "里程碑"},
+                    {key: "project", label: "项目"}
+                ];
+                options.forEach(function(opt) {
+                    let option = document.createElement("option");
+                    option.value = opt.key;
+                    option.textContent = opt.label;
+                    option.selected = (task[column.name] === opt.key);
+                    select.appendChild(option);
+                });
+                node.appendChild(select);
+                // 保存引用以便后续使用
+                this._node = node;
+                this._select = select;
+                placeholder.appendChild(node)
+            }
+        },
+        hide: function () {},
+        set_value: function (value, id, column, node) {
+            node.querySelector("select") && (node.querySelector("select").value = value)
+        },
+        get_value: function (id, column, node) {
+            let task = Gantt.getTask(id);
+            return node.querySelector("select") && node.querySelector("select").value || task.taskType
+        },
+        is_changed: function (value, id, column, node) {
+            var currentValue = this.get_value(id, column, node);
+            currentValue = "WBS" ? currentValue = "project" : ''
             return value !== currentValue;
         },
         is_valid: function (value, id, column, node) {
@@ -1090,10 +1212,18 @@ function _inConfigColumns() {
     }
 }
 
+function updateParent(id) {
+    nextTick(() => {
+        Gantt.updateTask(id)
+    })
+    const parentData = Gantt.getTask(id)
+    if(parentData.parent > 0) updateParent(parentData.parent)
+}
+
 const projectCode = window.parent._P && window.parent._P.shell_info && window.parent._P.shell_info.shellnumber || "A-DLS-1-01"
 // 表格框修改数据
 function firstItemLabel(task) {
-    return `${task.taskCode && `A${task.taskCode.padStart(4, '0')}` || projectCode + task.wbsCode}`
+    return `${task.taskCode && `A${task.taskCode.padStart(4, '0')}` || projectCode + (task.wbsCode && task.wbsCode || "") }`
 }
 function wbsCodeLabel(task) {
     return projectCode + task.wbsCode
@@ -1106,6 +1236,18 @@ function constraint_type_label(task) {
 }
 function taskPhaseLabel(task) {
     return task.taskPhase && Gantt.serverList("taskPhaseOptions").find(el => el.key == task.taskPhase).label
+}
+function typeLabel(task) {
+    if(task.type) {
+        const findItem = Gantt.serverList("taskTypeOptions").find(el => el.key == task.type)
+        if(findItem) {
+            return findItem.label
+        } else {
+            return "WBS"
+        }
+    } else {
+        return ""
+    }
 }
 function taskOwnerLabel(task) {
     task.taskPosition = task.taskOwner && Gantt.serverList("taskOwnerOptions").find(el => el.key == task.taskOwner).CRRC_USER_GW
@@ -1202,17 +1344,17 @@ function redo() {
 
 function zoomIn(){
     Gantt.ext.zoom.zoomIn();
-    nextTick(() => {
-        // 删除表头添加按钮
-        document.querySelector(".gantt_grid_head_add").style.display = "none";
-    })
+    // nextTick(() => {
+    //     // 删除表头添加按钮
+    //     document.querySelector(".gantt_grid_head_add").style.display = "none";
+    // })
 }
 function zoomOut(){
     Gantt.ext.zoom.zoomOut()
-    nextTick(() => {
-        // 删除表头添加按钮
-        document.querySelector(".gantt_grid_head_add").style.display = "none";
-    })
+    // nextTick(() => {
+    //     // 删除表头添加按钮
+    //     document.querySelector(".gantt_grid_head_add").style.display = "none";
+    // })
 }
 
 // gantt.exportToPNG({ skin:"dark" })broadway skyblue material
@@ -1249,7 +1391,6 @@ function saveTask() {
         }
     })
 }
-
 </script>
 
 <style lang="scss">
@@ -1285,6 +1426,13 @@ function saveTask() {
 .dhx_menu {
     max-height: 400px;
     overflow: auto;
+}
+
+.gantt_grid_head_add {
+    cursor: default;
+}
+.gantt_grid_head_add::before {
+    display: none;
 }
 // html, body {
 //     --dhx-gantt-task-border-radius:0;
