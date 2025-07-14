@@ -1,7 +1,20 @@
 <template>
-<div style="height: 100%;">
-<!-- <div v-loading="loading" style="height: 100%;"> -->
-    <div style="height: calc(100% - 160px); margin: 20px; margin-bottom: 0px" ref="gantt"></div>
+<!-- <div style="height: 100%;"> -->
+<div v-loading="loading" style="height: 100%;">
+    <div style="height: 40px; display: flex; justify-content: center; align-items: center">
+        <el-button @click="undo">撤销</el-button>
+        <el-button @click="redo">恢复撤销</el-button>
+        <el-button @click="zoomIn">减小范围</el-button>
+        <el-button @click="zoomOut">增大范围</el-button>
+        <el-button @click="updateCriticalPath">{{ criticalPathText }}</el-button>
+        <el-button @click="exportToPDF">导出到PDF</el-button>
+        <el-button @click="exportToPNG">导出到PNG</el-button>
+        <input type="file" id="file-upload" accept=".xlsx,.xml,.xer,text/xml,application/xml,application/xer" />
+        <el-button @click="importFrom">导入文件</el-button>
+        <el-button type="primary" @click="saveTask">保存数据</el-button>
+    </div>
+    <div style="height: calc(100% - 60px); margin: 20px; margin-top: 0px" ref="gantt"></div>
+    <!-- <div style="height: calc(100% - 160px); margin: 20px; margin-bottom: 0px" ref="gantt"></div>
     <el-card shadow="never" style="height: 100px; margin: 20px;">
         <div style="height: 60px; display: flex; justify-content: space-between; align-items: center">
             <div>
@@ -15,13 +28,14 @@
             </div>
             <el-button type="primary" @click="saveTask">保存数据</el-button>
         </div>
-    </el-card>
+    </el-card> -->
 </div>
 </template>
 
 <script setup>
 // import Gantt from "dhtmlx-gantt";
 import Gantt from "../utils/gantt/dhtmlxgantt.js";
+import { fileDragAndDrop } from "../utils/gantt/snippets/dhx_file_dnd.js";
 import { nextTick, onMounted, onUnmounted, reactive, ref, useTemplateRef } from 'vue';
 import { ElMessage, ElMessageBox } from "element-plus";
 import axios from "../assets/axios/GanttPage.js"
@@ -144,11 +158,11 @@ onUnmounted(() => {
 async function getGanttData() {
     const option1 = await axios.getOptionsList({projectId, type: 'taskPhase'})
     const option2 = await axios.getOptionsList({projectId, type: 'taskPosition'})
-    taskPhaseOptions = option1.data.data
+    taskPhaseOptions = [ {key: '', label: ''}, ...option1.data.data ]
     taskPhaseOptions.forEach(el => {
         el.label = el.key
     })
-    taskOwnerOptions = option2.data.data
+    taskOwnerOptions = [ {key: '', CRRC_USER_QM: ''}, ...option2.data.data ]
     taskOwnerOptions.forEach(el => {
         el.label = el.CRRC_USER_QM
     })
@@ -162,7 +176,7 @@ async function getGanttData() {
     if(tasks.data.length < 1) {
         tasks.data.push({
             id: 1,
-            text: "新项目",
+            text: projectCode || "新项目",
             open: true,
             type: "project",
             wbsCode: "",
@@ -196,6 +210,9 @@ async function getGanttData() {
         el.targetEndDate = el.targetStartDate && el.targetDrtnHrCnt && new Date(new Date(el.targetStartDate).getTime() + (el.targetDrtnHrCnt * 24 * 60 * 60 * 1000)) || ""
         el.start_date = el.targetStartDate && `${el.targetStartDate.substring(8, 10)}-${el.targetStartDate.substring(5, 7)}-${el.targetStartDate.substring(0, 4)}` || el.start_date
         el.duration = el.targetDrtnHrCnt || el.duration
+        if(el.parent < 1) {
+            el.text = projectCode
+        }
     })
     _initGanttEvents()
 }
@@ -254,6 +271,18 @@ function _initGanttEvents() {
     // Gantt.config.drag_move = false;
     Gantt.locale.labels.section_priority = "Priority";
     Gantt.config.multiselect = true;
+
+	Gantt.attachEvent("onParse", function () {
+		Gantt.eachTask(function (task) {
+			if (Gantt.hasChild(task.id)) {
+				task.type = Gantt.config.types.project;
+				Gantt.updateTask(task.id);
+			} else if (task.duration === 0) {
+				task.type = Gantt.config.types.milestone;
+				Gantt.updateTask(task.id);
+			}
+		});
+	});
     // 鼠标拖动新增数据
     // Gantt.config.click_drag = {
     //     callback: onDragEnd,
@@ -266,7 +295,6 @@ function _initGanttEvents() {
     //         return 0
     //     }
     // })
-
     Gantt.config.order_branch = true;
     // Gantt.config.work_time = false
     // Gantt.config.validate_task = function(task){
@@ -301,11 +329,24 @@ function _initGanttEvents() {
     // 配置表格列
     _inConfigColumns()
     Gantt.i18n.setLocale("cn");
+
+	Gantt.message("Upload <b>XER</b> or <b>XML</b> Project file using 'Choose File' button or simply drag-and-drop it into the page");
+	if (!window.FormData) {
+		Gantt.message({type:"error", text: "Your browsers does not support Ajax File upload, please open this demo in modern browser"});
+	}
+	Gantt.config.static_background = true;
+	Gantt.config.xml_date = "%Y-%m-%d %H:%i";
     // 初始化dom
     Gantt.init(ganttDom.value);
     // 填入数据
     Gantt.parse(tasks)
     Gantt.sort("type", true)
+    fileDnD.fileTypeMessage = "Only XER and XML files are supported!";
+    fileDnD.dndFileTypeMessage = "Please try XER and XML project file.";
+    fileDnD.dndHint = "Drop XER file into Gantt";
+    fileDnD.mode = "primaveraP6";
+    fileDnD.init(Gantt.$container)
+	fileDnD.onDrop(sendFile);
     loading.value = false
     // nextTick(() => {
         // 删除表头添加按钮
@@ -373,8 +414,7 @@ function getColumnLabel(column) {
 function detectIconType(value) {
     if (value) {
         return "dxi dxi-checkbox-blank-outline";
-    }
-    else {
+    } else {
         return "dxi dxi-checkbox-marked";
     }
 };
@@ -494,6 +534,7 @@ function linkTypeToString(linkType) {
 // 作业类型
 const taskTypeOptions = [
     // {key: "project", label: "WBS"},
+    {key: "", label: ""},
     {key: "task", label: "任务相关"},
     {key: "milestone", label: "项目里程碑"},
     // {key: "开始里程碑", label: "开始里程碑"},
@@ -501,12 +542,14 @@ const taskTypeOptions = [
 ]
 // 里程碑类型
 const taskMilestoneTypeOptions = [
+    {key: "", label: ""},
     {key: "项目里程碑", label: "项目里程碑"},
     {key: "关键节点", label: "关键节点"},
     {key: "合同节点", label: "合同节点"}
 ]
 // 作业状态
 const taskStatusOptions = [
+    {key: "", label: ""},
     {key: "未开始", label: "未开始"},
     {key: "进行中", label: "进行中"},
     {key: "已完成", label: "已完成"}
@@ -517,7 +560,7 @@ let taskPhaseOptions = []
 let taskOwnerOptions = []
 // 约束类型
 const constraint_type_option = [
-    // { key: "", label: "" },
+    { key: "", label: "" },
     { key: "asap", label: "尽早开始", text: Gantt.locale.labels.asap },
     { key: "alap", label: "尽晚完成", text: Gantt.locale.labels.alap },
     { key: "snet", label: "开始时间不早于", text: Gantt.locale.labels.snet },
@@ -1034,6 +1077,7 @@ function _inConfigColumns() {
     const date_show = Gantt.config.editor_types.date.show
     const select_show = Gantt.config.editor_types.select.show
     const number_show = Gantt.config.editor_types.number.show
+    const text_show = Gantt.config.editor_types.text.show
     // wbs数据禁止输入日期
     Gantt.config.editor_types.date.show = (o,s,l,c) => {
         let task = Gantt.getTask(o);
@@ -1071,10 +1115,6 @@ function _inConfigColumns() {
         }
     }
     // wbs数据禁止输入数字
-    console.log(number_show)
-    console.log(Gantt.config.editor_types.number.set_value)
-    console.log(Gantt.config.editor_types.number.get_value)
-    console.log(Gantt.config.editor_types.number.get_input)
     Gantt.config.editor_types.number.show = (i,a,r,o) => {
         let task = Gantt.getTask(i);
         if(task.type !== "project") {
@@ -1092,6 +1132,16 @@ function _inConfigColumns() {
             return a.querySelector("input").value
         }
     }
+    // 项目数据禁止输入
+    Gantt.config.editor_types.text.show = (i,a,r,o) => {
+        let task = Gantt.getTask(i);
+        if(task.parent > 0) {
+            text_show(i,a,r,o)
+        }
+    }
+    Gantt.config.editor_types.text.get_input = (e) => {
+        return e.querySelector("input") || {value: projectCode}
+    }
     // Gantt.config.editor_types.date.get_value = (value, id, column, node) => {
     //     var currentValue = this.get_value(id, column, node);
     //     currentValue = "WBS" ? currentValue = "project" : ''
@@ -1108,6 +1158,7 @@ function _inConfigColumns() {
     Gantt.config.editor_types.date.is_valid = function(value, id, column, node) {
         return true
     }
+    // 未使用
     Gantt.config.editor_types.taskTypeSelect = {
         show: function (id, column, config, placeholder) {
             let task = Gantt.getTask(id);
@@ -1162,7 +1213,7 @@ function _inConfigColumns() {
     }
     Gantt.config.editor_types.typeSelect = {
         show: function (id, column, config, placeholder) {
-            // let task = Gantt.getTask(id);
+            let task = Gantt.getTask(id);
             if(task.type !== "project") {
                 let node = document.createElement("div");
                 node.className = "gantt-task-type-editor";
@@ -1482,6 +1533,46 @@ function exportToPNG() {
     Gantt.exportToPNG()
 }
 
+const fileDnD = fileDragAndDrop()
+function sendFile(file) {
+    fileDnD.showUpload();
+    upload(file, function () {
+        fileDnD.hideOverlay();
+    })
+}
+function upload(file, callback) {
+    Gantt.importFromMSProject({
+        data: file,
+        callback: function (project) {
+            if (project) {
+                Gantt.clearAll();
+                if (project.config.duration_unit) {
+                    Gantt.config.duration_unit = project.config.duration_unit;
+                }
+                Gantt.parse(project.data);
+            }
+            if (callback)
+                callback(project);
+        }
+    });
+}
+function importFrom() {
+    // Gantt.importFromExcel({
+    //     server:"https://https://dls.4dlp.com.cn:7102/import/",
+    //     data: file,
+    //     callback: function(project){
+    //         console.log(project)
+    //     }
+    // });
+    var fileInput = document.getElementById("file-upload");
+    if (fileInput.files[0])
+    sendFile(fileInput.files[0]);
+}
+// Excel数据转换
+function transformExcelData(excelData) {
+    console.log(excelData)
+}
+
 function saveTask() {
     const dataForm = Gantt.serialize()
     dataForm.projectId = projectId
@@ -1511,6 +1602,7 @@ function saveTask() {
 
 <style lang="scss">
 @import "../utils/gantt/dhtmlxgantt.css";
+@import "../utils/gantt/snippets/dhx_file_dnd.css";
 
 .custom-delete-btn {
     padding: 6px 20px;
