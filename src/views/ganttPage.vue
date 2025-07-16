@@ -232,7 +232,6 @@ async function getGanttData() {
         el.targetEndDate = el.targetStartDate && el.targetDrtnHrCnt && new Date(new Date(el.targetStartDate).getTime() + (el.targetDrtnHrCnt * 24 * 60 * 60 * 1000)) || ""
         // el.start_date = el.targetStartDate && `${el.targetStartDate.substring(8, 10)}-${el.targetStartDate.substring(5, 7)}-${el.targetStartDate.substring(0, 4)} 09:00:00` || el.start_date
         el.start_date = el.targetStartDate && `${el.targetStartDate} 09:00:00` || el.start_date
-        console.log(el.start_date)
         el.duration = el.targetDrtnHrCnt || el.duration
         if(el.parent < 1) {
             el.text = projectCode
@@ -251,7 +250,7 @@ function _initGanttEvents() {
         tooltip: true,
         export_api: true
 	});
-    Gantt.config.auto_scheduling = true;
+    Gantt.config.auto_scheduling = false;
     // Gantt.config.scale_unit = "day";
     // Gantt.config.date_scale = "%Y年%m月%d日";
     // 动态配置表头
@@ -371,6 +370,14 @@ function _initGanttEvents() {
     fileDnD.dndHint = "Drop XER file into Gantt";
     fileDnD.mode = "primaveraP6";
     fileDnD.init(Gantt.$container)
+    
+    // Gantt.batchUpdate(function () {
+    //     Gantt.eachTask(function (task) {
+    //         if (Gantt.hasChild(task.id)) {
+    //             calculatePlannedDates(task.id)
+    //         }
+    //     })
+    // })
 	// fileDnD.onDrop(sendFile);
     loading.value = false
     // nextTick(() => {
@@ -379,6 +386,27 @@ function _initGanttEvents() {
     // })
 }
 
+function calculatePlannedDates(parentId) {
+    const parent = Gantt.getTask(parentId);
+    // parent.targetStartDate = null;
+    // parent.targetEndDate = null;
+    if(parent) {
+        Gantt.eachTask(function (child) {
+            // iterate only direct children
+            if (child.parent != parentId) {
+                return
+            }
+            parent.targetStartDate = parent.targetStartDate || child.targetStartDate;
+            parent.targetEndDate = parent.targetEndDate || child.targetEndDate;
+    
+            parent.targetStartDate = new Date(parent.targetStartDate).getTime() > new Date(child.targetStartDate).getTime() ? child.targetStartDate : parent.targetStartDate
+            parent.targetEndDate = new Date(parent.targetEndDate).getTime() < new Date(child.targetEndDate).getTime() ? child.targetEndDate : parent.targetEndDate
+            // parent.targetStartDate = Math.min(parent.targetStartDate, child.targetStartDate)
+            // parent.targetEndDate = Math.max(parent.targetEndDate, child.targetEndDate)
+        }, parentId);
+        Gantt.updateTask(parentId)
+    }
+}
 // 动态配置表头
 function _inConfigColumnsShow() {
 	let contextMenu = new dhx.ContextMenu(null, { css: "dhx_widget--bg_gray" });
@@ -1023,22 +1051,34 @@ function _inConfigColumns() {
 	Gantt.serverList("constraint_type_option", constraint_type_option);
     // 修改数据后
     Gantt.attachEvent("onAfterTaskUpdate", function(id, task) {
-        // const startDate = task.start_date
-        // const endDate = task.end_date
-        // task.targetStartDate = startDate && `${startDate.getFullYear()}-${(startDate.getMonth()+1).toString().padStart(2, '0')}-${startDate.getDate().toString().padStart(2, '0')}` || ""
-        // task.start_date = new Date(`${task.targetStartDate} 09:00:00`)
-        // task.targetEndDate = endDate && `${endDate.getFullYear()}-${(endDate.getMonth()+1).toString().padStart(2, '0')}-${endDate.getDate().toString().padStart(2, '0')}` || ""
-        // task.end_date = task.targetEndDate && new Date(`${task.targetEndDate} 09:00:00`) || ""
-        // if(task.targetEndDate && task.targetStartDate) {
-        //     task.targetDrtnHrCnt = task.duration = (new Date(task.targetEndDate).getTime() - new Date(task.targetStartDate).getTime()) / (24 * 60 * 60 * 1000)
-        // }
-        // if(task.parent > 0) {
-        //     updateParent(task.parent)
-        //     refreshSummaryProgress(Gantt.getParent(id), true);
-        // }
-        // Gantt.refreshTask(id);
-        return true;
+        const startDate = task.start_date
+        const endDate = task.end_date
+        task.targetStartDate = startDate && `${startDate.getFullYear()}-${(startDate.getMonth()+1).toString().padStart(2, '0')}-${startDate.getDate().toString().padStart(2, '0')}` || ""
+        task.targetEndDate = endDate && `${endDate.getFullYear()}-${(endDate.getMonth()+1).toString().padStart(2, '0')}-${endDate.getDate().toString().padStart(2, '0')}` || ""
+        task.start_date = new Date(`${task.targetStartDate} 09:00:00`)
+        task.end_date = task.targetEndDate && new Date(`${task.targetEndDate} 09:00:00`) || ""
+        Gantt.batchUpdate(function () {
+            if (task.parent > 0) {
+                calculatePlannedDates(task.parent)
+            }
+        })
+    //     const startDate = task.start_date
+    //     const endDate = task.end_date
+    //     task.targetStartDate = startDate && `${startDate.getFullYear()}-${(startDate.getMonth()+1).toString().padStart(2, '0')}-${startDate.getDate().toString().padStart(2, '0')}` || ""
+    //     task.start_date = new Date(`${task.targetStartDate} 09:00:00`)
+    //     task.targetEndDate = endDate && `${endDate.getFullYear()}-${(endDate.getMonth()+1).toString().padStart(2, '0')}-${endDate.getDate().toString().padStart(2, '0')}` || ""
+    //     task.end_date = task.targetEndDate && new Date(`${task.targetEndDate} 09:00:00`) || ""
+    //     if(task.targetEndDate && task.targetStartDate) {
+    //         task.targetDrtnHrCnt = task.duration = (new Date(task.targetEndDate).getTime() - new Date(task.targetStartDate).getTime()) / (24 * 60 * 60 * 1000)
+    //     }
+    //     if(task.parent > 0) {
+    //         updateParent(task.parent)
+    //         refreshSummaryProgress(Gantt.getParent(id), true);
+    //     }
+    //     Gantt.refreshTask(id);
+    //     return true;
     });
+
     // 拖拽甘特图完成情况
     Gantt.attachEvent("onTaskDrag", function (id) {
         refreshSummaryProgress(Gantt.getParent(id), false);
@@ -1048,7 +1088,7 @@ function _inConfigColumns() {
         // { name: "projectId", label: "项目ID", tree: true },
         // editor: {type: "text", map_to: "wbsCode"}   表格编辑框
         { name: "firstItem", label: "编码", align: "left", template: firstItemLabel, tree: true, resize: true },
-        // { name: "wbsCode", label: "WBS编码", align: "center", template: wbsCodeLabel, resize: true },
+        { name: "wbsCode", label: "WBS编码", align: "center", template: wbsCodeLabel, resize: true },
         // { name: "taskCode", label: "作业编码", align: "center", template: taskCodeLabel, resize: true },
         // { name: "wbs", label: "WBS", template: Gantt.getWBSCode }, // 插件自带WBS编码
         { name: "text", label: "作业名称", editor: {type: "text", map_to: "text"}, resize: true },
@@ -1065,9 +1105,9 @@ function _inConfigColumns() {
         { name: "constraint_type", label: "作业约束类型", align: "center", hide: true, editor: {type: "select", map_to: "constraint_type", options:Gantt.serverList("constraint_type_option")}, template: constraint_type_label, resize: true },
         { name: "constraint_date", label: "作业约束日期", align: "center", hide: true, editor: {type: "date", map_to: "constraint_date", min: new Date(2025, 1, 1), max: new Date(2026, 1, 1)}, min_width: 100, resize: true },
         { name: "taskPhase", label: "作业阶段", align: "center", hide: true, editor: {type: "select", map_to: "taskPhase", options:Gantt.serverList("taskPhaseOptions")}, resize: true },
-        { name: "targetStartDate", label: "计划开始", align: "center", hide: true, editor: {type: "targetStartDate", map_to: "targetStartDate", min: new Date(2025, 1, 1), max: new Date(2026, 1, 1)}, min_width: 100, resize: true },
-        { name: "targetDrtnHrCnt", label: "计划工期", align: "center", hide: true, editor: {type: "targetDrtnHrCnt", map_to: "targetDrtnHrCnt"}, resize: true },
-        { name: "targetEndDate", label: "计划完成", align: "center", hide: true, min_width: 100, resize: true },
+        { name: "targetStartDate", label: "计划开始", align: "center", editor: {type: "targetStartDate", map_to: "targetStartDate", min: new Date(2025, 1, 1), max: new Date(2026, 1, 1)}, min_width: 100, resize: true },
+        { name: "targetDrtnHrCnt", label: "计划工期", align: "center", editor: {type: "targetDrtnHrCnt", map_to: "targetDrtnHrCnt"}, resize: true },
+        { name: "targetEndDate", label: "计划完成", align: "center", min_width: 100, resize: true },
         { name: "actStartDate", label: "实际开始", align: "center", hide: true, editor: {type: "date", map_to: "actStartDate", min: new Date(2025, 1, 1), max: new Date(2026, 1, 1)}, template: actStartDateLabel, min_width: 100, resize: true },
         { name: "actWorkQty", label: "实际工期", align: "center", hide: true, editor: {type: "number", map_to: "actWorkQty"}, template: actWorkQtyLabel, resize: true },
         { name: "remainDrtnHrCnt", label: "尚需工期", align: "center", hide: true, editor: {type: "number", map_to: "remainDrtnHrCnt"}, resize: true },
@@ -1615,8 +1655,13 @@ function uploadProject(file, callback) {
                 }
                 project.data.data.forEach(el => {
                     el.targetDrtnHrCnt = el.duration
-                    el.targetStartDate = el.start_date.substring(0, 10)
-                    el.targetEndDate = el.end_date
+                    el.targetStartDate = el.start_date && el.start_date.substring(0, 10) || ""
+                    if(el.targetDrtnHrCnt > 0) {
+                        el.targetEndDate = Gantt.calculateEndDate({start_date: new Date(el.start_date), duration: el.duration})
+                        el.type = "task"
+                    } else {
+                        el.type = "milestone"
+                    }
                 })
                 Gantt.parse(project.data);
                 fileDnD.hideOverlay();
@@ -1669,7 +1714,12 @@ function uploadP6(file, callback) {
                 project.data.data.forEach(el => {
                     el.targetDrtnHrCnt = el.duration
                     el.targetStartDate = el.start_date && el.start_date.substring(0, 10) || ""
-                    el.targetEndDate = el.end_date
+                    if(el.targetDrtnHrCnt > 0) {
+                        el.targetEndDate = Gantt.calculateEndDate({start_date: new Date(el.start_date), duration: el.duration})
+                        el.type = "task"
+                    } else {
+                        el.type = "milestone"
+                    }
                 })
                 Gantt.parse(project.data);
                 fileDnD.hideOverlay();
