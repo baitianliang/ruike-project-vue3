@@ -7,10 +7,32 @@
         <el-button @click="zoomIn">减小范围</el-button>
         <el-button @click="zoomOut">增大范围</el-button>
         <el-button @click="updateCriticalPath">{{ criticalPathText }}</el-button>
-        <el-button @click="exportToPDF">导出到PDF</el-button>
-        <el-button @click="exportToPNG">导出到PNG</el-button>
-        <input type="file" id="file-upload" accept=".xlsx,.xml,.xer,text/xml,application/xml,application/xer" />
-        <el-button @click="importFrom">导入文件</el-button>
+        <el-dropdown style="margin: 0px 12px" @command="exportTo">
+            <el-button>
+                导出<el-icon class="el-icon--right"><ArrowDown /></el-icon>
+            </el-button>
+            <template #dropdown>
+            <el-dropdown-menu>
+                <el-dropdown-item command="PDF">导出到PDF</el-dropdown-item>
+                <el-dropdown-item command="Excel">导出到Excel</el-dropdown-item>
+            </el-dropdown-menu>
+            </template>
+        </el-dropdown>
+        <!-- <el-button @click="exportToPDF">导出到PDF</el-button>
+        <el-button @click="exportToExcel">导出到Excel</el-button> -->
+        <input type="file" id="file-upload" accept=".mpp,.xlsx,.xml,.xer,text/xml,application/xml,application/xer" />
+        <!-- <el-button @click="importFrom">渲染文件</el-button> -->
+        <el-dropdown style="margin: 0px 12px" @command="importFrom">
+            <el-button>
+                导入数据<el-icon class="el-icon--right"><ArrowDown /></el-icon>
+            </el-button>
+            <template #dropdown>
+            <el-dropdown-menu>
+                <el-dropdown-item command="Project">导入Project</el-dropdown-item>
+                <el-dropdown-item command="P6">导入P6</el-dropdown-item>
+            </el-dropdown-menu>
+            </template>
+        </el-dropdown>
         <el-button type="primary" @click="saveTask">保存数据</el-button>
     </div>
     <div style="height: calc(100% - 60px); margin: 20px; margin-top: 0px" ref="gantt"></div>
@@ -33,7 +55,7 @@
 </template>
 
 <script setup>
-// import Gantt from "dhtmlx-gantt";
+import { ArrowDown } from '@element-plus/icons-vue'
 import Gantt from "../utils/gantt/dhtmlxgantt.js";
 import { fileDragAndDrop } from "../utils/gantt/snippets/dhx_file_dnd.js";
 import { nextTick, onMounted, onUnmounted, reactive, ref, useTemplateRef } from 'vue';
@@ -208,7 +230,9 @@ async function getGanttData() {
         el.targetStartDate = el.targetStartDate && el.targetStartDate.substring(0, 10) || ""
         // el.targetEndDate = el.targetEndDate.substring(0, 10)
         el.targetEndDate = el.targetStartDate && el.targetDrtnHrCnt && new Date(new Date(el.targetStartDate).getTime() + (el.targetDrtnHrCnt * 24 * 60 * 60 * 1000)) || ""
-        el.start_date = el.targetStartDate && `${el.targetStartDate.substring(8, 10)}-${el.targetStartDate.substring(5, 7)}-${el.targetStartDate.substring(0, 4)}` || el.start_date
+        // el.start_date = el.targetStartDate && `${el.targetStartDate.substring(8, 10)}-${el.targetStartDate.substring(5, 7)}-${el.targetStartDate.substring(0, 4)} 09:00:00` || el.start_date
+        el.start_date = el.targetStartDate && `${el.targetStartDate} 09:00:00` || el.start_date
+        console.log(el.start_date)
         el.duration = el.targetDrtnHrCnt || el.duration
         if(el.parent < 1) {
             el.text = projectCode
@@ -341,12 +365,13 @@ function _initGanttEvents() {
     // 填入数据
     Gantt.parse(tasks)
     Gantt.sort("type", true)
+
     fileDnD.fileTypeMessage = "Only XER and XML files are supported!";
     fileDnD.dndFileTypeMessage = "Please try XER and XML project file.";
     fileDnD.dndHint = "Drop XER file into Gantt";
     fileDnD.mode = "primaveraP6";
     fileDnD.init(Gantt.$container)
-	fileDnD.onDrop(sendFile);
+	// fileDnD.onDrop(sendFile);
     loading.value = false
     // nextTick(() => {
         // 删除表头添加按钮
@@ -997,21 +1022,21 @@ function _inConfigColumns() {
 	Gantt.serverList("taskOwnerOptions", taskOwnerOptions);
 	Gantt.serverList("constraint_type_option", constraint_type_option);
     // 修改数据后
-    Gantt.attachEvent("onAfterTaskUpdate", function(id, task){
-        const startDate = task.start_date
-        const endDate = task.end_date
-        task.targetStartDate = `${startDate.getFullYear()}-${(startDate.getMonth()+1).toString().padStart(2, '0')}-${startDate.getDate().toString().padStart(2, '0')}`
-        task.targetEndDate = `${endDate.getFullYear()}-${(endDate.getMonth()+1).toString().padStart(2, '0')}-${endDate.getDate().toString().padStart(2, '0')}`
-        task.targetDrtnHrCnt = task.duration = (new Date(task.targetEndDate).getTime() - new Date(task.targetStartDate).getTime()) / (24 * 60 * 60 * 1000)
-        if(task.parent > 0) {
-            updateParent(task.parent)
-            refreshSummaryProgress(Gantt.getParent(id), true);
-        }
-        // task.targetDrtnHrCnt = task.duration != task.targetDrtnHrCnt ? task.duration : task.targetDrtnHrCnt
-        // task.targetStartDate = task.start_date != new Date(task.targetStartDate) ? task.start_date : task.targetStartDate
-        // task.targetEndDate = task.end_date != new Date(task.targetEndDate) ? task.end_date : task.targetEndDate
-        // Gantt.updateTask(id)
-        Gantt.refreshTask(id);
+    Gantt.attachEvent("onAfterTaskUpdate", function(id, task) {
+        // const startDate = task.start_date
+        // const endDate = task.end_date
+        // task.targetStartDate = startDate && `${startDate.getFullYear()}-${(startDate.getMonth()+1).toString().padStart(2, '0')}-${startDate.getDate().toString().padStart(2, '0')}` || ""
+        // task.start_date = new Date(`${task.targetStartDate} 09:00:00`)
+        // task.targetEndDate = endDate && `${endDate.getFullYear()}-${(endDate.getMonth()+1).toString().padStart(2, '0')}-${endDate.getDate().toString().padStart(2, '0')}` || ""
+        // task.end_date = task.targetEndDate && new Date(`${task.targetEndDate} 09:00:00`) || ""
+        // if(task.targetEndDate && task.targetStartDate) {
+        //     task.targetDrtnHrCnt = task.duration = (new Date(task.targetEndDate).getTime() - new Date(task.targetStartDate).getTime()) / (24 * 60 * 60 * 1000)
+        // }
+        // if(task.parent > 0) {
+        //     updateParent(task.parent)
+        //     refreshSummaryProgress(Gantt.getParent(id), true);
+        // }
+        // Gantt.refreshTask(id);
         return true;
     });
     // 拖拽甘特图完成情况
@@ -1286,7 +1311,7 @@ function _inConfigColumns() {
         is_changed: function (value, id, column, node) {
             var currentValue = this.get_value(id, column, node);
             const dataForm = Gantt.getTask(id)
-            dataForm.start_date = new Date(`${currentValue} 00:00:00`)
+            dataForm.start_date = new Date(`${currentValue} 09:00:00`)
             // `${currentValue.substring(8, 10)}-${currentValue.substring(5, 7)}-${currentValue.substring(0, 4)}`
             if(dataForm.targetDrtnHrCnt) {
                 dataForm.duration = dataForm.targetDrtnHrCnt
@@ -1329,7 +1354,7 @@ function _inConfigColumns() {
             var currentValue = this.get_value(id, column, node);
             const dataForm = Gantt.getTask(id)
             dataForm.duration = currentValue
-            dataForm.targetEndDate = new Date(new Date(`${dataForm.targetStartDate} 00:00:00`).getTime() + (currentValue * 24 * 60 * 60 * 1000))
+            dataForm.targetEndDate = new Date(new Date(`${dataForm.targetStartDate}`).getTime() + (currentValue * 24 * 60 * 60 * 1000))
             dataForm.end_date = dataForm.targetEndDate
             Gantt.updateTask(id)
             return value !== currentValue;
@@ -1524,39 +1549,38 @@ function zoomOut(){
     // })
 }
 
+const exportTo = (command) => {
+    switch(command) {
+        case "PDF":
+            exportToPDF()
+            break;
+        case "Excel":
+            exportToExcel()
+            break;
+    }
+}
 // gantt.exportToPNG({ skin:"dark" })broadway skyblue material
 // 导出文件
 function exportToPDF() {
     Gantt.exportToPDF()
 }
-function exportToPNG() {
-    Gantt.exportToPNG()
+function exportToExcel() {
+    Gantt.exportToExcel()
 }
 
+
+const importFrom = (command) => {
+    switch(command) {
+        case "Project":
+            importProject()
+            break;
+        case "P6":
+            importP6()
+            break;
+    }
+}
 const fileDnD = fileDragAndDrop()
-function sendFile(file) {
-    fileDnD.showUpload();
-    upload(file, function () {
-        fileDnD.hideOverlay();
-    })
-}
-function upload(file, callback) {
-    Gantt.importFromMSProject({
-        data: file,
-        callback: function (project) {
-            if (project) {
-                Gantt.clearAll();
-                if (project.config.duration_unit) {
-                    Gantt.config.duration_unit = project.config.duration_unit;
-                }
-                Gantt.parse(project.data);
-            }
-            if (callback)
-                callback(project);
-        }
-    });
-}
-function importFrom() {
+function importProject() {
     // Gantt.importFromExcel({
     //     server:"https://https://dls.4dlp.com.cn:7102/import/",
     //     data: file,
@@ -1565,9 +1589,104 @@ function importFrom() {
     //     }
     // });
     var fileInput = document.getElementById("file-upload");
-    if (fileInput.files[0])
-    sendFile(fileInput.files[0]);
+    if (fileInput.files[0]) {
+        loading.value = true
+        fileDnD.showUpload();
+        uploadProject(fileInput.files[0], function () {})
+    }
+    else ElMessage({
+        message: '请先选择文件！',
+        type: 'warning',
+    });
 }
+function uploadProject(file, callback) {
+    Gantt.importFromMSProject({
+        server:"https://dls.4dlp.com.cn:7102/import/",
+        data: file,
+        taskProperties: [
+            "Summary",
+            "Milestone",
+        ],
+        callback: function (project) {
+            if (project) {
+                Gantt.clearAll();
+                if (project.config.duration_unit) {
+                    Gantt.config.duration_unit = project.config.duration_unit;
+                }
+                project.data.data.forEach(el => {
+                    el.targetDrtnHrCnt = el.duration
+                    el.targetStartDate = el.start_date.substring(0, 10)
+                    el.targetEndDate = el.end_date
+                })
+                Gantt.parse(project.data);
+                fileDnD.hideOverlay();
+                loading.value = false
+            } else {
+                ElMessage({
+                    message: '导入文件格式错误，请尝试其他导入！',
+                    type: 'warning',
+                });
+                fileDnD.hideOverlay();
+                loading.value = false
+            }
+        }
+    });
+}
+function importP6() {
+    // Gantt.importFromExcel({
+    //     server:"https://https://dls.4dlp.com.cn:7102/import/",
+    //     data: file,
+    //     callback: function(project){
+    //         console.log(project)
+    //     }
+    // });
+    var fileInput = document.getElementById("file-upload");
+    if (fileInput.files[0]) {
+        loading.value = true
+        fileDnD.showUpload();
+        uploadP6(fileInput.files[0], function () {})
+    }
+    else ElMessage({
+        message: '请先选择文件！',
+        type: 'warning',
+    });
+}
+function uploadP6(file, callback) {
+    Gantt.importFromPrimaveraP6({
+        server:"https://dls.4dlp.com.cn:7102/import/",
+        data: file,
+        taskProperties: [
+            "Summary",
+            "Milestone",
+        ],
+        callback: function (project) {
+            console.log(project)
+            if (project) {
+                Gantt.clearAll();
+                if (project.config.duration_unit) {
+                    Gantt.config.duration_unit = project.config.duration_unit;
+                }
+                project.data.data.forEach(el => {
+                    el.targetDrtnHrCnt = el.duration
+                    el.targetStartDate = el.start_date && el.start_date.substring(0, 10) || ""
+                    el.targetEndDate = el.end_date
+                })
+                Gantt.parse(project.data);
+                fileDnD.hideOverlay();
+                loading.value = false
+            } else {
+                ElMessage({
+                    message: '导入文件格式错误，请尝试其他导入！',
+                    type: 'warning',
+                });
+                fileDnD.hideOverlay();
+                loading.value = false
+            }
+        }
+    });
+}
+
+
 // Excel数据转换
 function transformExcelData(excelData) {
     console.log(excelData)
@@ -1578,7 +1697,8 @@ function saveTask() {
     dataForm.projectId = projectId
     dataForm.userName = userName
     dataForm.data.forEach(el => {
-        el.targetStartDate = `${el.start_date.substring(6, 10)}-${el.start_date.substring(3, 5)}-${el.start_date.substring(0, 2)}`
+        // el.targetStartDate = `${el.start_date.substring(6, 10)}-${el.start_date.substring(3, 5)}-${el.start_date.substring(0, 2)}`
+        el.targetStartDate = `${el.start_date.substring(0, 10)}`
         el.targetDrtnHrCnt = el.duration
         el.targetEndDate = new Date(el.end_date)
         let task = Gantt.getTask(el.id)
