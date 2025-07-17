@@ -234,7 +234,7 @@ async function getGanttData() {
         el.start_date = el.targetStartDate && `${el.targetStartDate} 09:00:00` || el.start_date
         el.duration = el.targetDrtnHrCnt || el.duration
         if(el.parent < 1) {
-            el.text = projectCode
+            el.text = projectName
         }
     })
     _initGanttEvents()
@@ -363,7 +363,9 @@ function _initGanttEvents() {
     Gantt.init(ganttDom.value);
     // 填入数据
     Gantt.parse(tasks)
-    Gantt.sort("type", true)
+    // Gantt.sort("type", true)
+    Gantt.sort("firstItem", true)
+    Gantt.sort("wbsCode", false)
 
     fileDnD.fileTypeMessage = "Only XER and XML files are supported!";
     fileDnD.dndFileTypeMessage = "Please try XER and XML project file.";
@@ -602,7 +604,7 @@ const taskMilestoneTypeOptions = [
 ]
 // 作业状态
 const taskStatusOptions = [
-    {key: "", label: ""},
+    // {key: "", label: ""},
     {key: "未开始", label: "未开始"},
     {key: "进行中", label: "进行中"},
     {key: "已完成", label: "已完成"}
@@ -703,7 +705,7 @@ function _inClassic() {
 function _inExport() {
 	Gantt.config.grid_width = 440;
 	Gantt.templates.task_text = function (s, e, task) {
-		return "Export " + task.text;
+		return task.text;
 	}
 	Gantt.config.columns[0].template = function (obj) {
 		return obj.text + " - <b>" + obj.progress*100 + "%</b>";
@@ -874,7 +876,8 @@ function dynamicData() {
             task.text = "新任务"
             // task.taskType = "任务相关"
             task.type = "task"
-            task.taskMilestoneType = "项目里程碑"
+            // task.taskMilestoneType = "项目里程碑"
+            task.taskMilestoneType = ""
             task.taskStatus = "未开始"
             task.taskPhase = ""
             task.taskPosition = ""
@@ -951,32 +954,42 @@ function dynamicData() {
             //     document.querySelector(".gantt_grid_head_add").style.display = "none";
             // })
         }
-        Gantt.sort("type", true)
+        // Gantt.sort("type", true)
+        Gantt.sort("taskCode", false)
+        Gantt.sort("wbsCode", false)
         //在这里放置任何自定义逻辑
     });
     // 删除数据后
     Gantt.attachEvent("onAfterTaskDelete", function(id, item){
         const obj = Gantt.serialize().data.find(el => el.parent === item.parent);
-        if(item.parent > 0 && !obj) {
-            const dataForm = Gantt.getTask(item.parent)
-            if(dataForm.parent > 0) {
-                dataForm.wbsCode = Gantt.getTask(dataForm.parent).wbsCode
-                dataForm.taskCode = item.taskCode || item.parentTaskCode
-                // dataForm.taskType = "任务相关"
-                dataForm.type = "task"
-                dataForm.taskMilestoneType = "项目里程碑"
-                dataForm.taskStatus = "未开始"
-                dataForm.taskPhase = ""
-                dataForm.taskPosition = ""
-                dataForm.taskOwner = ""
-                dataForm.targetStartDate = dataForm.start_date
-                dataForm.targetDrtnHrCnt = dataForm.duration
-                dataForm.targetEndDate = dataForm.end_date
-                // dataForm.type = ""
-                dataForm.constraint_type = "asap"
-                Gantt.updateTask(item.parent)
+        if(item.parent > 0) {
+            Gantt.batchUpdate(function () {
+                calculatePlannedDates(item.parent)
+            })
+            if(!obj) {
+                const dataForm = Gantt.getTask(item.parent)
+                if(dataForm.parent > 0) {
+                    dataForm.wbsCode = Gantt.getTask(dataForm.parent).wbsCode
+                    dataForm.taskCode = item.taskCode || item.parentTaskCode
+                    // dataForm.taskType = "任务相关"
+                    dataForm.type = "task"
+                    // dataForm.taskMilestoneType = "项目里程碑"
+                    dataForm.taskMilestoneType = ""
+                    dataForm.taskStatus = "未开始"
+                    dataForm.taskPhase = ""
+                    dataForm.taskPosition = ""
+                    dataForm.taskOwner = ""
+                    dataForm.targetStartDate = dataForm.start_date
+                    dataForm.targetDrtnHrCnt = dataForm.duration
+                    dataForm.targetEndDate = dataForm.end_date
+                    // dataForm.type = ""
+                    dataForm.constraint_type = "asap"
+                    Gantt.updateTask(item.parent)
+                }
             }
         }
+        Gantt.sort("taskCode", false)
+        Gantt.sort("wbsCode", false)
         // nextTick(() => {
         //     // 删除表头添加按钮
         //     document.querySelector(".gantt_grid_head_add").style.display = "none";
@@ -985,7 +998,8 @@ function dynamicData() {
 
     // 自定义删除按钮
     Gantt.attachEvent("onLightbox", function(id){
-        if (typeof id === "string" && Gantt.getTask(id).type !== "project") {
+        // if (typeof id === "string" && Gantt.getTask(id).type !== "project") {
+        if (typeof id === "string") {
             const btnSet = document.querySelector(".gantt_cal_lcontrols_push_right");
             const haveBtn = document.querySelector(".custom-delete-btn");
             if (btnSet && !haveBtn) {
@@ -1053,6 +1067,7 @@ function _inConfigColumns() {
     Gantt.attachEvent("onAfterTaskUpdate", function(id, task) {
         const startDate = task.start_date
         const endDate = task.end_date
+        task.targetDrtnHrCnt = task.duration
         task.targetStartDate = startDate && `${startDate.getFullYear()}-${(startDate.getMonth()+1).toString().padStart(2, '0')}-${startDate.getDate().toString().padStart(2, '0')}` || ""
         task.targetEndDate = endDate && `${endDate.getFullYear()}-${(endDate.getMonth()+1).toString().padStart(2, '0')}-${endDate.getDate().toString().padStart(2, '0')}` || ""
         task.start_date = new Date(`${task.targetStartDate} 09:00:00`)
@@ -1087,7 +1102,7 @@ function _inConfigColumns() {
         { name: "add", label: "" },
         // { name: "projectId", label: "项目ID", tree: true },
         // editor: {type: "text", map_to: "wbsCode"}   表格编辑框
-        { name: "firstItem", label: "编码", align: "left", template: firstItemLabel, tree: true, resize: true },
+        { name: "firstItem", width: 200, label: "编码", align: "left", template: firstItemLabel, tree: true, resize: true },
         { name: "wbsCode", label: "WBS编码", align: "center", template: wbsCodeLabel, resize: true },
         // { name: "taskCode", label: "作业编码", align: "center", template: taskCodeLabel, resize: true },
         // { name: "wbs", label: "WBS", template: Gantt.getWBSCode }, // 插件自带WBS编码
@@ -1101,23 +1116,23 @@ function _inConfigColumns() {
         { name: "end_date", label: "完成时间", align: "center", min_width: 100, resize: true },
         { name: "taskOwner", label: "作业负责人", align: "center", editor: {type: "select", map_to: "taskOwner", options:Gantt.serverList("taskOwnerOptions")}, template: taskOwnerLabel, resize: true },
         { name: "taskPosition", label: "作业负责岗位", align: "center", resize: true },
-        { name: "taskMilestoneType", label: "里程碑类型", align: "center", hide: true, editor: {type: "select", map_to: "taskMilestoneType", options:Gantt.serverList("taskMilestoneTypeOptions")}, resize: true },
-        { name: "constraint_type", label: "作业约束类型", align: "center", hide: true, editor: {type: "select", map_to: "constraint_type", options:Gantt.serverList("constraint_type_option")}, template: constraint_type_label, resize: true },
-        { name: "constraint_date", label: "作业约束日期", align: "center", hide: true, editor: {type: "date", map_to: "constraint_date", min: new Date(2025, 1, 1), max: new Date(2026, 1, 1)}, min_width: 100, resize: true },
-        { name: "taskPhase", label: "作业阶段", align: "center", hide: true, editor: {type: "select", map_to: "taskPhase", options:Gantt.serverList("taskPhaseOptions")}, resize: true },
+        { name: "taskMilestoneType", label: "里程碑类型", align: "center", editor: {type: "select", map_to: "taskMilestoneType", options:Gantt.serverList("taskMilestoneTypeOptions")}, resize: true },
+        { name: "constraint_type", label: "作业约束类型", align: "center", editor: {type: "select", map_to: "constraint_type", options:Gantt.serverList("constraint_type_option")}, template: constraint_type_label, resize: true },
+        { name: "constraint_date", label: "作业约束日期", align: "center", editor: {type: "date", map_to: "constraint_date", min: new Date(2025, 1, 1), max: new Date(2026, 1, 1)}, min_width: 100, resize: true },
+        { name: "taskPhase", label: "作业阶段", align: "center", editor: {type: "select", map_to: "taskPhase", options:Gantt.serverList("taskPhaseOptions")}, resize: true },
         { name: "targetStartDate", label: "计划开始", align: "center", editor: {type: "targetStartDate", map_to: "targetStartDate", min: new Date(2025, 1, 1), max: new Date(2026, 1, 1)}, min_width: 100, resize: true },
         { name: "targetDrtnHrCnt", label: "计划工期", align: "center", editor: {type: "targetDrtnHrCnt", map_to: "targetDrtnHrCnt"}, resize: true },
         { name: "targetEndDate", label: "计划完成", align: "center", min_width: 100, resize: true },
-        { name: "actStartDate", label: "实际开始", align: "center", hide: true, editor: {type: "date", map_to: "actStartDate", min: new Date(2025, 1, 1), max: new Date(2026, 1, 1)}, template: actStartDateLabel, min_width: 100, resize: true },
-        { name: "actWorkQty", label: "实际工期", align: "center", hide: true, editor: {type: "number", map_to: "actWorkQty"}, template: actWorkQtyLabel, resize: true },
-        { name: "remainDrtnHrCnt", label: "尚需工期", align: "center", hide: true, editor: {type: "number", map_to: "remainDrtnHrCnt"}, resize: true },
-        { name: "actEndDate", label: "实际完成", align: "center", hide: true, min_width: 100, resize: true },
-        { name: "freeFloatHrCnt", label: "自由浮时", align: "center", hide: true, resize: true, template: freeFloatHrCntLabel },
-        { name: "totalFloatHrCnt", label: "总浮时", align: "center", hide: true, resize: true, template: totalFloatHrCntLabel },
-        // taskComplete
-        { name: "progress", label: "完成百分比", align: "center", hide: true, template: function(task) {
+        { name: "actStartDate", label: "实际开始", align: "center", editor: {type: "date", map_to: "actStartDate", min: new Date(2025, 1, 1), max: new Date(2026, 1, 1)}, template: actStartDateLabel, min_width: 100, resize: true },
+        { name: "progress", label: "完成百分比", align: "center", template: function(task) {
             return Math.round(task.progress * 100) + "%";
         }, editor: {type: "number", map_to: "progress", min:0, max: 100}},
+        { name: "actWorkQty", label: "实际工期", align: "center", editor: {type: "number", map_to: "actWorkQty"}, template: actWorkQtyLabel, resize: true },
+        { name: "remainDrtnHrCnt", label: "尚需工期", align: "center", editor: {type: "number", map_to: "remainDrtnHrCnt"}, resize: true },
+        { name: "actEndDate", label: "实际完成", align: "center", min_width: 100, resize: true },
+        { name: "freeFloatHrCnt", label: "自由浮时", align: "center", resize: true, template: freeFloatHrCntLabel },
+        { name: "totalFloatHrCnt", label: "总浮时", align: "center", resize: true, template: totalFloatHrCntLabel },
+        // taskComplete
         // { name: "add", label: "", hide: true }
     ];
     Gantt.ext.inlineEditors.attachEvent("onEditStart", function (state) {
@@ -1205,7 +1220,7 @@ function _inConfigColumns() {
         }
     }
     Gantt.config.editor_types.text.get_input = (e) => {
-        return e.querySelector("input") || {value: projectCode}
+        return e.querySelector("input") || {value: projectName}
     }
     // Gantt.config.editor_types.date.get_value = (value, id, column, node) => {
     //     var currentValue = this.get_value(id, column, node);
@@ -1452,9 +1467,11 @@ function calculateSummaryProgress(task) {
     else return totalDone / totalToDo;
 }
 const projectCode = window.parent._P && window.parent._P.shell_info && window.parent._P.shell_info.shellnumber || "A-DLS-1-01"
+const projectName = window.parent._P && window.parent._P.shell_info && window.parent._P.shell_info.shellname || "测试项目"
 // 表格框修改数据
 function firstItemLabel(task) {
     task.wbsCode = task.wbsCode || ""
+    task.taskCode = task.type === "project" ? "" : task.taskCode
     return `${task.taskCode && `A${task.taskCode.padStart(4, '0')}` || projectCode + (task.wbsCode && task.wbsCode || "") }`
 }
 function wbsCodeLabel(task) {
@@ -1530,7 +1547,7 @@ function updateCriticalPath() {
 // 鼠标拖动时间轴
 function onDragEnd(startPoint, endPoint, startDate, endDate, tasksBetweenDates, tasksInRow) {
     if (tasksInRow.length === 1) {
-        var currentTask = tasksInRow[0];
+        let currentTask = tasksInRow[0];
         if (currentTask.type === "project") {
             currentTask.render = "split";
             Gantt.addTask({
@@ -1539,9 +1556,9 @@ function onDragEnd(startPoint, endPoint, startDate, endDate, tasksBetweenDates, 
                 end_date: Gantt.roundDate(endDate)
             }, currentTask.id);
         } else {
-            var projectName = "new Project " + currentTask.text;
-            var newProject = Gantt.addTask({
-                text: projectName,
+            let projectNameText = "new Project " + currentTask.text;
+            let newProject = Gantt.addTask({
+                text: projectNameText,
                 render: "split",
                 type: "project",
             }, currentTask.parent);
@@ -1549,8 +1566,8 @@ function onDragEnd(startPoint, endPoint, startDate, endDate, tasksBetweenDates, 
             Gantt.moveTask(currentTask.id, 0, newProject);
             Gantt.calculateTaskLevel(currentTask)
 
-            var newTask = Gantt.addTask({
-                text: "Subtask of " + projectName,
+            let newTask = Gantt.addTask({
+                text: "Subtask of " + projectNameText,
                 start_date: Gantt.roundDate(startDate),
                 end_date: Gantt.roundDate(endDate)
             }, newProject);
@@ -1602,10 +1619,10 @@ const exportTo = (command) => {
 // gantt.exportToPNG({ skin:"dark" })broadway skyblue material
 // 导出文件
 function exportToPDF() {
-    Gantt.exportToPDF()
+    Gantt.exportToPDF({server: "https://dls.4dlp.com.cn:7102/export/gantt"})
 }
 function exportToExcel() {
-    Gantt.exportToExcel()
+    Gantt.exportToExcel({server: "https://dls.4dlp.com.cn:7102/export/gantt"})
 }
 
 
@@ -1644,16 +1661,22 @@ function uploadProject(file, callback) {
         server:"https://dls.4dlp.com.cn:7102/import/",
         data: file,
         taskProperties: [
-            "Summary",
-            "Milestone",
+            "ID",
+            "WBS",
+            "ActivityID",
+            "Type",
         ],
         callback: function (project) {
+            console.log(project)
             if (project) {
                 Gantt.clearAll();
-                if (project.config.duration_unit) {
-                    Gantt.config.duration_unit = project.config.duration_unit;
-                }
+                // if (project.config.duration_unit) {
+                //     Gantt.config.duration_unit = project.config.duration_unit;
+                // }
                 project.data.data.forEach(el => {
+                    if(el.parent < 1) el.text = projectName
+                    el.taskCode = el.$custom_data.ID && (el.$custom_data.ID + 0)
+                    el.wbsCode = el.$custom_data.WBS && el.$custom_data.WBS.split('').splice(1).join('')
                     el.targetDrtnHrCnt = el.duration
                     el.targetStartDate = el.start_date && el.start_date.substring(0, 10) || ""
                     if(el.targetDrtnHrCnt > 0) {
@@ -1662,8 +1685,15 @@ function uploadProject(file, callback) {
                     } else {
                         el.type = "milestone"
                     }
+                    if(el.$custom_data.Type === "FIXED_UNITS") {
+                        let wbsCodeList = el.wbsCode.split('.')
+                        wbsCodeList.pop()
+                        el.wbsCode = wbsCodeList.join('.')
+                        el.taskStatus = "未开始"
+                    }
                 })
                 Gantt.parse(project.data);
+                Gantt.sort("firstItem", true)
                 fileDnD.hideOverlay();
                 loading.value = false
             } else {
@@ -1701,17 +1731,30 @@ function uploadP6(file, callback) {
         server:"https://dls.4dlp.com.cn:7102/import/",
         data: file,
         taskProperties: [
+            "ID",
+            "WBS",
+            "ActivityStatus",
+            "ActivityID",
             "Summary",
             "Milestone",
         ],
         callback: function (project) {
             console.log(project)
             if (project) {
-                Gantt.clearAll();
-                if (project.config.duration_unit) {
-                    Gantt.config.duration_unit = project.config.duration_unit;
+                const ActivityStatusList = {
+                    NOT_STARTED: "未开始",
+                    IN_PROGRESS: "进行中",
+                    COMPLETED: "已完成"
                 }
+                Gantt.clearAll();
+                // if (project.config.duration_unit) {
+                //     Gantt.config.duration_unit = project.config.duration_unit;
+                // }
                 project.data.data.forEach(el => {
+                    if(el.parent < 1) el.text = projectName
+                    el.taskStatus = el.$custom_data.ActivityStatus && ActivityStatusList[el.$custom_data.ActivityStatus]
+                    el.taskCode = el.$custom_data.ActivityID && el.$custom_data.ActivityID.split('').splice(1).join('')
+                    el.wbsCode = el.$custom_data.WBS && el.$custom_data.WBS.split('.').splice(1).join('.') && `.${el.$custom_data.WBS.split('.').splice(1).join('.')}`
                     el.targetDrtnHrCnt = el.duration
                     el.targetStartDate = el.start_date && el.start_date.substring(0, 10) || ""
                     if(el.targetDrtnHrCnt > 0) {
@@ -1722,6 +1765,7 @@ function uploadP6(file, callback) {
                     }
                 })
                 Gantt.parse(project.data);
+                Gantt.sort("firstItem", true)
                 fileDnD.hideOverlay();
                 loading.value = false
             } else {
