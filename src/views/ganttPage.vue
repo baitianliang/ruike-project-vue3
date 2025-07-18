@@ -58,11 +58,11 @@
 import { ArrowDown } from '@element-plus/icons-vue'
 import Gantt from "../utils/gantt/dhtmlxgantt.js";
 import { fileDragAndDrop } from "../utils/gantt/snippets/dhx_file_dnd.js";
-import { nextTick, onMounted, onUnmounted, reactive, ref, useTemplateRef } from 'vue';
-import { ElMessage, ElMessageBox } from "element-plus";
+import { h, nextTick, onMounted, onUnmounted, reactive, ref, render, useTemplateRef } from 'vue';
+import { ElSelect, ElOption, ElMessage, ElMessageBox } from "element-plus";
 import axios from "../assets/axios/GanttPage.js"
 const ganttDom = useTemplateRef('gantt')
-const loading = ref(true)
+const loading = ref(false)
 let projectId = ""
 let userName = window.parent._P ? window.parent._P.userId || '测试' : '测试'
 // 甘特图数据和线的数据和基线数据
@@ -184,8 +184,8 @@ async function getGanttData() {
     taskPhaseOptions.forEach(el => {
         el.label = el.key
     })
-    taskOwnerOptions = [ {key: '', CRRC_USER_QM: ''}, ...option2.data.data ]
-    taskOwnerOptions.forEach(el => {
+    taskOwnerOptions.value = [ {key: '', CRRC_USER_QM: ''}, ...option2.data.data ]
+    taskOwnerOptions.value.forEach(el => {
         el.label = el.CRRC_USER_QM
     })
     const res = await axios.getGanttData(projectId)
@@ -196,14 +196,16 @@ async function getGanttData() {
     // tasks.baselines = []
     // tasks.links = []
     if(tasks.data.length < 1) {
-        tasks.data.push({
+        const nowDate = new Date()
+        const endDate = new Date(nowDate.setDate(nowDate.getDate() + 5));
+        tasks.data = [{
             id: 1,
-            text: projectCode || "新项目",
+            text: projectName || "新项目",
             open: true,
-            type: "project",
+            type: "task",
             wbsCode: "",
-            taskCode: "",
-            taskType: "WBS",
+            taskCode: "10",
+            taskType: "",
             taskMilestoneType: "",
             constraint_type: "",
             constraint_date: "",
@@ -211,18 +213,19 @@ async function getGanttData() {
             taskPhase: "",
             taskPosition: "",
             taskOwner: "",
-            targetStartDate: "",
-            targetDrtnHrCnt: "",
-            targetEndDate: "",
+            targetStartDate: `${nowDate.getFullYear()}-${(nowDate.getMonth()+1).toString().padStart(2, '0')}-${nowDate.getDate().toString().padStart(2, '0')}`,
+            targetDrtnHrCnt: 5,
+            targetEndDate: endDate,
             actStartDate: "",
             actWorkQty: "",
             remainDrtnHrCnt: "",
             actEndDate: "",
-            freeFloatHrCnt: "自由浮时1",
-            totalFloatHrCnt: "总浮时1",
-            taskComplete: "20",
-            progress: '0.2'
-        })
+            freeFloatHrCnt: "0",
+            totalFloatHrCnt: "0",
+            progress: 0,
+            taskConstraintDate: null,
+            taskConstraintType: null,
+        }]
     }
     // projectId = window.location.href.split("=")[1]
     tasks.data.forEach(el => {
@@ -612,7 +615,7 @@ const taskStatusOptions = [
 // 作业阶段
 let taskPhaseOptions = []
 // 作业负责人
-let taskOwnerOptions = []
+let taskOwnerOptions = ref([])
 // 约束类型
 const constraint_type_option = [
     { key: "", label: "" },
@@ -772,6 +775,7 @@ function deleteLink(){
     endPopup();
 }
 
+// 监听方法
 function dynamicData() {
     // 添加新任务
     // Gantt.attachEvent("onTaskCreated", function(task){
@@ -963,13 +967,10 @@ function dynamicData() {
     Gantt.attachEvent("onAfterTaskDelete", function(id, item){
         const obj = Gantt.serialize().data.find(el => el.parent === item.parent);
         if(item.parent > 0) {
-            Gantt.batchUpdate(function () {
-                calculatePlannedDates(item.parent)
-            })
             if(!obj) {
                 const dataForm = Gantt.getTask(item.parent)
-                if(dataForm.parent > 0) {
-                    dataForm.wbsCode = Gantt.getTask(dataForm.parent).wbsCode
+                // if(dataForm.parent > 0) {
+                    dataForm.wbsCode = (dataForm.parent > 0) && Gantt.getTask(dataForm.parent).wbsCode || ""
                     dataForm.taskCode = item.taskCode || item.parentTaskCode
                     // dataForm.taskType = "任务相关"
                     dataForm.type = "task"
@@ -980,13 +981,18 @@ function dynamicData() {
                     dataForm.taskPosition = ""
                     dataForm.taskOwner = ""
                     dataForm.targetStartDate = dataForm.start_date
-                    dataForm.targetDrtnHrCnt = dataForm.duration
-                    dataForm.targetEndDate = dataForm.end_date
+                    dataForm.targetDrtnHrCnt = dataForm.duration = 5
+                    dataForm.targetEndDate = new Date(new Date(dataForm.targetStartDate).getTime() + (dataForm.targetDrtnHrCnt * 24 * 60 * 60 * 1000))
+                    dataForm.end_date = Gantt.calculateEndDate({start_date: dataForm.start_date, duration: dataForm.targetDrtnHrCnt})
+                    // dataForm.targetEndDate = dataForm.end_date
                     // dataForm.type = ""
                     dataForm.constraint_type = "asap"
                     Gantt.updateTask(item.parent)
-                }
+                // }
             }
+            Gantt.batchUpdate(function () {
+                calculatePlannedDates(item.parent)
+            })
         }
         Gantt.sort("taskCode", false)
         Gantt.sort("wbsCode", false)
@@ -1061,7 +1067,7 @@ function _inConfigColumns() {
 	Gantt.serverList("taskMilestoneTypeOptions", taskMilestoneTypeOptions);
 	Gantt.serverList("taskStatusOptions", taskStatusOptions);
 	Gantt.serverList("taskPhaseOptions", taskPhaseOptions);
-	Gantt.serverList("taskOwnerOptions", taskOwnerOptions);
+	Gantt.serverList("taskOwnerOptions", taskOwnerOptions.value);
 	Gantt.serverList("constraint_type_option", constraint_type_option);
     // 修改数据后
     Gantt.attachEvent("onAfterTaskUpdate", function(id, task) {
@@ -1102,8 +1108,8 @@ function _inConfigColumns() {
         { name: "add", label: "" },
         // { name: "projectId", label: "项目ID", tree: true },
         // editor: {type: "text", map_to: "wbsCode"}   表格编辑框
-        { name: "firstItem", width: 200, label: "编码", align: "left", template: firstItemLabel, tree: true, resize: true },
-        { name: "wbsCode", label: "WBS编码", align: "center", template: wbsCodeLabel, resize: true },
+        { name: "firstItem", label: "编码", align: "left", min_width: 200, template: firstItemLabel, tree: true, resize: true },
+        { name: "wbsCode", label: "WBS编码", align: "center", min_width: 150, template: wbsCodeLabel, resize: true },
         // { name: "taskCode", label: "作业编码", align: "center", template: taskCodeLabel, resize: true },
         // { name: "wbs", label: "WBS", template: Gantt.getWBSCode }, // 插件自带WBS编码
         { name: "text", label: "作业名称", editor: {type: "text", map_to: "text"}, resize: true },
@@ -1114,7 +1120,7 @@ function _inConfigColumns() {
         { name: "start_date", label: "开始时间", align: "center", min_width: 100, resize: true },
         { name: "duration", label: "持续时间", align: "center", resize: true },
         { name: "end_date", label: "完成时间", align: "center", min_width: 100, resize: true },
-        { name: "taskOwner", label: "作业负责人", align: "center", editor: {type: "select", map_to: "taskOwner", options:Gantt.serverList("taskOwnerOptions")}, template: taskOwnerLabel, resize: true },
+        { name: "taskOwner", label: "作业负责人", align: "center", editor: {type: "taskOwnerSelect", map_to: "taskOwner", options:Gantt.serverList("taskOwnerOptions")}, template: taskOwnerLabel, resize: true },
         { name: "taskPosition", label: "作业负责岗位", align: "center", resize: true },
         { name: "taskMilestoneType", label: "里程碑类型", align: "center", editor: {type: "select", map_to: "taskMilestoneType", options:Gantt.serverList("taskMilestoneTypeOptions")}, resize: true },
         { name: "constraint_type", label: "作业约束类型", align: "center", editor: {type: "select", map_to: "constraint_type", options:Gantt.serverList("constraint_type_option")}, template: constraint_type_label, resize: true },
@@ -1289,6 +1295,50 @@ function _inConfigColumns() {
             if (!input) { return; }
             if (input.focus) { input.focus(); }
             if (input.select) { input.select(); }
+        }
+    }
+    let taskOwnerSelect = null
+    Gantt.config.editor_types.taskOwnerSelect = {
+        show: function (id, column, config, placeholder) {
+            let task = Gantt.getTask(id);
+            if(task.type !== "project") {
+                let node = document.createElement("div");
+                node.className = "gantt-task-type-editor";
+                taskOwnerSelect = task.taskOwner
+                // 创建select元素
+                const select = h(ElSelect, {
+                    modelValue: taskOwnerSelect,
+                    'onUpdate:modelValue': (val) => { this.set_value(val) },
+                    // 'onUpdate:modelValue': (val) => { this.set_value(val); task.taskOwner = val; Gantt.updateTask(task.id) },
+                    filterable: true,
+                    placeholder: '请选择'
+                }, taskOwnerOptions.value.map(item => h(ElOption, {
+                    key: item.key,
+                    label: item.label,
+                    value: item.key
+                })));
+                select.name = column.name
+                render(select, node)
+                placeholder.appendChild(node)
+            }
+        },
+        // hide: function () {},
+        set_value: function (value, id, column, node) {
+            taskOwnerSelect = value
+        },
+        get_value: function (id, column, node) {
+            let task = Gantt.getTask(id);
+            return taskOwnerSelect || task.taskType
+        },
+        is_changed: function (value, id, column, node) {
+            // var currentValue = this.get_value(id, column, node);
+            return true
+            return value !== taskOwnerSelect;
+        },
+        is_valid: function (value, id, column, node) {
+            return true
+        },
+        focus: function (node) {
         }
     }
     Gantt.config.editor_types.typeSelect = {
@@ -1637,6 +1687,7 @@ const importFrom = (command) => {
     }
 }
 const fileDnD = fileDragAndDrop()
+// 导入project文件
 function importProject() {
     // Gantt.importFromExcel({
     //     server:"https://https://dls.4dlp.com.cn:7102/import/",
@@ -1707,6 +1758,7 @@ function uploadProject(file, callback) {
         }
     });
 }
+// 导入P6文件
 function importP6() {
     // Gantt.importFromExcel({
     //     server:"https://https://dls.4dlp.com.cn:7102/import/",
