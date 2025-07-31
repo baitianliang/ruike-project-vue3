@@ -306,7 +306,7 @@ let modal;
 let editLinkId;
 
 onMounted(() => {
-    projectId = window.parent._P ? window.parent._P.projectId || '1010' : '1010'
+    projectId = window.parent._P ? window.parent._P.projectId || '1085' : '1085'
     getGanttData()
 })
 onUnmounted(() => {
@@ -317,16 +317,16 @@ onUnmounted(() => {
 })
 
 async function getGanttData() {
-    // const option1 = await axios.getOptionsList({projectId, type: 'taskPhase'})
-    // const option2 = await axios.getOptionsList({projectId, type: 'taskPosition'})
-    // taskPhaseOptions = [ {key: '', label: ''}, ...option1.data.data ]
-    // taskPhaseOptions.forEach(el => {
-    //     el.label = el.key
-    // })
-    // taskOwnerOptions.value = [ {key: '', CRRC_USER_QM: ''}, ...option2.data.data ]
-    // taskOwnerOptions.value.forEach(el => {
-    //     el.label = el.CRRC_USER_QM
-    // })
+    const option1 = await axios.getOptionsList({projectId, type: 'taskPhase'})
+    const option2 = await axios.getOptionsList({projectId, type: 'taskPosition'})
+    taskPhaseOptions = [ {key: '', label: ''}, ...option1.data.data ]
+    taskPhaseOptions.forEach(el => {
+        el.label = el.key
+    })
+    taskOwnerOptions.value = [ {key: '', CRRC_USER_QM: ''}, ...option2.data.data ]
+    taskOwnerOptions.value.forEach(el => {
+        el.label = el.CRRC_USER_QM
+    })
     const res = await axios.getGanttData(projectId)
     tasks.data = res.data.data.data
     tasks.baselines = res.data.data.baselines
