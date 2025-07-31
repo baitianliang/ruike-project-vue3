@@ -14,5 +14,21 @@ export default {
     // 获取字典
     getOptionsList(val) {
         return axios.get(`gantt/dictionaries?projectId=${val.projectId}&type=${val.type}`)
+    },
+    // 获取日历列表
+    getCalendarList(projectId) {
+        return axios.get(`gantt/active?projectId=${projectId}`)
+    },
+    // 保存日历
+    saveCalendar(query) {
+        return axios.post(`gantt/saveOrUpdate`, query)
+    },
+    // 删除日历
+    deleteCalendar(id) {
+        return axios.post(`gantt/delete?id=${id}`)
+    },
+    // 使用日历
+    useCalendar(query) {
+        return axios.post(`gantt/enableSaving`, query)
     }
 }

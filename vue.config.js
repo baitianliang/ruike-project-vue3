@@ -10,6 +10,7 @@ module.exports = defineConfig({
     proxy: {
       '/api': {
         target: 'https://dls.4dlp.com.cn:7102/dls-strengthen/',
+        // target: 'http://192.168.2.173:8092/dls-strengthen/',
         changeOrigin: true,
         pathRewrite: {
             '^/api': '',

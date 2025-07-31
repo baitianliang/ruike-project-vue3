@@ -1,38 +1,52 @@
 <template>
 <!-- <div style="height: 100%;"> -->
 <div v-loading="loading" style="height: 100%;">
-    <div style="height: 40px; display: flex; justify-content: center; align-items: center">
-        <el-button @click="undo">撤销</el-button>
-        <el-button @click="redo">恢复撤销</el-button>
-        <el-button @click="zoomIn">减小范围</el-button>
-        <el-button @click="zoomOut">增大范围</el-button>
-        <el-button @click="updateCriticalPath">{{ criticalPathText }}</el-button>
-        <el-dropdown style="margin: 0px 12px" @command="exportTo">
-            <el-button>
-                导出<el-icon class="el-icon--right"><ArrowDown /></el-icon>
-            </el-button>
-            <template #dropdown>
-            <el-dropdown-menu>
-                <el-dropdown-item command="PDF">导出到PDF</el-dropdown-item>
-                <el-dropdown-item command="Excel">导出到Excel</el-dropdown-item>
-            </el-dropdown-menu>
-            </template>
-        </el-dropdown>
-        <!-- <el-button @click="exportToPDF">导出到PDF</el-button>
-        <el-button @click="exportToExcel">导出到Excel</el-button> -->
-        <input type="file" id="file-upload" accept=".mpp,.xlsx,.xml,.xer,text/xml,application/xml,application/xer" />
-        <!-- <el-button @click="importFrom">渲染文件</el-button> -->
-        <el-dropdown style="margin: 0px 12px" @command="importFrom">
-            <el-button>
-                导入数据<el-icon class="el-icon--right"><ArrowDown /></el-icon>
-            </el-button>
-            <template #dropdown>
-            <el-dropdown-menu>
-                <el-dropdown-item command="Project">导入Project</el-dropdown-item>
-                <el-dropdown-item command="P6">导入P6</el-dropdown-item>
-            </el-dropdown-menu>
-            </template>
-        </el-dropdown>
+    <div style="height: 40px; margin: 0px 20px; display: flex; justify-content: space-between; align-items: center">
+        <div>
+            <el-button @click="undo"><el-icon><RefreshLeft /></el-icon></el-button>
+            <el-button @click="redo"><el-icon><RefreshRight /></el-icon></el-button>
+            <el-button @click="close"><el-icon><Folder /></el-icon></el-button>
+            <el-button @click="open"><el-icon><FolderOpened /></el-icon></el-button>
+            <el-button @click="updateCriticalPath"><el-icon><Key /></el-icon></el-button>
+            <el-select v-model="zoomValue" @change="changeZoom" style="width: 70px; margin-left: 12px">
+                <el-option
+                    v-for="(item, index) in zoomConfig.levels"
+                    :key="index"
+                    :label="item.label"
+                    :value="item.name"
+                />
+            </el-select>
+            <el-button style="margin-left: 12px" @click="showCalendar">项目日历</el-button>
+            <!-- <el-button @click="zoomIn">减小范围</el-button>
+            <el-button @click="zoomOut">增大范围</el-button>
+            <el-button @click="updateCriticalPath">{{ criticalPathText }}</el-button> -->
+            <el-dropdown style="margin: 0px 12px" @command="exportTo">
+                <el-button>
+                    导出<el-icon class="el-icon--right"><ArrowDown /></el-icon>
+                </el-button>
+                <template #dropdown>
+                <el-dropdown-menu>
+                    <el-dropdown-item command="PDF">导出到PDF</el-dropdown-item>
+                    <el-dropdown-item command="Excel">导出到Excel</el-dropdown-item>
+                </el-dropdown-menu>
+                </template>
+            </el-dropdown>
+            <!-- <el-button @click="exportToPDF">导出到PDF</el-button>
+            <el-button @click="exportToExcel">导出到Excel</el-button> -->
+            <input type="file" id="file-upload" accept=".mpp,.xlsx,.xml,.xer,text/xml,application/xml,application/xer" />
+            <!-- <el-button @click="importFrom">渲染文件</el-button> -->
+            <el-dropdown style="margin: 0px 12px" @command="importFrom">
+                <el-button>
+                    导入数据<el-icon class="el-icon--right"><ArrowDown /></el-icon>
+                </el-button>
+                <template #dropdown>
+                <el-dropdown-menu>
+                    <el-dropdown-item command="Project">导入Project</el-dropdown-item>
+                    <el-dropdown-item command="P6">导入P6</el-dropdown-item>
+                </el-dropdown-menu>
+                </template>
+            </el-dropdown>
+        </div>
         <el-button type="primary" @click="saveTask">保存数据</el-button>
     </div>
     <div style="height: calc(100% - 60px); margin: 20px; margin-top: 0px" ref="gantt"></div>
@@ -51,11 +65,125 @@
             <el-button type="primary" @click="saveTask">保存数据</el-button>
         </div>
     </el-card> -->
+    <el-dialog
+        v-model="dialogVisible"
+        title="日历管理"
+        width="1500"
+        :before-close="handleClose"
+        :close-on-click-modal="false">
+        <el-card shadow="never">
+            <div class="gantt-calendar">
+                <div class="gantt-calendar-left">
+                    <div class="gantt-calendar-left-header">
+                        <el-icon><Calendar /></el-icon>
+                        <div>日历管理</div>
+                        <el-button @click="showAddCalendar">添加项目日历</el-button>
+                    </div>
+                    <div class="gantt-calendar-left-body" v-for="(item, name, index) of calendarData" :key="index">
+                        <div class="gantt-calendar-left-body-title" v-if="name === 'allCalendar'"><el-icon><Tools /></el-icon>全局日历</div>
+                        <div class="gantt-calendar-left-body-title" v-if="name === 'projectCalendar' && item.length"><el-icon><Folder /></el-icon>项目日历</div>
+                        <div @click="showCalendarDetail(_item)" class="gantt-calendar-left-body-item" :class="_item.id === calendarDetail.id ? 'active' : ''" v-for="(_item, index) in item" :key="index">
+                            <div class="gantt-calendar-left-body-item-top">
+                                <div>{{ _item.name }}</div>
+                                <div v-if="_item.id === calendarId" class="gantt-calendar-left-body-item-top-buttons selected">
+                                    <div v-if="name === 'allCalendar'"><el-icon><Tools /></el-icon>使用中</div>
+                                    <div v-if="name === 'projectCalendar'"><el-icon><Folder /></el-icon>使用中</div>
+                                </div>
+                                <div v-else class="gantt-calendar-left-body-item-top-buttons" :class="name === 'projectCalendar' ? 'projectCalendar-buttons' : ''">
+                                    <div v-if="name === 'allCalendar'"><el-icon><Tools /></el-icon>全局</div>
+                                    <div v-if="name === 'projectCalendar'"><el-icon><Folder /></el-icon>项目</div>
+                                    <el-button @click="selectCalendar(_item)">使用</el-button>
+                                    <el-button @click.stop="deleteCalendar(_item)" v-if="name === 'projectCalendar'" type="danger" :icon="Delete" link></el-button>
+                                </div>
+                            </div>
+                            <div class="gantt-calendar-left-body-item-bottom">
+                                <el-tag :type="_item.workWeek === 'seven' ? 'success' : 'info'">日</el-tag>
+                                <el-tag type="success">一</el-tag>
+                                <el-tag type="success">二</el-tag>
+                                <el-tag type="success">三</el-tag>
+                                <el-tag type="success">四</el-tag>
+                                <el-tag type="success">五</el-tag>
+                                <el-tag :type="_item.workWeek === 'seven' ? 'success' : 'info'">六</el-tag>
+                            </div>
+                            <div class="gantt-calendar-left-body-item-special" v-if="name === 'projectCalendar' && _item.calendarList.length">特殊日期：{{ _item.calendarList.length }}个</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="gantt-calendar-right">
+                    <div class="gantt-calendar-right-header">
+                        <div>
+                            <el-icon v-if="calendarDetail.calendarList"><Folder /></el-icon>
+                            <el-icon v-else><Tools /></el-icon>
+                            <div>
+                                <div>{{ calendarDetail.name }}</div>
+                                <div v-if="calendarDetail.calendarList">项目日历（可编辑）</div>
+                                <div v-else>全局日历（不可编辑）</div>
+                            </div>
+                        </div>
+                        <div>
+                            <el-button @click="selectCalendar(calendarDetail)">设为项目日历</el-button>
+                            <el-button v-if="calendarDetail.calendarList" type="primary" @click="editCalendar"><el-icon><FolderChecked /></el-icon>保存</el-button>
+                        </div>
+                    </div>
+                    <el-calendar
+                        ref="calendar">
+                        <template #header="{ date }">
+                            <el-button link @click="selectDate('prev-month')"><el-icon><ArrowLeft /></el-icon></el-button>
+                            <span>{{ date }}</span>
+                            <el-button link @click="selectDate('next-month')"><el-icon><ArrowRight /></el-icon></el-button>
+                        </template>
+                        <template #date-cell="{ data }">
+                            <div @click="chooseDate(calendarDetail, data.day)" :class="['calendar-day', isWeekend(calendarDetail, data.day) ? 'weekend' : '']">
+                                {{ Number(data.day.split('-').slice(2).join('-')) }}
+                            </div>
+                        </template>
+                    </el-calendar>
+                    <div class="gantt-calendar-right-footer">
+                        <div class="gantt-calendar-right-footer-title">图例说明:</div>
+                        <div class="gantt-calendar-right-footer-item">
+                            <el-tag type="success"></el-tag>
+                            <div>工作日</div>
+                            <el-tag type="info"></el-tag>
+                            <div>休息日</div>
+                        </div>
+                        <div>点击日期在 工作日→休息日→常规状态 之间切换</div>
+                    </div>
+                </div>
+            </div>
+        </el-card>
+        <el-dialog
+            v-model="innerVisible"
+            width="500"
+            title="添加项目日历"
+            :close-on-click-modal="false"
+            append-to-body
+            top="40vh">
+            <div style="width: 300px; margin: 30px auto;">
+                <el-form ref="form" label-position="left" :model="calendarForm" label-width="100px">
+                    <el-form-item label="日历名称">
+                        <el-input v-model="calendarForm.name"></el-input>
+                    </el-form-item>
+                    <el-form-item label="工作制">
+                        <el-select v-model="calendarForm.workWeek">
+                            <el-option label="7天工作制" value="seven"></el-option>
+                            <el-option label="5天工作制" value="five"></el-option>
+                        </el-select>
+                    </el-form-item>
+                </el-form>
+            </div>
+            <template #footer>
+                <div class="dialog-footer">
+                    <el-button @click="clearCalendarForm">取消</el-button>
+                    <el-button type="primary" @click="addCalendar">添加</el-button>
+                </div>
+            </template>
+        </el-dialog>
+    </el-dialog>
 </div>
 </template>
 
 <script setup>
-import { ArrowDown } from '@element-plus/icons-vue'
+import { Folder, FolderOpened, RefreshLeft, RefreshRight, Key, ArrowDown, ArrowLeft, ArrowRight, Tools, FolderChecked, Calendar, Delete } from '@element-plus/icons-vue'
 import Gantt from "../utils/gantt/dhtmlxgantt.js";
 import { fileDragAndDrop } from "../utils/gantt/snippets/dhx_file_dnd.js";
 import { h, nextTick, onMounted, onUnmounted, reactive, ref, render, useTemplateRef } from 'vue';
@@ -104,19 +232,22 @@ const tasks = reactive({
         { id: 2, task_id: 2, start_date: "25-07-2025 00:00:00", duration: 2 },
     ],
 })
+let zoomValue = ref('day')
 // 时间范围配置
 const zoomConfig = {
     levels: [
         {
             name:"day",
+            label: "日",
             scale_height: 27,
             min_column_width:80,
             scales:[
-                {unit: "day", step: 1, format: "%d %M"}
+                {unit: "day", step: 1, format: "%d %M", css: checkHighlight}
             ]
         },
         {
             name:"week",
+            label: "周",
             scale_height: 50,
             min_column_width:50,
             scales:[
@@ -126,11 +257,12 @@ const zoomConfig = {
                     var weekNum = Gantt.date.date_to_str("%W")(date);
                     return "#" + weekNum + ", " + dateToStr(date) + " - " + dateToStr(endDate);
                 }},
-                {unit: "day", step: 1, format: "%j %D"}
+                {unit: "day", step: 1, format: "%j %D", css: checkHighlight}
             ]
         },
         {
             name:"month",
+            label: "月",
             scale_height: 50,
             min_column_width:120,
             scales:[
@@ -140,6 +272,7 @@ const zoomConfig = {
         },
         {
             name:"quarter",
+            label: "季",
             height: 50,
             min_column_width:90,
             scales:[
@@ -155,13 +288,19 @@ const zoomConfig = {
         },
         {
             name:"year",
+            label: "年",
             scale_height: 50,
             min_column_width: 30,
             scales:[
                 {unit: "year", step: 1, format: "%Y"}
             ]
         }
-    ]
+    ],
+    useKey: "ctrlKey",
+    trigger: "wheel",
+    element: function () {
+        return Gantt.$root.querySelector(".gantt_task");
+    }
 };
 let modal;
 let editLinkId;
@@ -178,16 +317,16 @@ onUnmounted(() => {
 })
 
 async function getGanttData() {
-    const option1 = await axios.getOptionsList({projectId, type: 'taskPhase'})
-    const option2 = await axios.getOptionsList({projectId, type: 'taskPosition'})
-    taskPhaseOptions = [ {key: '', label: ''}, ...option1.data.data ]
-    taskPhaseOptions.forEach(el => {
-        el.label = el.key
-    })
-    taskOwnerOptions.value = [ {key: '', CRRC_USER_QM: ''}, ...option2.data.data ]
-    taskOwnerOptions.value.forEach(el => {
-        el.label = el.CRRC_USER_QM
-    })
+    // const option1 = await axios.getOptionsList({projectId, type: 'taskPhase'})
+    // const option2 = await axios.getOptionsList({projectId, type: 'taskPosition'})
+    // taskPhaseOptions = [ {key: '', label: ''}, ...option1.data.data ]
+    // taskPhaseOptions.forEach(el => {
+    //     el.label = el.key
+    // })
+    // taskOwnerOptions.value = [ {key: '', CRRC_USER_QM: ''}, ...option2.data.data ]
+    // taskOwnerOptions.value.forEach(el => {
+    //     el.label = el.CRRC_USER_QM
+    // })
     const res = await axios.getGanttData(projectId)
     tasks.data = res.data.data.data
     tasks.baselines = res.data.data.baselines
@@ -197,14 +336,14 @@ async function getGanttData() {
     // tasks.links = []
     if(tasks.data.length < 1) {
         const nowDate = new Date()
-        const endDate = new Date(nowDate.setDate(nowDate.getDate() + 5));
+        // const endDate = new Date(nowDate.setDate(nowDate.getDate() + 5));
         tasks.data = [{
             id: 1,
             text: projectName || "新项目",
             open: true,
             type: "task",
             wbsCode: "",
-            taskCode: "10",
+            taskCode: "0010",
             taskType: "",
             taskMilestoneType: "",
             constraint_type: "",
@@ -215,7 +354,7 @@ async function getGanttData() {
             taskOwner: "",
             targetStartDate: `${nowDate.getFullYear()}-${(nowDate.getMonth()+1).toString().padStart(2, '0')}-${nowDate.getDate().toString().padStart(2, '0')}`,
             targetDrtnHrCnt: 5,
-            targetEndDate: endDate,
+            // targetEndDate: endDate,
             actStartDate: "",
             actWorkQty: "",
             remainDrtnHrCnt: "",
@@ -232,7 +371,7 @@ async function getGanttData() {
         el.open = true
         el.targetStartDate = el.targetStartDate && el.targetStartDate.substring(0, 10) || ""
         // el.targetEndDate = el.targetEndDate.substring(0, 10)
-        el.targetEndDate = el.targetStartDate && el.targetDrtnHrCnt && new Date(new Date(el.targetStartDate).getTime() + (el.targetDrtnHrCnt * 24 * 60 * 60 * 1000)) || ""
+        el.targetEndDate = el.targetStartDate && el.targetDrtnHrCnt && Gantt.calculateEndDate({start_date: new Date(el.targetStartDate), duration: el.targetDrtnHrCnt}) || ""
         // el.start_date = el.targetStartDate && `${el.targetStartDate.substring(8, 10)}-${el.targetStartDate.substring(5, 7)}-${el.targetStartDate.substring(0, 4)} 09:00:00` || el.start_date
         el.start_date = el.targetStartDate && `${el.targetStartDate} 09:00:00` || el.start_date
         el.duration = el.targetDrtnHrCnt || el.duration
@@ -241,6 +380,7 @@ async function getGanttData() {
         }
     })
     _initGanttEvents()
+    setCalendarConfig(res.data.data.calendars[0])
 }
 
 function _initGanttEvents() {
@@ -253,7 +393,7 @@ function _initGanttEvents() {
         tooltip: true,
         export_api: true
 	});
-    Gantt.config.auto_scheduling = false;
+    Gantt.config.auto_scheduling = true;
     // Gantt.config.scale_unit = "day";
     // Gantt.config.date_scale = "%Y年%m月%d日";
     // 动态配置表头
@@ -264,6 +404,9 @@ function _initGanttEvents() {
     _inBaselines()
     // 修改外观
     // _inClassic()
+    Gantt.templates.timeline_cell_class = function (task, date) {
+        return checkHighlight(date, task)
+    };
     // 初始化导出
     _inExport()
     // 初始化双击线
@@ -347,7 +490,7 @@ function _initGanttEvents() {
         Gantt.config.buttons_left = [];
     });
     // 工作日
-    // Gantt.config.work_time = true;
+    Gantt.config.work_time = true;
 	Gantt.config.details_on_create = false
     // 动态时间轴
 	Gantt.ext.zoom.init(zoomConfig);
@@ -392,7 +535,7 @@ function _initGanttEvents() {
 }
 
 function calculatePlannedDates(parentId) {
-    const parent = Gantt.getTask(parentId);
+    const parent = Gantt.getTask(parentId); 
     // parent.targetStartDate = null;
     // parent.targetEndDate = null;
     if(parent) {
@@ -406,9 +549,11 @@ function calculatePlannedDates(parentId) {
     
             parent.targetStartDate = new Date(parent.targetStartDate).getTime() > new Date(child.targetStartDate).getTime() ? child.targetStartDate : parent.targetStartDate
             parent.targetEndDate = new Date(parent.targetEndDate).getTime() < new Date(child.targetEndDate).getTime() ? child.targetEndDate : parent.targetEndDate
+
             // parent.targetStartDate = Math.min(parent.targetStartDate, child.targetStartDate)
             // parent.targetEndDate = Math.max(parent.targetEndDate, child.targetEndDate)
         }, parentId);
+        parent.targetDrtnHrCnt = (new Date(parent.targetEndDate).getTime() - new Date(parent.targetStartDate).getTime()) / (24 * 60 * 60 * 1000)
         Gantt.updateTask(parentId)
     }
 }
@@ -942,7 +1087,7 @@ function dynamicData() {
                 task.targetDrtnHrCnt = 5
                 task.duration = 5
                 task.targetStartDate = `${startDate.getFullYear()}-${(startDate.getMonth()+1).toString().padStart(2, '0')}-${startDate.getDate().toString().padStart(2, '0')}`
-                task.targetEndDate = new Date(new Date(task.targetStartDate).getTime() + (task.targetDrtnHrCnt * 24 * 60 * 60 * 1000))
+                task.targetEndDate = Gantt.calculateEndDate({start_date: new Date(task.targetStartDate), duration: task.duration})
                 task.end_date = Gantt.calculateEndDate({start_date: startDate, duration: task.targetDrtnHrCnt})
                 const childData = taskList.filter(el => el.parent === task.parent)[0]
                 if(taskList.filter(el => el.parent == childData.id).length < 1) {
@@ -952,7 +1097,7 @@ function dynamicData() {
                 // const endDate = task.targetEndDate
                 // task.end_date = `${endDate.getFullYear()}-${(endDate.getMonth()+1).toString().padStart(2, '0')}-${endDate.getDate().toString().padStart(2, '0')}`
             }
-            task.taskCode = `${Math.max(...taskCodeList)}`
+            task.taskCode = `${Math.max(...taskCodeList)}`.padStart(4, '0')
             // nextTick(() => {
             //     // 删除表头添加按钮
             //     document.querySelector(".gantt_grid_head_add").style.display = "none";
@@ -982,7 +1127,7 @@ function dynamicData() {
                     dataForm.taskOwner = ""
                     dataForm.targetStartDate = dataForm.start_date
                     dataForm.targetDrtnHrCnt = dataForm.duration = 5
-                    dataForm.targetEndDate = new Date(new Date(dataForm.targetStartDate).getTime() + (dataForm.targetDrtnHrCnt * 24 * 60 * 60 * 1000))
+                    dataForm.targetEndDate = Gantt.calculateEndDate({start_date: new Date(dataForm.targetStartDate), duration: dataForm.duration})
                     dataForm.end_date = Gantt.calculateEndDate({start_date: dataForm.start_date, duration: dataForm.targetDrtnHrCnt})
                     // dataForm.targetEndDate = dataForm.end_date
                     // dataForm.type = ""
@@ -1056,6 +1201,7 @@ function dynamicData() {
     });
 }
 
+const gridDateToStr = Gantt.date.date_to_str("%Y-%m-%d");
 // 配置表格列
 function _inConfigColumns() {
 	Gantt.serverList("priority", [
@@ -1128,7 +1274,7 @@ function _inConfigColumns() {
         { name: "taskPhase", label: "作业阶段", align: "center", editor: {type: "select", map_to: "taskPhase", options:Gantt.serverList("taskPhaseOptions")}, resize: true },
         { name: "targetStartDate", label: "计划开始", align: "center", editor: {type: "targetStartDate", map_to: "targetStartDate", min: new Date(2025, 1, 1), max: new Date(2026, 1, 1)}, min_width: 100, resize: true },
         { name: "targetDrtnHrCnt", label: "计划工期", align: "center", editor: {type: "targetDrtnHrCnt", map_to: "targetDrtnHrCnt"}, resize: true },
-        { name: "targetEndDate", label: "计划完成", align: "center", min_width: 100, resize: true },
+        { name: "targetEndDate", label: "计划完成", align: "center", template: targetEndDateLabel, min_width: 100, resize: true },
         { name: "actStartDate", label: "实际开始", align: "center", editor: {type: "date", map_to: "actStartDate", min: new Date(2025, 1, 1), max: new Date(2026, 1, 1)}, template: actStartDateLabel, min_width: 100, resize: true },
         { name: "progress", label: "完成百分比", align: "center", template: function(task) {
             return Math.round(task.progress * 100) + "%";
@@ -1141,6 +1287,16 @@ function _inConfigColumns() {
         // taskComplete
         // { name: "add", label: "", hide: true }
     ];
+    Gantt.templates.task_end_date = function (date) {
+        return Gantt.templates.task_date(new Date(date.valueOf() - 24 * 60 * 60 * 1000));
+    };
+    Gantt.templates.grid_date_format = function (date, column) {
+        if (column === "end_date") {
+            return gridDateToStr(new Date(date.valueOf() - 24 * 60 * 60 * 1000));
+        } else {
+            return gridDateToStr(date);
+        }
+    }
     Gantt.ext.inlineEditors.attachEvent("onEditStart", function (state) {
         if (state.columnName == "progress") {
             const node = Gantt.ext.inlineEditors._placeholder.firstChild.firstChild
@@ -1420,7 +1576,7 @@ function _inConfigColumns() {
             // `${currentValue.substring(8, 10)}-${currentValue.substring(5, 7)}-${currentValue.substring(0, 4)}`
             if(dataForm.targetDrtnHrCnt) {
                 dataForm.duration = dataForm.targetDrtnHrCnt
-                dataForm.targetEndDate = new Date(new Date(dataForm.start_date).getTime() + (dataForm.targetDrtnHrCnt * 24 * 60 * 60 * 1000))
+                dataForm.targetEndDate = Gantt.calculateEndDate({start_date: new Date(dataForm.targetStartDate), duration: dataForm.duration})
                 dataForm.end_date = dataForm.targetEndDate
             }
             Gantt.updateTask(id)
@@ -1459,7 +1615,8 @@ function _inConfigColumns() {
             var currentValue = this.get_value(id, column, node);
             const dataForm = Gantt.getTask(id)
             dataForm.duration = currentValue
-            dataForm.targetEndDate = new Date(new Date(`${dataForm.targetStartDate}`).getTime() + (currentValue * 24 * 60 * 60 * 1000))
+            dataForm.targetEndDate = Gantt.calculateEndDate({start_date: new Date(dataForm.targetStartDate), duration: dataForm.duration})
+            // dataForm.targetEndDate = new Date(new Date(`${dataForm.targetStartDate}`).getTime() + (currentValue * 24 * 60 * 60 * 1000))
             dataForm.end_date = dataForm.targetEndDate
             Gantt.updateTask(id)
             return value !== currentValue;
@@ -1532,6 +1689,9 @@ function taskCodeLabel(task) {
 }
 function constraint_type_label(task) {
     return task.constraint_type && Gantt.serverList("constraint_type_option").find(el => el.key == task.constraint_type).label
+}
+function targetEndDateLabel(task) {
+    return task.targetEndDate && gridDateToStr(new Date(new Date(task.targetEndDate).valueOf() - 24 * 60 * 60 * 1000))
 }
 function taskPhaseLabel(task) {
     return task.taskPhase && Gantt.serverList("taskPhaseOptions").find(el => el.key == task.taskPhase).label
@@ -1639,6 +1799,225 @@ function undo() {
 // 恢复撤销
 function redo() {
     Gantt.redo()
+}
+// 展开父节点
+function open() {
+    Gantt.batchUpdate(function (task) {
+        Gantt.eachTask(function (task) {
+            task.$open = true;
+        })
+    })
+}
+// 关闭父节点
+function close() {
+    Gantt.batchUpdate(function (task) {
+        Gantt.eachTask(function (task) {
+            task.$open = false;
+        })
+    })
+}
+// 时间范围
+function changeZoom(val) {
+	Gantt.ext.zoom.setLevel(val);
+}
+
+const dialogVisible = ref(false)
+const calendar = ref(null)
+let calendarDetail = ref({})
+const calendarData = ref({
+    allCalendar: [
+        {
+            id: 1,
+            name: "7天工作制",
+            workWeek: "seven",
+        },
+        {
+            id: 2,
+            name: "5天工作制",
+            workWeek: "five",
+        }
+    ],
+    projectCalendar: [
+        {
+            id: 3,
+            name: "项目日历",
+            workWeek: "five",
+            calendarList: []
+        },
+    ],
+})
+let calendarId = ref(3)
+// 显示日历管理器
+function showCalendar() {
+    axios.getCalendarList(projectId)
+    .then(res => {
+        if(res.data.code === 200) {
+            calendarData.value.allCalendar = res.data.data.filter(el => el.calType === "all")
+            calendarData.value.projectCalendar = res.data.data.filter(el => el.calType === "project")
+            calendarData.value.projectCalendar.forEach(el => {
+                el.calendarList = JSON.parse(el.calendarList)
+            })
+            calendarDetail.value = res.data.data.find(el => el.isUse === 1)
+            dialogVisible.value = true
+        } else {
+            ElMessage.error(res.msg)
+        }
+    })
+}
+// 判断是否为非工作日
+const isWeekend = (calendarDetail, dateStr) => {
+    const date = new Date(dateStr);
+    const day = date.getDay();
+    if(calendarDetail.workWeek === "five")
+    return day === 0 || day === 6 || (calendarDetail.calendarList && calendarDetail.calendarList.includes(dateStr));
+    if(calendarDetail.workWeek === "seven")
+    return calendarDetail.calendarList && calendarDetail.calendarList.includes(dateStr)
+};
+
+// 项目日历弹窗表单
+const calendarForm = ref({})
+// 打开添加项目日历弹窗
+const showAddCalendar = () => {
+    calendarForm.value = {
+        calType: "project",
+        projectId: projectId,
+        name: "项目日历",
+        workWeek: "seven",
+        calendarList: [],
+        isUse: 0,
+    }
+    innerVisible.value = true
+}
+const innerVisible = ref(false)
+// 添加项目日历
+const addCalendar = () => {
+    const form = JSON.parse(JSON.stringify(calendarForm.value))
+    form.calendarList = JSON.stringify(form.calendarList)
+    axios.saveCalendar(form)
+    .then(res => {
+        if(res.data.code === 200) {
+            showCalendar()
+            clearCalendarForm()
+        } else {
+            ElMessage.error(res.data.msg)
+        }
+    })
+    // calendarData.value.projectCalendar.push(calendarForm.value)
+    // clearCalendarForm()
+}
+// 修改项目日历
+const editCalendar = () => {
+    const form = JSON.parse(JSON.stringify(calendarDetail.value))
+    form.calendarList = JSON.stringify(form.calendarList)
+    axios.saveCalendar(form)
+    .then(res => {
+        if(res.data.code === 200) {
+            ElMessage.success('保存成功')
+        }
+    })
+}
+// 关闭项目日历弹窗
+const clearCalendarForm = () => {
+    innerVisible.value = false
+}
+
+// 选中日期
+const chooseDate = (calendarDetail, dateStr) => {
+    if(!calendarDetail.calendarList) return;
+    const date = new Date(dateStr);
+    const day = date.getDay();
+    if(calendarDetail.workWeek === "five" && (day === 0 || day === 6)) return;
+    if(calendarDetail.calendarList.includes(dateStr))
+    calendarDetail.calendarList.splice(calendarDetail.calendarList.indexOf(dateStr), 1)
+    else calendarDetail.calendarList.push(dateStr)
+}
+// 设置为项目日历
+const selectCalendar = (item) => {
+    const form = JSON.parse(JSON.stringify(item))
+    form.calendarList = JSON.stringify(form.calendarList)
+    form.isUse = 1
+    axios.useCalendar(form)
+    .then(res => {
+        if(res.data.code === 200) {
+            ElMessage.success('设置成功')
+            setCalendarConfig(form)
+        } else {
+            ElMessage.error(res.data.msg)
+        }
+    })
+}
+// 设置日历配置
+function setCalendarConfig(item) {
+    const taskData = Gantt.serialize()
+    Gantt.getCalendar("global")._worktime.dates = [ true, true, true, true, true, true, true ]
+    if(!item.id) return ElMessage({
+        message: '请先保存日历设置！',
+        type: 'warning',
+    });
+    let changeCalendar = false
+    if(item.workWeek === "five") {
+        Gantt.setWorkTime({ day: 6, hours: false })
+        Gantt.setWorkTime({ day: 0, hours: false })
+        changeCalendar = true
+    }
+    if(item.workWeek === "seven") {
+        Gantt.setWorkTime({ day: 6, hours: true })
+        Gantt.setWorkTime({ day: 0, hours: true })
+        changeCalendar = true
+    }
+    item.calendarList = JSON.parse(item.calendarList)
+    if(item.calendarList && item.calendarList.length > 0) {
+        item.calendarList.forEach(el => {
+            Gantt.getCalendar().setWorkTime({
+                date: new Date(el),
+                hours: false
+            })
+        })
+        changeCalendar = true
+    }
+    if(changeCalendar) {
+        taskData.data.forEach(el => {
+            el.end_date = ""
+            el.targetEndDate = Gantt.calculateEndDate({start_date: new Date(el.targetStartDate), duration: el.duration})
+        })
+        Gantt.parse(taskData)
+    }
+    calendarId.value = item.id
+}
+// 删除日历
+const deleteCalendar = (item) => {
+    ElMessageBox.confirm('确认删除？', '提示',{
+        distinguishCancelAndClose: true,
+        confirmButtonText: '确认',
+        cancelButtonText: '取消',
+    })
+    .then(() => {
+        axios.deleteCalendar(item.id)
+        .then(res => {
+            if(res.data.code === 200) {
+                ElMessage.success('删除成功')
+                showCalendar()
+            }
+        })
+        // calendarData.value.projectCalendar = calendarData.value.projectCalendar.filter(el => el.id!== item.id)
+    })
+    .catch((action) => {
+    })
+}
+// 查看项目日历配置
+const showCalendarDetail = (val) => {
+    calendarDetail.value = val
+}
+// 切换月份
+const selectDate = (val) => {
+  if (!calendar.value) return
+  calendar.value.selectDate(val)
+}
+// 甘特图非工作日颜色
+function checkHighlight(date, task) {
+    if (!Gantt.isWorkTime({ date, task, unit: Gantt.getScale().unit })) {
+        return "weekend";
+    }
 }
 
 function zoomIn(){
@@ -1908,6 +2287,210 @@ function saveTask() {
 .gantt_grid_head_add::before {
     display: none;
 }
+
+.gantt-calendar {
+    width: 100%;
+    height: 853px;
+    display: flex;
+    .gantt-calendar-left {
+        overflow: auto;
+        height: 100%;
+        width: 400px;
+        padding: 30px 0px;
+        margin: -20px 0px;
+        border-right: 1px solid #cecece;
+        .gantt-calendar-left-header {
+            font-size: 28px;
+            line-height: 28px;
+            font-weight: bold;
+            border-bottom: 1px solid #cecece;
+            padding: 0px 15px;
+            padding-bottom: 40px;
+            margin-left: -20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            > div {
+                margin: 0px 30px;
+            }
+        }
+        .gantt-calendar-left-body {
+            padding: 20px;
+            margin-left: -20px;
+            .gantt-calendar-left-body-title {
+                display: flex;
+                align-items: center;
+                font-size: 20px;
+                line-height: 20px;
+                margin-bottom: 20px;
+                > i {
+                    margin-right: 5px;
+                }
+            }
+            .gantt-calendar-left-body-item {
+                border: 1px solid #cecece;
+                border-radius: 10px;
+                margin-bottom: 10px;
+                padding: 15px;
+                cursor: pointer;
+                .gantt-calendar-left-body-item-top {
+                    // font-size: 16px;
+                    margin-bottom: 10px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: space-between;
+                    >div:first-child {
+                        font-size: 20px;
+                        line-height: 20px;
+                    }
+                    .gantt-calendar-left-body-item-top-buttons {
+                        display: flex;
+                        align-items: center;
+                        > div {
+                            // cursor: default;
+                            background-color: rgb(243.9, 244.2, 244.8);
+                            border-radius: 5px;
+                            padding: 5px 10px;
+                            margin-right: 10px;
+                            display: flex;
+                            align-items: center;
+                            i {
+                                margin-right: 5px;
+                            }
+                        }
+                    }
+                    .projectCalendar-buttons {
+                        > div {
+                            color: #67c23a;
+                            background-color: rgb(239.8, 248.9, 235.3);
+                            border: 1px solid rgb(224.6, 242.8, 215.6);
+                        }
+                    }
+                    .selected {
+                        > div {
+                            color: #409eff;
+                            background-color: rgb(236, 245, 255);
+                            margin-right: 0px;
+                        }
+                    }
+                }
+                .gantt-calendar-left-body-item-bottom {
+                    > span {
+                        margin-right: 5px
+                    }
+                }
+                .gantt-calendar-left-body-item-special {
+                    margin-top: 10px;
+                }
+            }
+            .gantt-calendar-left-body-item:hover {
+                border-color: #73cfcf;
+                background-color: #c0f2f2;
+                // opacity: 0.5;
+            }
+            .active {
+                border-color: #73cfcf;
+                background-color: #c0f2f2;
+            }
+        }
+    }
+    .gantt-calendar-right {
+        width: 950px;
+        margin: auto;
+        .gantt-calendar-right-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            padding: 0px 57px 12px 50px;
+            border-bottom: 1px solid #cecece;
+            margin: 0px -38px;
+            margin-right: -57px;
+            >div:first-child {
+                display: flex;
+                align-items: center;
+                font-size: 28px;
+                line-height: 28px;
+                font-weight: bold;
+                > i {
+                    margin-right: 10px;
+                }
+                > div {
+                    >div:last-child {
+                        font-size: 16px;
+                        font-weight: 400;
+                    }
+                    >div:first-child {
+                        font-size: 28px;
+                        font-weight: bold;
+                    }
+                }
+            }
+            >div:last-child {
+                i {
+                    margin-right: 5px;
+                }
+            }
+        }
+        .el-calendar {
+            margin-top: 20px;
+            border-bottom: 1px solid #cecece;
+            .el-calendar__header {
+                border-bottom: 0px;
+                font-size: 20px;
+                font-weight: bold;
+            }
+            .el-calendar-table >thead th {
+                text-align: center;
+            }
+            .el-calendar-table td {
+                border: 0px;
+            }
+            .el-calendar-table td.is-selected {
+                background-color: white;
+            }
+            .el-calendar-day {
+                border-radius: 20px;
+                padding: 0px;
+                margin: 5px; 
+                background-color: rgb(239.8, 248.9, 235.3);
+                .calendar-day {
+                    height: 100%;
+                    width: 100%;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                }
+                .weekend {
+                    border-radius: 20px;
+                    background-color: rgb(243.9, 244.2, 244.8);
+                }
+            }
+        }
+        .gantt-calendar-right-footer {
+            margin-top: 30px;
+            margin-bottom: 20px;
+            .gantt-calendar-right-footer-title {
+                font-size: 20px;
+                line-height: 20px;
+                margin-right: 20px;
+            }
+            .gantt-calendar-right-footer-item {
+                margin-top: 20px;
+                margin-bottom: 10px;
+                display: flex;
+                font-size: 20px;
+                line-height: 20px;
+                display: flex;
+                align-items: center;
+                >div {
+                    margin-left: 10px;
+                    width: 400px;
+                }
+            }
+        }   
+    }
+}
 // html, body {
 //     --dhx-gantt-task-border-radius:0;
 //     --dhx-gantt-task-background: blue;
@@ -1990,7 +2573,7 @@ function saveTask() {
 //     border: none;
 // }
 
-// .weekend {
-//     background: var(--dhx-gantt-base-colors-background-alt);
-// }
+.weekend {
+    background-color: rgb(239.8, 248.9, 235.3);
+}
 </style>
