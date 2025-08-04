@@ -22,6 +22,11 @@ const routes = [
         component: () => import('../views/ganttPage.vue')
     },
     {
+        path: '/GanttShow',
+        name: 'GanttShow',
+        component: () => import('../views/ganttPage.vue')
+    },
+    {
         path: '/VChat',
         name: 'VChat',
         component: () => import('../views/vChat.vue')

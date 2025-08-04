@@ -1,7 +1,7 @@
 <template>
 <!-- <div style="height: 100%;"> -->
 <div v-loading="loading" style="height: 100%;">
-    <div style="height: 40px; margin: 0px 20px; display: flex; justify-content: space-between; align-items: center">
+    <div v-if="!readonly" style="height: 40px; margin: 0px 20px; display: flex; justify-content: space-between; align-items: center">
         <div>
             <el-button @click="undo"><el-icon><RefreshLeft /></el-icon></el-button>
             <el-button @click="redo"><el-icon><RefreshRight /></el-icon></el-button>
@@ -49,7 +49,8 @@
         </div>
         <el-button type="primary" @click="saveTask">保存数据</el-button>
     </div>
-    <div style="height: calc(100% - 60px); margin: 20px; margin-top: 0px" ref="gantt"></div>
+    <div v-if="readonly" style="height: calc(100% - 40px); margin: 20px;" ref="gantt"></div>
+    <div v-else style="height: calc(100% - 60px); margin: 20px; margin-top: 0px" ref="gantt"></div>
     <!-- <div style="height: calc(100% - 160px); margin: 20px; margin-bottom: 0px" ref="gantt"></div>
     <el-card shadow="never" style="height: 100px; margin: 20px;">
         <div style="height: 60px; display: flex; justify-content: space-between; align-items: center">
@@ -189,6 +190,7 @@ import { fileDragAndDrop } from "../utils/gantt/snippets/dhx_file_dnd.js";
 import { h, nextTick, onMounted, onUnmounted, reactive, ref, render, useTemplateRef } from 'vue';
 import { ElSelect, ElOption, ElMessage, ElMessageBox } from "element-plus";
 import axios from "../assets/axios/GanttPage.js"
+import router from '@/router/index.js';
 const ganttDom = useTemplateRef('gantt')
 const loading = ref(false)
 let projectId = ""
@@ -304,8 +306,10 @@ const zoomConfig = {
 };
 let modal;
 let editLinkId;
+let readonly = ref(false)
 
 onMounted(() => {
+    readonly.value = router.currentRoute.value.name === "GanttShow"
     projectId = window.parent._P ? window.parent._P.projectId || '1085' : '1085'
     getGanttData()
 })
@@ -464,6 +468,7 @@ function _initGanttEvents() {
     //         return 0
     //     }
     // })
+    if(readonly.value) Gantt.config.readonly = true;
     Gantt.config.order_branch = true;
     // Gantt.config.work_time = false
     // Gantt.config.validate_task = function(task){
