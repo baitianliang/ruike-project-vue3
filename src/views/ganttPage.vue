@@ -33,7 +33,7 @@
             </el-dropdown>
             <!-- <el-button @click="exportToPDF">导出到PDF</el-button>
             <el-button @click="exportToExcel">导出到Excel</el-button> -->
-            <input type="file" id="file-upload" accept=".mpp,.xlsx,.xml,.xer,text/xml,application/xml,application/xer" />
+            <input type="file" id="file-upload" accept=".xls,.mpp,.xlsx,.xml,.xer,text/xml,application/xml,application/xer" />
             <!-- <el-button @click="importFrom">渲染文件</el-button> -->
             <el-dropdown style="margin: 0px 12px" @command="importFrom">
                 <el-button>
@@ -43,6 +43,7 @@
                 <el-dropdown-menu>
                     <el-dropdown-item command="Project">导入Project</el-dropdown-item>
                     <el-dropdown-item command="P6">导入P6</el-dropdown-item>
+                    <el-dropdown-item command="Excel">导入EXCEL</el-dropdown-item>
                 </el-dropdown-menu>
                 </template>
             </el-dropdown>
@@ -70,7 +71,6 @@
         v-model="dialogVisible"
         title="日历管理"
         width="1500"
-        :before-close="handleClose"
         :close-on-click-modal="false">
         <el-card shadow="never">
             <div class="gantt-calendar">
@@ -310,7 +310,7 @@ let readonly = ref(false)
 
 onMounted(() => {
     readonly.value = router.currentRoute.value.name === "GanttShow"
-    projectId = window.parent._P ? window.parent._P.projectId || '1085' : '1085'
+    projectId = window.parent._P ? window.parent._P.projectId || '110' : '110'
     getGanttData()
 })
 onUnmounted(() => {
@@ -377,7 +377,7 @@ async function getGanttData() {
         // el.targetEndDate = el.targetEndDate.substring(0, 10)
         el.targetEndDate = el.targetStartDate && el.targetDrtnHrCnt && Gantt.calculateEndDate({start_date: new Date(el.targetStartDate), duration: el.targetDrtnHrCnt}) || ""
         // el.start_date = el.targetStartDate && `${el.targetStartDate.substring(8, 10)}-${el.targetStartDate.substring(5, 7)}-${el.targetStartDate.substring(0, 4)} 09:00:00` || el.start_date
-        el.start_date = el.targetStartDate && `${el.targetStartDate} 09:00:00` || el.start_date
+        el.start_date = el.targetStartDate && `${el.targetStartDate} 00:00:00` || el.start_date
         el.duration = el.targetDrtnHrCnt || el.duration
         if(el.parent < 1) {
             el.text = projectName
@@ -1227,8 +1227,8 @@ function _inConfigColumns() {
         task.targetDrtnHrCnt = task.duration
         task.targetStartDate = startDate && `${startDate.getFullYear()}-${(startDate.getMonth()+1).toString().padStart(2, '0')}-${startDate.getDate().toString().padStart(2, '0')}` || ""
         task.targetEndDate = endDate && `${endDate.getFullYear()}-${(endDate.getMonth()+1).toString().padStart(2, '0')}-${endDate.getDate().toString().padStart(2, '0')}` || ""
-        task.start_date = new Date(`${task.targetStartDate} 09:00:00`)
-        task.end_date = task.targetEndDate && new Date(`${task.targetEndDate} 09:00:00`) || ""
+        task.start_date = new Date(`${task.targetStartDate} 00:00:00`)
+        task.end_date = task.targetEndDate && new Date(`${task.targetEndDate} 00:00:00`) || ""
         Gantt.batchUpdate(function () {
             if (task.parent > 0) {
                 calculatePlannedDates(task.parent)
@@ -1577,7 +1577,7 @@ function _inConfigColumns() {
         is_changed: function (value, id, column, node) {
             var currentValue = this.get_value(id, column, node);
             const dataForm = Gantt.getTask(id)
-            dataForm.start_date = new Date(`${currentValue} 09:00:00`)
+            dataForm.start_date = new Date(`${currentValue} 00:00:00`)
             // `${currentValue.substring(8, 10)}-${currentValue.substring(5, 7)}-${currentValue.substring(0, 4)}`
             if(dataForm.targetDrtnHrCnt) {
                 dataForm.duration = dataForm.targetDrtnHrCnt
@@ -2068,6 +2068,9 @@ const importFrom = (command) => {
         case "P6":
             importP6()
             break;
+        case "Excel":
+            importExcel()
+            break;
     }
 }
 const fileDnD = fileDragAndDrop()
@@ -2113,7 +2116,7 @@ function uploadProject(file, callback) {
                     el.taskCode = el.$custom_data.ID && (el.$custom_data.ID + 0)
                     el.wbsCode = el.$custom_data.WBS && el.$custom_data.WBS.split('').splice(1).join('')
                     el.targetDrtnHrCnt = el.duration
-                    el.targetStartDate = el.start_date && el.start_date.substring(0, 10) || ""
+                    el.targetStartDate = el.start_date = el.start_date && el.start_date.substring(0, 10) || ""
                     if(el.targetDrtnHrCnt > 0) {
                         el.targetEndDate = Gantt.calculateEndDate({start_date: new Date(el.start_date), duration: el.duration})
                         el.type = "task"
@@ -2192,7 +2195,7 @@ function uploadP6(file, callback) {
                     el.taskCode = el.$custom_data.ActivityID && el.$custom_data.ActivityID.split('').splice(1).join('')
                     el.wbsCode = el.$custom_data.WBS && el.$custom_data.WBS.split('.').splice(1).join('.') && `.${el.$custom_data.WBS.split('.').splice(1).join('.')}`
                     el.targetDrtnHrCnt = el.duration
-                    el.targetStartDate = el.start_date && el.start_date.substring(0, 10) || ""
+                    el.targetStartDate = el.start_date = el.start_date && el.start_date.substring(0, 10) || ""
                     if(el.targetDrtnHrCnt > 0) {
                         el.targetEndDate = Gantt.calculateEndDate({start_date: new Date(el.start_date), duration: el.duration})
                         el.type = "task"
@@ -2215,7 +2218,72 @@ function uploadP6(file, callback) {
         }
     });
 }
-
+// 导入Excel文件
+function importExcel() {
+    var fileInput = document.getElementById("file-upload");
+    if (fileInput.files[0]) {
+        loading.value = true
+        fileDnD.showUpload();
+        uploadExcel(fileInput.files[0], function () {})
+    }
+    else ElMessage({
+        message: '请先选择文件！',
+        type: 'warning',
+    });
+}
+function uploadExcel(file, callback) {
+    Gantt.importFromExcel({
+        server:"https://dls.4dlp.com.cn:7102/export/gantt",
+        data: file,
+        callback: function (project) {
+            console.log(project)
+            if (project) {
+                Gantt.clearAll();
+                const date = new Date()
+                const nowDate = date.getFullYear() + "-" + (date.getMonth() + 1).toString().padStart(2, '0') + "-" + date.getDate() + " 00:00:00"
+                const parentList = {}
+                project.forEach(el => {
+                    el.id = Gantt.uid()
+                    if(parentList[el['WBS编号']]) {
+                        el.parent = parentList[el['WBS编号']]
+                    } else if(parentList[el['WBS编号'].split('.').slice(0, -1).join('.')]) {
+                        el.parent = parentList[el['WBS编号'].split('.').slice(0, -1).join('.')]
+                        parentList[el['WBS编号']] = el.id
+                    } else {
+                        el.parent = 0
+                        parentList[el['WBS编号']] = el.id
+                    }
+                    el.text = el['作业名称']
+                    if(el.parent < 1) el.text = projectName
+                    // el.taskCode = el.$custom_data.ID && (el.$custom_data.ID + 0)
+                    el.wbsCode = el['WBS编号'] && el['WBS编号'].split('.').splice(1).join('.') && `.${el['WBS编号'].split('.').splice(1).map(el => Number(el)).join('.')}`
+                    if(el['里程碑类型']) el.taskMilestoneType = el['里程碑类型']
+                    el.duration = el.targetDrtnHrCnt = el['计划工期']
+                    el.start_date = el['计划开始'] || nowDate
+                    el.targetStartDate = el.start_date && el.start_date.substring(0, 10) || ""
+                    if(el.targetDrtnHrCnt > 0) {
+                        el.targetEndDate = Gantt.calculateEndDate({start_date: new Date(el.start_date), duration: el.duration})
+                        el.type = "task"
+                    } else {
+                        el.type = "milestone"
+                    }
+                })
+                Gantt.parse({data: project});
+                Gantt.sort("firstItem", true)
+                fileDnD.hideOverlay();
+                open()
+                loading.value = false
+            } else {
+                ElMessage({
+                    message: '导入文件格式错误，请尝试其他导入！',
+                    type: 'warning',
+                });
+                fileDnD.hideOverlay();
+                loading.value = false
+            }
+        }
+    });
+}
 
 // Excel数据转换
 function transformExcelData(excelData) {
@@ -2226,7 +2294,8 @@ function saveTask() {
     const dataForm = Gantt.serialize()
     dataForm.projectId = projectId
     dataForm.userName = userName
-    dataForm.data.forEach(el => {
+    dataForm.data.forEach((el, index) => {
+        el.serialNumber = index + 1
         // el.targetStartDate = `${el.start_date.substring(6, 10)}-${el.start_date.substring(3, 5)}-${el.start_date.substring(0, 2)}`
         el.targetStartDate = `${el.start_date.substring(0, 10)}`
         el.targetDrtnHrCnt = el.duration
@@ -2400,6 +2469,8 @@ function saveTask() {
         }
     }
     .gantt-calendar-right {
+        overflow-x: hidden;
+        height: 100%;
         width: 950px;
         margin: auto;
         .gantt-calendar-right-header {
