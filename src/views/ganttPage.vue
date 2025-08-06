@@ -200,38 +200,14 @@ const tasks = reactive({
     data: [
         {id: 1, text: "Office itinerancy", open: true, type: "project", wbsCode: ".1", taskCode: "", taskType: "WBS", taskMilestoneType: "", constraint_type: "", constraint_date: "", taskStatus: "", taskPhase: "", taskPosition: "", taskOwner: "", targetStartDate: "", targetDrtnHrCnt: "", targetEndDate: "", actStartDate: "", actWorkQty: "", remainDrtnHrCnt: "", actEndDate: "", freeFloatHrCnt: "自由浮时1", totalFloatHrCnt: "总浮时1", taskComplete: "20", progress: '0.2'},
         {id: 2, text: "Office facing", start_date: "", wbsCode: ".1", taskCode: "1000", taskType: "WBS", taskMilestoneType: "项目里程碑", constraint_type: "", constraint_date: "", taskStatus: "未开始", taskPhase: "", taskPosition: "", taskOwner: "", targetStartDate: "2025-07-22", targetDrtnHrCnt: "20", targetEndDate: "", actStartDate: "", actWorkQty: "", remainDrtnHrCnt: "", actEndDate: "", freeFloatHrCnt: "自由浮时2", totalFloatHrCnt: "总浮时2", taskComplete: "20", duration: "", parent: "1", progress: '0.2'},
-        {id: 3, text: "Furniture installation", start_date: "", wbsCode: ".1", taskCode: "1010", taskType: "WBS", taskMilestoneType: "项目里程碑", constraint_type: "", constraint_date: "", taskStatus: "未开始", taskPhase: "", taskPosition: "", taskOwner: "", targetStartDate: "2025-07-22", targetDrtnHrCnt: "5", targetEndDate: "", actStartDate: "", actWorkQty: "", remainDrtnHrCnt: "", actEndDate: "", freeFloatHrCnt: "自由浮时3", totalFloatHrCnt: "总浮时3", taskComplete: "20", duration: "", parent: "1", progress: '0.2'},
-        {id: 4, text: "The employee relocation", start_date: "", wbsCode: ".1", taskCode: "1020", taskType: "WBS", taskMilestoneType: "项目里程碑", constraint_type: "", constraint_date: "", taskStatus: "未开始", taskPhase: "", taskPosition: "", taskOwner: "", targetStartDate: "2025-07-29", targetDrtnHrCnt: "15", targetEndDate: "", actStartDate: "", actWorkQty: "", remainDrtnHrCnt: "", actEndDate: "", freeFloatHrCnt: "自由浮时4", totalFloatHrCnt: "总浮时4", taskComplete: "20", duration: "", parent: "1", progress: '0.2'},
-        {id: 5, text: "Interior office", start_date: "", wbsCode: ".1", taskCode: "1030", taskType: "WBS", taskMilestoneType: "项目里程碑", constraint_type: "", constraint_date: "", taskStatus: "未开始", taskPhase: "", taskPosition: "", taskOwner: "", targetStartDate: "2025-07-29", targetDrtnHrCnt: "15", targetEndDate: "", actStartDate: "", actWorkQty: "", remainDrtnHrCnt: "", actEndDate: "", freeFloatHrCnt: "自由浮时5", totalFloatHrCnt: "总浮时5", taskComplete: "20", duration: "", parent: "1", progress: '0.2'},
-        {id: 6, text: "Air conditioners installation", start_date: "", wbsCode: ".1", taskCode: "1040", taskType: "WBS", taskMilestoneType: "项目里程碑", constraint_type: "", constraint_date: "", taskStatus: "未开始", taskPhase: "", taskPosition: "", taskOwner: "", targetStartDate: "2025-08-19", targetDrtnHrCnt: "2", targetEndDate: "", actStartDate: "", actWorkQty: "", remainDrtnHrCnt: "", actEndDate: "", freeFloatHrCnt: "自由浮时6", totalFloatHrCnt: "总浮时6", taskComplete: "20", duration: "", parent: "1", progress: '0.2'},
-        {id: 7, text: "Workplaces preparation", start_date: "", wbsCode: ".1", taskCode: "1050", taskType: "WBS", taskMilestoneType: "项目里程碑", constraint_type: "", constraint_date: "", taskStatus: "未开始", taskPhase: "", taskPosition: "", taskOwner: "", targetStartDate: "2025-08-21", targetDrtnHrCnt: "2", targetEndDate: "", actStartDate: "", actWorkQty: "", remainDrtnHrCnt: "", actEndDate: "", freeFloatHrCnt: "自由浮时7", totalFloatHrCnt: "总浮时7", taskComplete: "20", duration: "", parent: "1", progress: '0.2'},
-        {id: 8, text: "Preparing workplaces for us", start_date: "", wbsCode: ".1", taskCode: "1060", taskType: "WBS", taskMilestoneType: "项目里程碑", constraint_type: "", constraint_date: "", taskStatus: "未开始", taskPhase: "", taskPosition: "", taskOwner: "", targetStartDate: "2025-07-22", targetDrtnHrCnt: "10", targetEndDate: "", actStartDate: "", actWorkQty: "", remainDrtnHrCnt: "", actEndDate: "", freeFloatHrCnt: "自由浮时8", totalFloatHrCnt: "总浮时8", taskComplete: "20", duration: "", parent: "1", progress: '0.2'},
-        {id: 9, text: "Workplaces importation", start_date: "", wbsCode: ".1", taskCode: "1070", taskType: "WBS", taskMilestoneType: "项目里程碑", constraint_type: "", constraint_date: "", taskStatus: "未开始", taskPhase: "", taskPosition: "", taskOwner: "", targetStartDate: "2025-08-23", targetDrtnHrCnt: "1", targetEndDate: "", actStartDate: "", actWorkQty: "", remainDrtnHrCnt: "", actEndDate: "", freeFloatHrCnt: "自由浮时9", totalFloatHrCnt: "总浮时9", taskComplete: "20", duration: "", parent: "1", progress: '0.2'},
         {id: 18, text: "Mediate milestone", wbsCode: ".1", start_date: "29-08-2025 00:00", duration: 0, type: "milestone", parent: "1", progress: 0, open: true, duration: 0},
         {id: 19, text: "Final milestone", wbsCode: ".1", start_date: "29-08-2025 00:00", duration: 0, type: "milestone", parent: "1", progress: 0, open: true, duration: 0}
     ],
     links: [
         {id: "1", source: "3", target: "4", type: "0"},
-        {id: "2", source: "3", target: "5", type: "0"},
-        {id: "3", source: "2", target: "6", type: "0"},
-        {id: "4", source: "4", target: "6", type: "0"},
-        {id: "5", source: "5", target: "6", type: "0"},
-        {id: "6", source: "6", target: "7", type: "0"},
-        {id: "7", source: "7", target: "9", type: "0"},
-        {id: "8", source: "8", target: "9", type: "0"},
-        {id: "9", source: "9", target: "10", type: "0"},
-        {id: "10", source: "9", target: "11", type: "0"},
-        {id: "11", source: "9", target: "12", type: "0"},
-        {id: "12", source: "11", target: "13", type: "0"},
-        {id: "13", source: "12", target: "13", type: "0"},
-        {id: "14", source: "13", target: "14", type: "0"},
-        {id: "15", source: "13", target: "15", type: "0"},
-        {id: "16", source: "15", target: "17", type: "0"},
-        {id: "17", source: "16", target: "17", type: "0"}
     ],
     baselines: [
         { id: 1, task_id: 1, start_date: "20-07-2025 00:00:00", duration: 3 },
-        { id: 2, task_id: 2, start_date: "25-07-2025 00:00:00", duration: 2 },
     ],
 })
 let zoomValue = ref('day')
@@ -456,6 +432,17 @@ function _initGanttEvents() {
 			}
 		});
 	});
+    Gantt.attachEvent("onAfterTaskAutoSchedule", function (task, new_date, link, predecessor) {
+        var reason = "";
+        if (predecessor) {
+            reason = predecessor.text;
+        } else {
+            var constraint = Gantt.getConstraintType(task);
+            reason = Gantt.locale.labels[constraint];
+        }
+        var predecessor = predecessor ? predecessor : { text: task.constraint_type };
+        console.log("<b>" + task.text + "</b> has been rescheduled to " + Gantt.templates.task_date(new_date) + " due to <b>" + reason + "</b> constraint");
+    });
     // 鼠标拖动新增数据
     // Gantt.config.click_drag = {
     //     callback: onDragEnd,
@@ -1234,21 +1221,6 @@ function _inConfigColumns() {
                 calculatePlannedDates(task.parent)
             }
         })
-    //     const startDate = task.start_date
-    //     const endDate = task.end_date
-    //     task.targetStartDate = startDate && `${startDate.getFullYear()}-${(startDate.getMonth()+1).toString().padStart(2, '0')}-${startDate.getDate().toString().padStart(2, '0')}` || ""
-    //     task.start_date = new Date(`${task.targetStartDate} 09:00:00`)
-    //     task.targetEndDate = endDate && `${endDate.getFullYear()}-${(endDate.getMonth()+1).toString().padStart(2, '0')}-${endDate.getDate().toString().padStart(2, '0')}` || ""
-    //     task.end_date = task.targetEndDate && new Date(`${task.targetEndDate} 09:00:00`) || ""
-    //     if(task.targetEndDate && task.targetStartDate) {
-    //         task.targetDrtnHrCnt = task.duration = (new Date(task.targetEndDate).getTime() - new Date(task.targetStartDate).getTime()) / (24 * 60 * 60 * 1000)
-    //     }
-    //     if(task.parent > 0) {
-    //         updateParent(task.parent)
-    //         refreshSummaryProgress(Gantt.getParent(id), true);
-    //     }
-    //     Gantt.refreshTask(id);
-    //     return true;
     });
 
     // 拖拽甘特图完成情况
@@ -1585,6 +1557,7 @@ function _inConfigColumns() {
                 dataForm.end_date = dataForm.targetEndDate
             }
             Gantt.updateTask(id)
+            Gantt.autoSchedule(id)
             return value !== currentValue;
         },
         is_valid: function (value, id, column, node) {
@@ -1624,6 +1597,7 @@ function _inConfigColumns() {
             // dataForm.targetEndDate = new Date(new Date(`${dataForm.targetStartDate}`).getTime() + (currentValue * 24 * 60 * 60 * 1000))
             dataForm.end_date = dataForm.targetEndDate
             Gantt.updateTask(id)
+            Gantt.autoSchedule(id)
             return value !== currentValue;
         },
         is_valid: function (value, id, column, node) {
@@ -1828,7 +1802,9 @@ function changeZoom(val) {
 
 const dialogVisible = ref(false)
 const calendar = ref(null)
+// 日历详情
 let calendarDetail = ref({})
+// 日历配置数据
 const calendarData = ref({
     allCalendar: [
         {
