@@ -432,17 +432,6 @@ function _initGanttEvents() {
 			}
 		});
 	});
-    Gantt.attachEvent("onAfterTaskAutoSchedule", function (task, new_date, link, predecessor) {
-        var reason = "";
-        if (predecessor) {
-            reason = predecessor.text;
-        } else {
-            var constraint = Gantt.getConstraintType(task);
-            reason = Gantt.locale.labels[constraint];
-        }
-        var predecessor = predecessor ? predecessor : { text: task.constraint_type };
-        console.log("<b>" + task.text + "</b> has been rescheduled to " + Gantt.templates.task_date(new_date) + " due to <b>" + reason + "</b> constraint");
-    });
     // 鼠标拖动新增数据
     // Gantt.config.click_drag = {
     //     callback: onDragEnd,
