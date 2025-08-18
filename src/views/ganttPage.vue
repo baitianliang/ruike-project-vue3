@@ -1,7 +1,7 @@
 <template>
 <!-- <div style="height: 100%;"> -->
 <div v-loading="loading" style="height: 100%;">
-    <div v-if="!readonly" style="height: 40px; margin: 0px 20px; display: flex; justify-content: space-between; align-items: center">
+    <div style="height: 40px; margin: 0px 20px; display: flex; justify-content: space-between; align-items: center">
         <div>
             <el-button @click="undo"><el-icon><RefreshLeft /></el-icon></el-button>
             <el-button @click="redo"><el-icon><RefreshRight /></el-icon></el-button>
@@ -16,7 +16,7 @@
                     :value="item.name"
                 />
             </el-select>
-            <el-button style="margin-left: 12px" @click="showCalendar">项目日历</el-button>
+            <el-button :disabled="readonly" style="margin-left: 12px" @click="showCalendar">项目日历</el-button>
             <!-- <el-button @click="zoomIn">减小范围</el-button>
             <el-button @click="zoomOut">增大范围</el-button>
             <el-button @click="updateCriticalPath">{{ criticalPathText }}</el-button> -->
@@ -33,9 +33,9 @@
             </el-dropdown>
             <!-- <el-button @click="exportToPDF">导出到PDF</el-button>
             <el-button @click="exportToExcel">导出到Excel</el-button> -->
-            <input type="file" id="file-upload" accept=".xls,.mpp,.xlsx,.xml,.xer,text/xml,application/xml,application/xer" />
+            <input :disabled="readonly" type="file" id="file-upload" accept=".xls,.mpp,.xlsx,.xml,.xer,text/xml,application/xml,application/xer" />
             <!-- <el-button @click="importFrom">渲染文件</el-button> -->
-            <el-dropdown style="margin: 0px 12px" @command="importFrom">
+            <el-dropdown :disabled="readonly" style="margin: 0px 12px" @command="importFrom">
                 <el-button>
                     导入数据<el-icon class="el-icon--right"><ArrowDown /></el-icon>
                 </el-button>
@@ -48,10 +48,9 @@
                 </template>
             </el-dropdown>
         </div>
-        <el-button type="primary" @click="saveTask">保存数据</el-button>
+        <el-button :disabled="readonly" type="primary" @click="saveTask">保存数据</el-button>
     </div>
-    <div v-if="readonly" style="height: calc(100% - 40px); margin: 20px;" ref="gantt"></div>
-    <div v-else style="height: calc(100% - 60px); margin: 20px; margin-top: 0px" ref="gantt"></div>
+    <div style="height: calc(100% - 60px); margin: 20px; margin-top: 0px" ref="gantt"></div>
     <!-- <div style="height: calc(100% - 160px); margin: 20px; margin-bottom: 0px" ref="gantt"></div>
     <el-card shadow="never" style="height: 100px; margin: 20px;">
         <div style="height: 60px; display: flex; justify-content: space-between; align-items: center">
@@ -194,7 +193,7 @@ import router from '@/router/index.js';
 const ganttDom = useTemplateRef('gantt')
 const loading = ref(false)
 let projectId = ""
-let userName = window.parent._P ? window.parent._P.userId || '测试' : '测试'
+let userName = window.parent._P ? window.parent._P.userId : window.opener && window.opener._P.config.context.curruserid || '测试'
 // 甘特图数据和线的数据和基线数据
 const tasks = reactive({
     data: [
@@ -286,7 +285,7 @@ let readonly = ref(false)
 
 onMounted(() => {
     readonly.value = router.currentRoute.value.name === "GanttShow"
-    projectId = window.parent._P ? window.parent._P.projectId || '110' : '110'
+    projectId = window.parent._P ? window.parent._P.projectId : window.opener && window.opener._P.config.context.pid || '1085'
     getGanttData()
 })
 onUnmounted(() => {
@@ -1641,8 +1640,8 @@ function calculateSummaryProgress(task) {
     if (!totalToDo) return 0;
     else return totalDone / totalToDo;
 }
-const projectCode = window.parent._P && window.parent._P.shell_info && window.parent._P.shell_info.shellnumber || "A-DLS-1-01"
-const projectName = window.parent._P && window.parent._P.shell_info && window.parent._P.shell_info.shellname || "测试项目"
+const projectCode = window.parent._P ? window.parent._P.shell_info.shellnumber : window.opener && window.opener._P.data.upper.project_projectnumber || "A-DLS-1-01"
+const projectName = window.parent._P ? window.parent._P.shell_info.shellname : window.opener && window.opener._P.data.upper.project_projectname || "测试项目"
 // 表格框修改数据
 function firstItemLabel(task) {
     task.wbsCode = task.wbsCode || ""
@@ -2202,6 +2201,7 @@ function uploadExcel(file, callback) {
         data: file,
         callback: function (project) {
             console.log(project)
+            debugger;
             if (project) {
                 Gantt.clearAll();
                 const date = new Date()
@@ -2219,6 +2219,12 @@ function uploadExcel(file, callback) {
                         parentList[el['WBS编号']] = el.id
                     }
                     el.text = el['作业名称']
+                    if(el['作业负责人']) {
+                        const obj = taskOwnerOptions.value.find(_el => _el.label === el['作业负责人'])
+                        if(obj) {
+                            el.taskOwner = obj.key
+                        }
+                    }
                     if(el.parent < 1) el.text = projectName
                     // el.taskCode = el.$custom_data.ID && (el.$custom_data.ID + 0)
                     el.wbsCode = el['WBS编号'] && el['WBS编号'].split('.').splice(1).join('.') && `.${el['WBS编号'].split('.').splice(1).map(el => Number(el)).join('.')}`

@@ -2,33 +2,43 @@ import { createRouter, createWebHashHistory } from 'vue-router'
 
 const routes = [
     {
+        path: '/',
+        name: '导航页',
+        component: () => import('../views/home.vue')
+    },
+    {
         path: '/Guide',
-        name: 'guidePage',
+        name: '引导页',
         component: () => import('../views/guidePage.vue')
     },
     {
         path: '/AesButton',
-        name: 'AesButton',
+        name: '跳转BIM系统',
         component: () => import('../views/aesButton.vue')
     },
     {
         path: '/BusinessForm',
-        name: 'BusinessForm',
+        name: '接口报表',
         component: () => import('../views/businessForm.vue')
     },
     {
         path: '/GanttPage',
-        name: 'GanttPage',
+        name: '甘特图操作页',
         component: () => import('../views/ganttPage.vue')
     },
     {
         path: '/GanttShow',
-        name: 'GanttShow',
+        name: '甘特图展示页',
         component: () => import('../views/ganttPage.vue')
     },
     {
+        path: '/ApprovalPage',
+        name: '审批流程页',
+        component: () => import('../views/approvalPage.vue')
+    },
+    {
         path: '/VChat',
-        name: 'VChat',
+        name: 'Ai聊天室',
         component: () => import('../views/vChat.vue')
     },
 ]

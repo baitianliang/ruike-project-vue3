@@ -48,7 +48,10 @@ const props = defineProps({
 const emit = defineEmits(['update:menuList'])
 function changePage(val1, val2) {
     const obj = { ...val1 }
-    if(!obj.nextList) obj.name =  `${val2.name} > ${obj.name}`
+    if(!obj.nextList) {
+        obj._name = obj.name
+        obj.name =  `${val2.name} > ${obj.name}`
+    }
     emit('update:menuList', obj)
 }
 </script>

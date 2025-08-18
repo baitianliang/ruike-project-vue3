@@ -38,6 +38,10 @@ const props = defineProps({
     taskList: {
         type: Array,
         requied: true
+    },
+    titleText: {
+        type: String,
+        default: '启动阶段'
     }
 })
 const taskCompletionStatus = ref(null)
@@ -67,7 +71,7 @@ function initChart() {
     // 2. 设置配置项
     const option = {
         title: {
-            text: '启动阶段 任务状态',  // 主标题文本
+            text: `${props.titleText} 任务状态`,  // 主标题文本
             left: 'center',        // 水平居中（可选：'left' | 'right' | 'center' | 像素值）
             top: 10,               // 距离顶部距离（像素或百分比）
             textStyle: {           // 标题样式

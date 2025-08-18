@@ -8,7 +8,7 @@
       tab-position="left"
       type="border-card"
       ref="tabs">
-      <el-tab-pane label="Reference" name="reference">
+      <el-tab-pane label="工作包" name="reference">
         <el-table
           v-if="firstTable.show && activeName==='reference'"
           :data="firstTable.tableData"
@@ -32,7 +32,7 @@
           </el-table-column>
         </el-table>
       </el-tab-pane>
-      <el-tab-pane label="Matrix" name="matrix">
+      <el-tab-pane label="接口矩阵" name="matrix">
         <div id="tableContainer" style="position: absolute; width: calc(100% - 40px); height: calc(100% - 40px);"></div>
         <el-table
           v-if="secondTable.show && activeName==='matrix' && false"
@@ -81,7 +81,7 @@
         </el-table>
       </el-tab-pane
       >
-      <el-tab-pane label="Register" name="register">
+      <el-tab-pane label="接口清单" name="register">
         <el-table
           v-if="thirdTable.show"
           :data="thirdTable.tableData"
@@ -114,7 +114,7 @@
 </template>
 
 <script setup>
-import { PivotTable } from '@visactor/vtable';
+import { PivotTable, DEFAULT_THEME } from '@visactor/vtable';
 import { nextTick, onMounted, reactive, ref, useTemplateRef } from "vue";
 import axios from "../assets/axios/BusinessForm.js";
 import { ElMessage } from 'element-plus'
@@ -412,6 +412,23 @@ async function getSecondData() {
   
   secondTable.tableData = JSON.parse(JSON.stringify(secondTable.tableData))
   const option = {
+    theme: {
+      scrollStyle: {
+        visible: 'always',
+      },
+      headerStyle: {
+        bgColor: "#ECF1F5",
+        color: '#606266',
+      },
+      cornerHeaderStyle: {
+        bgColor: "#ECF1F5",
+        color: '#606266',
+      },
+      rowHeaderStyle: {
+        bgColor: "#ECF1F5",
+        color: '#606266',
+      }
+    },
     records: secondTable.tableData,
     rows: [
       {
@@ -517,6 +534,8 @@ async function getSecondData() {
     widthMode: 'standard'
   };
   const tableInstance = new PivotTable(document.getElementById('tableContainer'), option);
+  console.log(tableInstance)
+  // tableInstance.theme.extend({_scroll: {visible: "always"}});
   // 添加点击事件监听
   tableInstance.on('click_cell', (args) => {
     if(args.col > 2 && args.row > 2  && args.value) {

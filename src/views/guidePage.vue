@@ -1,7 +1,7 @@
     
 <template>
   <!-- 任务总览引导页 -->
-  <div id="guide">
+  <div id="guide" v-loading="loading">
     <el-container>
       <el-header v-if="false" style="background-color: rgb(197, 4, 34); height: 64px">
         <el-button class="header_button" type="text" @click="changePage(1)">
@@ -194,7 +194,7 @@
           <!-- <router-view/> -->
         </el-main>
         <el-aside type="half" class="right_aside">
-          <right-chart ref="rightChartChild" :taskList="table.taskList"></right-chart>
+          <right-chart v-if="titleText" ref="rightChartChild" :taskList="table.taskList" :titleText="titleText"></right-chart>
         </el-aside>
       </el-container>
     </el-container>
@@ -208,6 +208,7 @@ import LeftMenu from "../components/LeftMenu.vue";
 import axios from "../assets/axios/index.js";
 import RightChart from "../components/RightChart.vue";
 
+const loading = ref(true)
 const showContent = ref(2)
 const title = ref("")
 const stageStatus = ref("")
@@ -216,6 +217,7 @@ const projectTimeline = ref(null)
 const allTask = ref(null)
 const taskStatus = ref(null)
 const rightChartDom = useTemplateRef('rightChartChild')
+const titleText = ref("")
 let projectTimelineChart = null
 let allTaskChart = null
 let taskStatusChart = null
@@ -409,7 +411,9 @@ onMounted(() => {
 })
 onUnmounted(() => {
   // 组件销毁时移除监听并销毁图表
-  window.removeEventListener("resize", this.resizeHandler);
+    window.removeEventListener('resize', projectTimelineChartResize);
+    window.removeEventListener('resize', allTaskChartResize);
+    window.removeEventListener('resize', taskStatusChartResize);
 })
 // 获取左侧菜单列表
 function getMenuList() {
@@ -445,8 +449,11 @@ function getMenuList() {
       }
     });
     menu.menuList = menuArr
+    getPageData(menu.menuList[0])
     title.value = menu.menuList[0].name;
+    titleText.value = menu.menuList[0].name
     stageStatus.value = menu.menuList[0].status
+    loading.value = false
   })
 }
 
@@ -708,6 +715,7 @@ function changePage(val) {
     stageStatus.value = val.status
     showContent.value = 2;
     title.value = val.name;
+    titleText.value = val.name;
     // nextTick(() => {
     //   initTaskChart();
     // });
@@ -716,6 +724,7 @@ function changePage(val) {
     stageStatus.value = val.status
     showContent.value = 3;
     title.value = val.name;
+    titleText.value = val._name;
   }
 }
 </script>
