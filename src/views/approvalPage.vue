@@ -142,7 +142,7 @@ async function getFormData() {
         return ElMessage.error(res.data.msg);
     }
     console.log(res.data)
-    bpName.value = res.data.data.unifierData.CRRC_HYLX_PD
+    bpName.value = res.data.data.formHeader
     taskStatus.value = res.data.data.taskStatus
     // res.data.data.mainForm.length && (formData.value = res.data.data.mainForm[0].formattedData);
     if (res.data.data.mainForm.length) {

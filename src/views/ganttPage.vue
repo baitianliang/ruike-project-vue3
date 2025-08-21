@@ -1216,39 +1216,39 @@ function _inConfigColumns() {
         refreshSummaryProgress(Gantt.getParent(id), false);
     });
     Gantt.config.columns = [
-        { name: "add", label: "" },
+        { name: "add", label: "", min_width: 40 },
         // { name: "projectId", label: "项目ID", tree: true },
         // editor: {type: "text", map_to: "wbsCode"}   表格编辑框
         { name: "firstItem", label: "编码", align: "left", min_width: 200, template: firstItemLabel, tree: true, resize: true },
         { name: "wbsCode", label: "WBS编码", align: "center", min_width: 150, template: wbsCodeLabel, resize: true },
         // { name: "taskCode", label: "作业编码", align: "center", template: taskCodeLabel, resize: true },
         // { name: "wbs", label: "WBS", template: Gantt.getWBSCode }, // 插件自带WBS编码
-        { name: "text", label: "作业名称", editor: {type: "text", map_to: "text"}, resize: true },
+        { name: "text", label: "作业名称", min_width: 250, editor: {type: "text", map_to: "text"}, resize: true },
         // { name: "taskType", label: "作业类型", align: "center", editor: {type: "taskTypeSelect", map_to: "taskType", options:Gantt.serverList("taskTypeOptions")}, resize: true },
         // { name: "type", label: "作业类型", align: "center", resize: true },
-        { name: "type", label: "作业类型", align: "center", editor: {type: "typeSelect", map_to: "type", options:Gantt.serverList("taskTypeOptions")}, template: typeLabel, resize: true },
-        { name: "taskStatus", label: "作业状态", align: "center", editor: {type: "select", map_to: "taskStatus", options:Gantt.serverList("taskStatusOptions")}, resize: true },
-        { name: "start_date", label: "开始时间", align: "center", min_width: 100, resize: true },
-        { name: "duration", label: "持续时间", align: "center", resize: true },
-        { name: "end_date", label: "完成时间", align: "center", min_width: 100, resize: true },
-        { name: "taskOwner", label: "作业负责人", align: "center", editor: {type: "taskOwnerSelect", map_to: "taskOwner", options:Gantt.serverList("taskOwnerOptions")}, template: taskOwnerLabel, resize: true },
-        { name: "taskPosition", label: "作业负责岗位", align: "center", resize: true },
-        { name: "taskMilestoneType", label: "里程碑类型", align: "center", editor: {type: "select", map_to: "taskMilestoneType", options:Gantt.serverList("taskMilestoneTypeOptions")}, resize: true },
-        { name: "constraint_type", label: "作业约束类型", align: "center", editor: {type: "select", map_to: "constraint_type", options:Gantt.serverList("constraint_type_option")}, template: constraint_type_label, resize: true },
-        { name: "constraint_date", label: "作业约束日期", align: "center", editor: {type: "date", map_to: "constraint_date", min: new Date(2025, 1, 1), max: new Date(2026, 1, 1)}, min_width: 100, resize: true },
-        { name: "taskPhase", label: "作业阶段", align: "center", editor: {type: "select", map_to: "taskPhase", options:Gantt.serverList("taskPhaseOptions")}, resize: true },
-        { name: "targetStartDate", label: "计划开始", align: "center", editor: {type: "targetStartDate", map_to: "targetStartDate", min: new Date(2025, 1, 1), max: new Date(2026, 1, 1)}, min_width: 100, resize: true },
-        { name: "targetDrtnHrCnt", label: "计划工期", align: "center", editor: {type: "targetDrtnHrCnt", map_to: "targetDrtnHrCnt"}, resize: true },
-        { name: "targetEndDate", label: "计划完成", align: "center", template: targetEndDateLabel, min_width: 100, resize: true },
-        { name: "actStartDate", label: "实际开始", align: "center", editor: {type: "date", map_to: "actStartDate", min: new Date(2025, 1, 1), max: new Date(2026, 1, 1)}, template: actStartDateLabel, min_width: 100, resize: true },
-        { name: "progress", label: "完成百分比", align: "center", template: function(task) {
+        { name: "type", label: "作业类型", align: "center", min_width: 100, editor: {type: "typeSelect", map_to: "type", options:Gantt.serverList("taskTypeOptions")}, template: typeLabel, resize: true },
+        { name: "taskStatus", label: "作业状态", align: "center", min_width: 100, editor: {type: "select", map_to: "taskStatus", options:Gantt.serverList("taskStatusOptions")}, resize: true },
+        { name: "start_date", label: "开始时间", align: "center", min_width: 140, resize: true },
+        { name: "duration", label: "持续时间", align: "center", min_width: 90, resize: true },
+        { name: "end_date", label: "完成时间", align: "center", min_width: 140, resize: true },
+        { name: "taskOwner", label: "作业负责人", align: "center", min_width: 120, editor: {type: "taskOwnerSelect", map_to: "taskOwner", options:Gantt.serverList("taskOwnerOptions")}, template: taskOwnerLabel, resize: true },
+        { name: "taskPosition", label: "作业负责岗位", align: "center", min_width: 140, resize: true },
+        { name: "taskMilestoneType", label: "里程碑类型", align: "center", min_width: 100, editor: {type: "select", map_to: "taskMilestoneType", options:Gantt.serverList("taskMilestoneTypeOptions")}, resize: true },
+        { name: "constraint_type", label: "作业约束类型", align: "center", min_width: 120, editor: {type: "select", map_to: "constraint_type", options:Gantt.serverList("constraint_type_option")}, template: constraint_type_label, resize: true },
+        { name: "constraint_date", label: "作业约束日期", align: "center", min_width: 140, editor: {type: "date", map_to: "constraint_date", min: new Date(2025, 1, 1), max: new Date(2026, 1, 1)}, min_width: 100, resize: true },
+        { name: "taskPhase", label: "作业阶段", align: "center", min_width: 100, editor: {type: "select", map_to: "taskPhase", options:Gantt.serverList("taskPhaseOptions")}, resize: true },
+        { name: "targetStartDate", label: "计划开始", align: "center", min_width: 140, editor: {type: "targetStartDate", map_to: "targetStartDate", min: new Date(2025, 1, 1), max: new Date(2026, 1, 1)}, min_width: 100, resize: true },
+        { name: "targetDrtnHrCnt", label: "计划工期", align: "center", min_width: 90, editor: {type: "targetDrtnHrCnt", map_to: "targetDrtnHrCnt"}, resize: true },
+        { name: "targetEndDate", label: "计划完成", align: "center", min_width: 140, template: targetEndDateLabel, min_width: 100, resize: true },
+        { name: "actStartDate", label: "实际开始", align: "center", min_width: 140, editor: {type: "date", map_to: "actStartDate", min: new Date(2025, 1, 1), max: new Date(2026, 1, 1)}, template: actStartDateLabel, min_width: 100, resize: true },
+        { name: "progress", label: "完成百分比", align: "center", min_width: 90, template: function(task) {
             return Math.round(task.progress * 100) + "%";
         }, editor: {type: "number", map_to: "progress", min:0, max: 100}},
-        { name: "actWorkQty", label: "实际工期", align: "center", editor: {type: "number", map_to: "actWorkQty"}, template: actWorkQtyLabel, resize: true },
-        { name: "remainDrtnHrCnt", label: "尚需工期", align: "center", editor: {type: "number", map_to: "remainDrtnHrCnt"}, resize: true },
-        { name: "actEndDate", label: "实际完成", align: "center", min_width: 100, resize: true },
-        { name: "freeFloatHrCnt", label: "自由浮时", align: "center", resize: true, template: freeFloatHrCntLabel },
-        { name: "totalFloatHrCnt", label: "总浮时", align: "center", resize: true, template: totalFloatHrCntLabel },
+        { name: "actWorkQty", label: "实际工期", align: "center", min_width: 90, editor: {type: "number", map_to: "actWorkQty"}, template: actWorkQtyLabel, resize: true },
+        { name: "remainDrtnHrCnt", label: "尚需工期", align: "center", min_width: 90, editor: {type: "number", map_to: "remainDrtnHrCnt"}, resize: true },
+        { name: "actEndDate", label: "实际完成", align: "center", min_width: 140, min_width: 100, resize: true },
+        { name: "freeFloatHrCnt", label: "自由浮时", align: "center", min_width: 90, resize: true, template: freeFloatHrCntLabel },
+        { name: "totalFloatHrCnt", label: "总浮时", align: "center", min_width: 90, resize: true, template: totalFloatHrCntLabel },
         // taskComplete
         // { name: "add", label: "", hide: true }
     ];
@@ -1425,7 +1425,7 @@ function _inConfigColumns() {
             if(task.type !== "project") {
                 let node = document.createElement("div");
                 node.className = "gantt-task-type-editor";
-                taskOwnerSelect = task.taskOwner
+                taskOwnerSelect = Number(task.taskOwner)
                 // 创建select元素
                 const select = h(ElSelect, {
                     modelValue: taskOwnerSelect,
@@ -1452,8 +1452,9 @@ function _inConfigColumns() {
             return taskOwnerSelect || task.taskType
         },
         is_changed: function (value, id, column, node) {
+            let task = Gantt.getTask(id);
             // var currentValue = this.get_value(id, column, node);
-            return true
+            return task.type !== "project"
             return value !== taskOwnerSelect;
         },
         is_valid: function (value, id, column, node) {
