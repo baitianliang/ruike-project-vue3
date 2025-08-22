@@ -4,7 +4,10 @@ const routes = [
     {
         path: '/',
         name: '导航页',
-        component: () => import('../views/home.vue')
+        component: () => import('../views/home.vue'),
+        meta: {
+            hidden: true
+        }
     },
     {
         path: '/Guide',

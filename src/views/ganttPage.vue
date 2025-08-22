@@ -3,11 +3,11 @@
 <div v-loading="loading" style="height: 100%;">
     <div style="height: 40px; margin: 0px 20px; display: flex; justify-content: space-between; align-items: center">
         <div>
-            <el-button @click="undo"><el-icon><RefreshLeft /></el-icon></el-button>
-            <el-button @click="redo"><el-icon><RefreshRight /></el-icon></el-button>
-            <el-button @click="close"><el-icon><Folder /></el-icon></el-button>
-            <el-button @click="open"><el-icon><FolderOpened /></el-icon></el-button>
-            <el-button @click="updateCriticalPath"><el-icon><Key /></el-icon></el-button>
+            <el-button title="撤销" @click="undo"><el-icon><RefreshLeft /></el-icon></el-button>
+            <el-button title="恢复" @click="redo"><el-icon><RefreshRight /></el-icon></el-button>
+            <el-button title="折叠" @click="close"><el-icon><Folder /></el-icon></el-button>
+            <el-button title="展开" @click="open"><el-icon><FolderOpened /></el-icon></el-button>
+            <el-button title="关键路径" @click="updateCriticalPath"><el-icon><Key /></el-icon></el-button>
             <el-select v-model="zoomValue" @change="changeZoom" style="width: 70px; margin-left: 12px">
                 <el-option
                     v-for="(item, index) in zoomConfig.levels"
@@ -17,6 +17,7 @@
                 />
             </el-select>
             <el-button :disabled="readonly" style="margin-left: 12px" @click="showCalendar">项目日历</el-button>
+            <el-button title="甘特图" @click="toggleChart"><el-icon><CreditCard /></el-icon></el-button>
             <!-- <el-button @click="zoomIn">减小范围</el-button>
             <el-button @click="zoomOut">增大范围</el-button>
             <el-button @click="updateCriticalPath">{{ criticalPathText }}</el-button> -->
@@ -183,7 +184,7 @@
 </template>
 
 <script setup>
-import { Folder, FolderOpened, RefreshLeft, RefreshRight, Key, ArrowDown, ArrowLeft, ArrowRight, Tools, FolderChecked, Calendar, Delete } from '@element-plus/icons-vue'
+import { Folder, FolderOpened, RefreshLeft, RefreshRight, Key, CreditCard, ArrowDown, ArrowLeft, ArrowRight, Tools, FolderChecked, Calendar, Delete } from '@element-plus/icons-vue'
 import Gantt from "../utils/gantt/dhtmlxgantt.js";
 import { fileDragAndDrop } from "../utils/gantt/snippets/dhx_file_dnd.js";
 import { h, nextTick, onMounted, onUnmounted, reactive, ref, render, useTemplateRef } from 'vue';
@@ -1760,6 +1761,47 @@ function onDragEnd(startPoint, endPoint, startDate, endDate, tasksBetweenDates, 
     }
 }
 
+const showChart = ref(true)
+const onlyGrid = {
+    css: "gantt_container",
+    cols: [{
+        rows: [
+            { view: "grid", scrollX: "gridScroll", scrollable: true, scrollY: "scrollVer" },
+            { view: "scrollbar", id: "gridScroll", group: "horizontalScrolls" }
+        ]
+    },
+    { resizer: true, width: 1 }]
+};
+
+const gridAndChart = {
+    css: "gantt_container",
+    cols: [{
+        width: 700,
+        min_width: 300,
+        rows: [
+            { view: "grid", scrollX: "gridScroll", scrollable: true, scrollY: "scrollVer" },
+            { view: "scrollbar", id: "gridScroll", group: "horizontalScrolls" }
+        ]
+    },
+    { resizer: true, width: 1 },
+    {
+        rows: [
+            { view: "timeline", scrollX: "scrollHor", scrollY: "scrollVer" },
+            { view: "scrollbar", id: "scrollHor", group: "horizontalScrolls" }
+        ]
+    },
+    { view: "scrollbar", id: "scrollVer" }]
+};
+// 显示图表
+function toggleChart() {
+    showChart.value = !showChart.value;
+    if (showChart.value) {
+        Gantt.config.layout = gridAndChart;
+    } else {
+        Gantt.config.layout = onlyGrid;
+    }
+    Gantt.init(ganttDom.value);
+}
 // 撤销
 function undo() {
     Gantt.undo()
