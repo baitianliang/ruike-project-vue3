@@ -194,7 +194,7 @@ import router from '@/router/index.js';
 const ganttDom = useTemplateRef('gantt')
 const loading = ref(false)
 let projectId = ""
-let userName = window.parent._P ? window.parent._P.userId : window.opener && window.opener._P.config.context.curruserid || '测试'
+let userName = window.top._P ? window.top._P.data?.navbean?.user?.userid : window.opener?.opener?._P?.data?.navbean?.user?.userid || '测试'
 // 甘特图数据和线的数据和基线数据
 const tasks = reactive({
     data: [
@@ -285,8 +285,8 @@ let editLinkId;
 let readonly = ref(false)
 
 onMounted(() => {
-    readonly.value = router.currentRoute.value.name === "GanttShow"
-    projectId = window.parent._P ? window.parent._P.projectId : window.opener && window.opener._P.config.context.pid || '1085'
+    readonly.value = router.currentRoute.value.path === "/GanttShow"
+    projectId = window.top.getCurrentProjectId ? window.top.getCurrentProjectId() : window.opener?.opener?.getCurrentProjectId() || '1085'
     getGanttData()
 })
 onUnmounted(() => {
@@ -1642,8 +1642,8 @@ function calculateSummaryProgress(task) {
     if (!totalToDo) return 0;
     else return totalDone / totalToDo;
 }
-const projectCode = window.parent._P ? window.parent._P.shell_info.shellnumber : window.opener && window.opener._P.data.upper.project_projectnumber || "A-DLS-1-01"
-const projectName = window.parent._P ? window.parent._P.shell_info.shellname : window.opener && window.opener._P.data.upper.project_projectname || "测试项目"
+const projectCode = window.top._P ? window.top._P?.data?.recentLocations[0]?.number : window.opener?.opener?._P?.data?.recentLocations[0]?.number || "A-DLS-1-01"
+const projectName = window.top.getCurrentShellName ? window.top.getCurrentShellName() : window.opener?.opener?.getCurrentShellName() || "测试项目"
 // 表格框修改数据
 function firstItemLabel(task) {
     task.wbsCode = task.wbsCode || ""
