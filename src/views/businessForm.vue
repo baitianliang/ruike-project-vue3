@@ -114,7 +114,7 @@
 </template>
 
 <script setup>
-import { PivotTable, DEFAULT_THEME } from '@visactor/vtable';
+import { PivotTable } from '@visactor/vtable';
 import { nextTick, onMounted, reactive, ref, useTemplateRef } from "vue";
 import axios from "../assets/axios/BusinessForm.js";
 import { ElMessage } from 'element-plus'
