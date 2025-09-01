@@ -83,12 +83,12 @@
               <div class="explanation_value">
                 {{ stageDescription || "暂无说明！" }}
               </div>
-              <div class="explanation_hint">
+              <!-- <div class="explanation_hint">
                 提示：此阶段已完成，可进入下一阶段。
               </div>
               <div v-if="showContent === 2" class="explanation_time">
                 时间范围：2025-01-01 至 2025-02-15
-              </div>
+              </div> -->
               <!-- <div class="explanation_status">已完成</div> -->
               <div v-if="stageStatus === '已完成'" class="explanation_status status_ed">
                 已完成

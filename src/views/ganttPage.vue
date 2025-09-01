@@ -1222,6 +1222,7 @@ function _inConfigColumns() {
         // editor: {type: "text", map_to: "wbsCode"}   表格编辑框
         { name: "firstItem", label: "编码", align: "left", min_width: 200, template: firstItemLabel, tree: true, resize: true },
         { name: "wbsCode", label: "WBS编码", align: "center", min_width: 150, template: wbsCodeLabel, resize: true },
+        { name: "pmsWbsCode", label: "PMS_WBS编码", align: "center", min_width: 150, editor: {type: "text", map_to: "pmsWbsCode"}, resize: true },
         // { name: "taskCode", label: "作业编码", align: "center", template: taskCodeLabel, resize: true },
         // { name: "wbs", label: "WBS", template: Gantt.getWBSCode }, // 插件自带WBS编码
         { name: "text", label: "作业名称", min_width: 250, editor: {type: "text", map_to: "text"}, resize: true },
