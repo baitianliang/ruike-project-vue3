@@ -201,40 +201,56 @@ const handleDownload = (url) => {
 const agreement = () => {
     if(value.value === '')
     return ElMessage.info('请选择审批人');
-    const query = {
-        uuid,
-        assigneeId: value.value,
-        comments: comments.value,
-    }
-    axios.agreement(query)
-    .then(res => {
-        if(res.data.code === 200) {
-            ElMessage.success('审批成功');
-            dialogVisible.value = false;
-            window.close();
-        } else {
-            ElMessage.error(res.data.msg);
+    pushPms(function() {
+        const query = {
+            uuid,
+            assigneeId: value.value,
+            comments: comments.value,
         }
-    })
-    .catch(err => {
-        ElMessage.error(err.data.msg);
+        axios.agreement(query)
+        .then(res => {
+            if(res.data.code === 200) {
+                ElMessage.success('审批成功');
+                dialogVisible.value = false;
+                window.close();
+            } else {
+                ElMessage.error(res.data.msg);
+            }
+        })
+        .catch(err => {
+            ElMessage.error(err.data.msg);
+        })
     })
 }
 
 const conclude = () => {
-    const query = {
-        uuid,
-        concludeComments: concludeComments.value,
-    }
-    axios.conclude(query)
-    .then(res => {
-        if(res.data.code === 200) {
-            ElMessage.success('办结成功');
-            dialogVisible2.value = false;
-            window.close();
-        } else {
-            ElMessage.error(res.data.msg);
+    pushPms(function() {
+        const query = {
+            uuid,
+            concludeComments: concludeComments.value,
         }
+        axios.conclude(query)
+        .then(res => {
+            if(res.data.code === 200) {
+                ElMessage.success('办结成功');
+                dialogVisible2.value = false;
+                window.close();
+            } else {
+                ElMessage.error(res.data.msg);
+            }
+        })
+        .catch(err => {
+            ElMessage.error(err.data.msg);
+        })
+    })
+}
+
+const pushPms = (nextFun) => {
+    axios.pushPms({
+        taskId: window.location.href.split('=')[2].split('&')[0],
+    })
+    .then(res => {
+        nextFun()
     })
     .catch(err => {
         ElMessage.error(err.data.msg);

@@ -14,4 +14,8 @@ export default {
     conclude(query) {
         return axios.post(`api/process/concludethematter`, query)
     },
+    // 推送
+    pushPms(query) {
+        return axios.post(`api/dlstopmp/to-DoToDone`, query)
+    },
 }

@@ -320,6 +320,7 @@ async function getGanttData() {
         tasks.data = [{
             id: 1,
             text: projectName || "新项目",
+            pmsWbsCode: projectCode,
             open: true,
             type: "task",
             wbsCode: "",
@@ -357,6 +358,7 @@ async function getGanttData() {
         el.duration = el.targetDrtnHrCnt || el.duration
         if(el.parent < 1) {
             el.text = projectName
+            el.pmsWbsCode = projectCode
         }
     })
     _initGanttEvents()
@@ -1349,7 +1351,8 @@ function _inConfigColumns() {
         }
     }
     Gantt.config.editor_types.text.get_input = (e) => {
-        return e.querySelector("input") || {value: projectName}
+        let obj = e.attributes['data-column-name'].value === "text" ? {value: projectName} : {value: projectCode}
+        return e.querySelector("input") || obj
     }
     // Gantt.config.editor_types.date.get_value = (value, id, column, node) => {
     //     var currentValue = this.get_value(id, column, node);
