@@ -286,7 +286,7 @@ let readonly = ref(false)
 
 onMounted(() => {
     readonly.value = router.currentRoute.value.path === "/GanttShow"
-    projectId = window.top.getCurrentProjectId ? window.top.getCurrentProjectId() : window.opener?.opener?.getCurrentProjectId() || '1085'
+    projectId = window.top.getCurrentProjectId ? window.top.getCurrentProjectId() : window.opener?.opener?.getCurrentProjectId() || '110'
     getGanttData()
 })
 onUnmounted(() => {
@@ -1243,7 +1243,7 @@ function _inConfigColumns() {
         { name: "taskPhase", label: "作业阶段", align: "center", min_width: 100, editor: {type: "select", map_to: "taskPhase", options:Gantt.serverList("taskPhaseOptions")}, resize: true },
         { name: "targetStartDate", label: "计划开始", align: "center", min_width: 140, editor: {type: "targetStartDate", map_to: "targetStartDate", min: new Date(2025, 1, 1), max: new Date(2026, 1, 1)}, min_width: 100, resize: true },
         { name: "targetDrtnHrCnt", label: "计划工期", align: "center", min_width: 90, editor: {type: "targetDrtnHrCnt", map_to: "targetDrtnHrCnt"}, resize: true },
-        { name: "targetEndDate", label: "计划完成", align: "center", min_width: 140, template: targetEndDateLabel, min_width: 100, resize: true },
+        { name: "targetEndDate", label: "计划完成", align: "center", min_width: 140, editor: {type: "targetEndDate", map_to: "targetEndDate", min: new Date(2025, 1, 1), max: new Date(2026, 1, 1)}, template: targetEndDateLabel, min_width: 100, resize: true },
         { name: "actStartDate", label: "实际开始", align: "center", min_width: 140, editor: {type: "date", map_to: "actStartDate", min: new Date(2025, 1, 1), max: new Date(2026, 1, 1)}, template: actStartDateLabel, min_width: 100, resize: true },
         { name: "progress", label: "完成百分比", align: "center", min_width: 90, template: function(task) {
             return Math.round(task.progress * 100) + "%";
@@ -1590,6 +1590,47 @@ function _inConfigColumns() {
             dataForm.targetEndDate = Gantt.calculateEndDate({start_date: new Date(dataForm.targetStartDate), duration: dataForm.duration})
             // dataForm.targetEndDate = new Date(new Date(`${dataForm.targetStartDate}`).getTime() + (currentValue * 24 * 60 * 60 * 1000))
             dataForm.end_date = dataForm.targetEndDate
+            Gantt.updateTask(id)
+            Gantt.autoSchedule(id)
+            return value !== currentValue;
+        },
+        is_valid: function (value, id, column, node) {
+            return true
+        },
+        focus: function (node) {
+            var input = node.querySelector("input");
+            if (!input) { return; }
+            if (input.focus) { input.focus(); }
+            if (input.select) { input.select(); }
+        }
+    }
+    Gantt.config.editor_types.targetEndDate = {
+        show: function (id, column, config, placeholder) {
+            let task = Gantt.getTask(id);
+            task[column.name] = gridDateToStr(new Date(new Date(task.end_date).valueOf() - 24 * 60 * 60 * 1000))
+            if(task.type !== "project") {
+                let max = config.max
+                let min = config.min
+                var html = "<div style='width:140px' role='cell'><input type='date' min='" + min + 
+                            "' max='" + max + "' name='" + column.name + "'></div>";
+                placeholder.innerHTML = html;
+            }
+        },
+        hide: function () {},
+        set_value: function (value, id, column, node) {
+            node.querySelector("input") && (node.querySelector("input").value = value)
+        },
+        get_value: function (id, column, node) {
+            let task = Gantt.getTask(id);
+            return node.querySelector("input") && (node.querySelector("input").value && gridDateToStr(new Date(new Date(node.querySelector("input").value).valueOf() + 24 * 60 * 60 * 1000)) || 0) || gridDateToStr(new Date(new Date(task.targetEndDate).valueOf() + 24 * 60 * 60 * 1000));
+        },
+        is_changed: function (value, id, column, node) {
+            var currentValue = this.get_value(id, column, node);
+            const dataForm = Gantt.getTask(id)
+            dataForm.end_date = new Date(`${currentValue} 00:00:00`)
+            if(dataForm.targetEndDate) {
+                dataForm.duration = dataForm.targetDrtnHrCnt = Gantt.calculateDuration({start_date: dataForm.start_date, end_date: new Date(dataForm.end_date)})
+            }
             Gantt.updateTask(id)
             Gantt.autoSchedule(id)
             return value !== currentValue;
