@@ -30,5 +30,13 @@ export default {
     // 使用日历
     useCalendar(query) {
         return axios.post(`gantt/enableSaving`, query)
+    },
+    // 获取版本号
+    getVersion(projectId) {
+        return axios.get(`gantt/baseline/versions?projectId=${projectId}`)
+    },
+    // 获取版本数据
+    getVersionData(query) {
+        return axios.post(`gantt/baseline/versionComparison`, query)
     }
 }

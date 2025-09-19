@@ -485,11 +485,13 @@ function goLink(row) {
   if (!results) return null;
   if (!results[2]) return '';
   const id = decodeURIComponent(results[2].replace(/\+/g, ' '))
+  const url = row.CRRC_HP_PK01 ||
+  `https://dls.4dlp.com.cn:7102/bp/mod/bp/log?model=${row.CRRC_PFG_ID}&uuu_dataPickerDe=&src_model=&bulk=&logtype=bplog&consolidate=&restr_status=&datapickerDe=&configBpLogType=&__uref=${id}&admin_updates=&isPlanningSheet=0&activePlanningSheetId=0&isPortfolio=false`
   // const query = window.location.href;
   // console.log(query)
   // window.open(`https://dls.4dlp.com.cn:7102/bp/mod/bp/log?model=${row.CRRC_PFG_ID}&uuu_dataPickerDe=&src_model=&bulk=&logtype=bplog&consolidate=&restr_status=&datapickerDe=&configBpLogType=&__uref=${id}&admin_updates=&isPlanningSheet=0&activePlanningSheetId=0&isPortfolio=false`,
   // '_blank', `width=1200,height=800,top=${(window.innerHeight-800)/2},left=${(window.innerWidth-1200)/2}`)
-  window.location.href = `https://dls.4dlp.com.cn:7102/bp/mod/bp/log?model=${row.CRRC_PFG_ID}&uuu_dataPickerDe=&src_model=&bulk=&logtype=bplog&consolidate=&restr_status=&datapickerDe=&configBpLogType=&__uref=${id}&admin_updates=&isPlanningSheet=0&activePlanningSheetId=0&isPortfolio=false`
+  window.location.href = url
 }
 
 function initProjectChart() {

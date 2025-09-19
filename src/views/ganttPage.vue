@@ -21,6 +21,7 @@
             <!-- <el-button @click="zoomIn">减小范围</el-button>
             <el-button @click="zoomOut">增大范围</el-button>
             <el-button @click="updateCriticalPath">{{ criticalPathText }}</el-button> -->
+            <el-button @click="showVersionCompare">版本对比</el-button>
             <el-dropdown style="margin: 0px 12px" @command="exportTo">
                 <el-button>
                     导出<el-icon class="el-icon--right"><ArrowDown /></el-icon>
@@ -179,6 +180,43 @@
                 </div>
             </template>
         </el-dialog>
+    </el-dialog>
+    <el-dialog
+        v-model="versionCompareVisible"
+        v-if="versionCompareVisible"
+        title="版本对比"
+        width="1500"
+        :close-on-click-modal="false">
+        <div>
+            <el-select
+                multiple
+                v-model="versionCompareType"
+                style="width: 250px; margin-bottom: 20px"
+                placeholder="请选择版本号"
+                @change="changeVersionCompareType">
+                <el-option v-for="(item, index) in versionCompareOptions" :key="index" :label="item" :value="item"></el-option>
+            </el-select>
+            <el-table
+                :data="versionCompareData"
+                v-if="versionCompareTableShow"
+                border>
+                <el-table-column
+                    v-for="(item, index) in versionCompareColumns"
+                    :key="index"
+                    :label="item.label"
+                    align="center">
+                    <el-table-column
+                        v-for="(_item, _index) in item.children"
+                        :key="_index"
+                        :label="_item.label"
+                        :prop="_item.prop">
+                        <template #default="scope">
+                            {{ _item.prop.indexOf('TARGETENDDATE') > 0 ? scope.row[_item.prop]?.substring(0, 10) : scope.row[_item.prop] }}
+                        </template>
+                    </el-table-column>
+                </el-table-column>
+            </el-table>
+        </div>
     </el-dialog>
 </div>
 </template>
@@ -2090,6 +2128,95 @@ function zoomOut(){
     //     // 删除表头添加按钮
     //     document.querySelector(".gantt_grid_head_add").style.display = "none";
     // })
+}
+
+const versionCompareVisible = ref(false)
+const versionCompareType = ref([])
+const versionCompareOptions = ref(["B1", "B2", "B3"])
+const versionCompareData = ref([])
+const versionCompareColumns = ref([
+    {
+        label: "当前版本",
+        children: [
+            {
+                prop: "当前版本_TARGETSTARTDATE",
+                label: "计划开始",
+            },
+            {
+                prop: "当前版本_TARGETDRTNHRCNT",
+                label: "计划工期",
+            },
+            {
+                prop: "当前版本_TARGETENDDATE",
+                label: "计划完成",
+            },
+        ]
+    }
+])
+const versionCompareTableShow = ref(true)
+const showVersionCompare = () => {
+    versionCompareVisible.value = true
+    Promise.all([
+        axios.getVersion(projectId),
+        axios.getVersionData({projectId, baselineVersion: versionCompareType.value})
+    ]).then(res => {
+        if(res[0].data.code === 200 && res[1].data.code === 200) {
+            versionCompareOptions.value = res[0].data.data
+            versionCompareData.value = res[1].data.data
+        } else {
+            if(res[0].data.code !== 200) ElMessage.error(res[0].data.msg)
+            if(res[1].data.code !== 200) ElMessage.error(res[1].data.msg)
+        }
+    })
+}
+const changeVersionCompareType = async (val) => {
+    const res = await axios.getVersionData({projectId, baselineVersion: val})
+    if(res.data.code === 200) {
+        versionCompareData.value = res.data.data
+    } else {
+        ElMessage.error(res.data.msg)
+    }
+    versionCompareTableShow.value = false
+    const arr = [{
+        label: "当前版本",
+        children: [
+            {
+                prop: "当前版本_TARGETSTARTDATE",
+                label: "计划开始",
+            },
+            {
+                prop: "当前版本_TARGETDRTNHRCNT",
+                label: "计划工期",
+            },
+            {
+                prop: "当前版本_TARGETENDDATE",
+                label: "计划完成",
+            },
+        ]
+    }]
+    val.forEach(el => {
+        arr.push({
+            label: el,
+            children: [
+                {
+                    prop: `${el}_TARGETSTARTDATE`,
+                    label: "计划开始",
+                },
+                {
+                    prop: `${el}_TARGETDRTNHRCNT`,
+                    label: "计划工期",
+                },
+                {
+                    prop: `${el}_TARGETENDDATE`,
+                    label: "计划完成",
+                },
+            ]
+        })
+    })
+    versionCompareColumns.value = [ ...arr ]
+    nextTick(() => {
+        versionCompareTableShow.value = true
+    })
 }
 
 const exportTo = (command) => {
