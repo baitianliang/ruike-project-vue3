@@ -211,7 +211,9 @@
                         :label="_item.label"
                         :prop="_item.prop">
                         <template #default="scope">
-                            {{ _item.prop.indexOf('TARGETENDDATE') > 0 ? scope.row[_item.prop]?.substring(0, 10) : scope.row[_item.prop] }}
+                            <span v-if="_item.prop === 'firstItem'">{{ `${scope.row.TASKCODE && `A${scope.row.TASKCODE.padStart(4, '0')}` || projectCode + (scope.row.WBSCODE && scope.row.WBSCODE || "") }` }}</span>
+                            <span v-else-if="_item.prop.indexOf('TARGETENDDATE') > 0">{{ scope.row[_item.prop]?.substring(0, 10) }}</span>
+                            <span v-else>{{ scope.row[_item.prop] }}</span>
                         </template>
                     </el-table-column>
                 </el-table-column>
@@ -2139,6 +2141,14 @@ const versionCompareColumns = ref([
         label: "当前版本",
         children: [
             {
+                prop: "firstItem",
+                label: "作业编码",
+            },
+            {
+                prop: "TEXT",
+                label: "作业名称",
+            },
+            {
                 prop: "当前版本_TARGETSTARTDATE",
                 label: "计划开始",
             },
@@ -2180,6 +2190,14 @@ const changeVersionCompareType = async (val) => {
     const arr = [{
         label: "当前版本",
         children: [
+            {
+                prop: "firstItem",
+                label: "作业编码",
+            },
+            {
+                prop: "TEXT",
+                label: "作业名称",
+            },
             {
                 prop: "当前版本_TARGETSTARTDATE",
                 label: "计划开始",
