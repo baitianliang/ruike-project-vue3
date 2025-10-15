@@ -40,6 +40,11 @@ const routes = [
         component: () => import('../views/approvalPage.vue')
     },
     {
+        path: '/FinishedProjectPage',
+        name: '已办',
+        component: () => import('../views/finishedProjectPage.vue')
+    },
+    {
         path: '/VChat',
         name: 'Ai聊天室',
         component: () => import('../views/vChat.vue')

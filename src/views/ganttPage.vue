@@ -1,4 +1,5 @@
 <template>
+<!-- 甘特图 -->
 <!-- <div style="height: 100%;"> -->
 <div v-loading="loading" style="height: 100%;">
     <div style="height: 40px; margin: 0px 20px; display: flex; justify-content: space-between; align-items: center">
@@ -234,6 +235,8 @@ import router from '@/router/index.js';
 const ganttDom = useTemplateRef('gantt')
 const loading = ref(false)
 let projectId = ""
+let projectCode = ""
+let projectName = ""
 let userName = window.top._P ? window.top._P.data?.navbean?.user?.userid : window.opener?.opener?._P?.data?.navbean?.user?.userid || '测试'
 // 甘特图数据和线的数据和基线数据
 const tasks = reactive({
@@ -326,7 +329,10 @@ let readonly = ref(false)
 
 onMounted(() => {
     readonly.value = router.currentRoute.value.path === "/GanttShow"
-    projectId = window.top.getCurrentProjectId ? window.top.getCurrentProjectId() : window.opener?.opener?.getCurrentProjectId() || '110'
+    projectId = window.top.getCurrentProjectId ? window.top.getCurrentProjectId() : window.opener?.opener?.getCurrentProjectId() || ''
+    projectId = projectId || window.opener?.top?.getCurrentProjectId() || '1010'
+    // projectCode = window.top._P ? window.top._P?.data?.recentLocations[0]?.number : window.opener?.opener?._P?.data?.recentLocations[0]?.number || "A-DLS-1-01"
+    projectName = window.top.getCurrentShellName ? window.top.getCurrentShellName() : window.opener?.opener?.getCurrentShellName() || "测试项目"
     getGanttData()
 })
 onUnmounted(() => {
@@ -351,6 +357,7 @@ async function getGanttData() {
     tasks.data = res.data.data.data
     tasks.baselines = res.data.data.baselines
     tasks.links = res.data.data.links
+    projectCode = res.data.data.shellnumber
     // tasks.data = []
     // tasks.baselines = []
     // tasks.links = []
@@ -1727,8 +1734,6 @@ function calculateSummaryProgress(task) {
     if (!totalToDo) return 0;
     else return totalDone / totalToDo;
 }
-const projectCode = window.top._P ? window.top._P?.data?.recentLocations[0]?.number : window.opener?.opener?._P?.data?.recentLocations[0]?.number || "A-DLS-1-01"
-const projectName = window.top.getCurrentShellName ? window.top.getCurrentShellName() : window.opener?.opener?.getCurrentShellName() || "测试项目"
 // 表格框修改数据
 function firstItemLabel(task) {
     task.wbsCode = task.wbsCode || ""
@@ -2172,7 +2177,16 @@ const showVersionCompare = () => {
     ]).then(res => {
         if(res[0].data.code === 200 && res[1].data.code === 200) {
             versionCompareOptions.value = res[0].data.data
-            versionCompareData.value = res[1].data.data
+            // versionCompareData.value = res[1].data.data
+            const dataForm = Gantt.serialize()
+            const idList = dataForm.data.map(el => el.uuid)
+            let resData = res[1].data.data
+            idList.forEach(el => {
+                const obj = resData.find(_el => _el.uuid === el)
+                versionCompareData.value.push(obj)
+                resData = resData.filter(_el => _el.uuid !== el)
+            })
+            versionCompareData.value = [ ...versionCompareData.value, ...resData ]
         } else {
             if(res[0].data.code !== 200) ElMessage.error(res[0].data.msg)
             if(res[1].data.code !== 200) ElMessage.error(res[1].data.msg)
@@ -2182,7 +2196,17 @@ const showVersionCompare = () => {
 const changeVersionCompareType = async (val) => {
     const res = await axios.getVersionData({projectId, baselineVersion: val})
     if(res.data.code === 200) {
-        versionCompareData.value = res.data.data
+        versionCompareData.value = []
+        // versionCompareData.value = res.data.data
+        const dataForm = Gantt.serialize()
+        const idList = dataForm.data.map(el => el.uuid)
+        let resData = res.data.data
+        idList.forEach(el => {
+            const obj = resData.find(_el => _el.uuid === el)
+            versionCompareData.value.push(obj)
+            resData = resData.filter(_el => _el.uuid !== el)
+        })
+        versionCompareData.value = [ ...versionCompareData.value, ...resData ]
     } else {
         ElMessage.error(res.data.msg)
     }
@@ -2439,6 +2463,7 @@ function uploadExcel(file, callback) {
                 Gantt.clearAll();
                 const date = new Date()
                 const nowDate = date.getFullYear() + "-" + (date.getMonth() + 1).toString().padStart(2, '0') + "-" + date.getDate() + " 00:00:00"
+                let taskCode = 10
                 const parentList = {}
                 project.forEach(el => {
                     el.id = Gantt.uid()
@@ -2468,6 +2493,8 @@ function uploadExcel(file, callback) {
                     if(el.targetDrtnHrCnt > 0) {
                         el.targetEndDate = Gantt.calculateEndDate({start_date: new Date(el.start_date), duration: el.duration})
                         el.type = "task"
+                        el.taskCode = String(taskCode)
+                        taskCode = taskCode + 10
                     } else {
                         el.type = "milestone"
                     }
