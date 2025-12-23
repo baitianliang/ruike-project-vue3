@@ -476,9 +476,6 @@ async function getPageData(val) {
 }
 
 function goLink(row) {
-  console.log(row, "row");
-  // console.log(window.location)
-  // console.log(window.parent.location.href)
   // params.get('id')
   var regex = new RegExp('[?]__uref(=([^&#]*)|&|#|$)'),
   results = regex.exec(window.parent.location.href);
@@ -488,7 +485,6 @@ function goLink(row) {
   const url = row.CRRC_HP_PK01 ||
   `https://dls.4dlp.com.cn:7102/bp/mod/bp/log?model=${row.CRRC_PFG_ID}&uuu_dataPickerDe=&src_model=&bulk=&logtype=bplog&consolidate=&restr_status=&datapickerDe=&configBpLogType=&__uref=${id}&admin_updates=&isPlanningSheet=0&activePlanningSheetId=0&isPortfolio=false`
   // const query = window.location.href;
-  // console.log(query)
   // window.open(`https://dls.4dlp.com.cn:7102/bp/mod/bp/log?model=${row.CRRC_PFG_ID}&uuu_dataPickerDe=&src_model=&bulk=&logtype=bplog&consolidate=&restr_status=&datapickerDe=&configBpLogType=&__uref=${id}&admin_updates=&isPlanningSheet=0&activePlanningSheetId=0&isPortfolio=false`,
   // '_blank', `width=1200,height=800,top=${(window.innerHeight-800)/2},left=${(window.innerWidth-1200)/2}`)
   window.location.href = url

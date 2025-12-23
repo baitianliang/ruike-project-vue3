@@ -51,7 +51,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
+import { ref, onMounted, onBeforeUnmount } from 'vue'
 import router from "@/router";
 
 // 数据
@@ -103,7 +103,6 @@ const updateTime = () => {
     month: 'long', 
     day: 'numeric' 
   })
-  console.log(currentDate.value)
 }
 
 const particleStyle = (particle) => ({

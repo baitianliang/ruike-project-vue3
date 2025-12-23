@@ -1,0 +1,89 @@
+<template>
+    <div id="videoPlay">
+        <videoPlayer class="vjs-custom-skin videoPlayer" ref="videoPlayer" :options="playerOptions"></videoPlayer>
+        <div class="player" @click.stop="play"></div>
+    </div>
+</template>
+
+<script>
+    import 'video.js/dist/video-js.css'
+    import {videoPlayer} from 'vue-video-player'
+    import 'videojs-flash'
+
+    export default {
+        name: "videoPlay",
+        components: {
+            videoPlayer
+        },
+        props: {
+            videoUrl: {
+                type: String,
+                default: ''
+            },
+            autoPlay: {
+                type: Boolean,
+                default: false
+            }
+        },
+        data() {
+            return {
+                playerOptions: {
+                    playbackRates: [0.7, 1.0, 1.5, 2.0], //播放速度
+                    autoplay: this.autoPlay, //如果true,浏览器准备好时开始回放。
+                    muted: true, // 默认情况下将会消除任何音频。 true为静音
+                    loop: true, // 导致视频一结束就重新开始。
+                    preload: 'auto', // 建议浏览器在<video>加载元素后是否应该开始下载视频数据。auto浏览器选择最佳行为,立即开始加载视频（如果浏览器支持）
+                    language: 'zh-CN',
+                    aspectRatio: '16:9', // 将播放器置于流畅模式，并在计算播放器的动态大小时使用该值。值应该代表一个比例 - 用冒号分隔的两个数字（例如"16:9"或"4:3"）
+                    fluid: true, // 当true时，Video.js player将拥有流体大小。换句话说，它将按比例缩放以适应其容器。
+                    sources: [{
+                        //type:"rtmp/flv",
+                        type: "video/ogg" || "video/webm" || "video/mp4" || "application/x-mpegURL",//这里的种类支持很多种：基本视频格式、直播、流媒体等，具体可以参看git网址项目
+                        // src: require('../../assets/img/testVideo.mp4')//url地址
+                        src: ''//url地址
+                    }],
+                    // poster: "../../static/images/test.jpg", //你的封面地址
+                    // height: document.documentElement.clientHeight * 0.4,
+                    // width: document.documentElement.clientWidth, //播放器宽度
+                    notSupportedMessage: '此视频暂无法播放，请稍后再试', //允许覆盖Video.js无法播放媒体源时显示的默认信息。
+                    controls: false,
+                    controlBar: {
+                        timeDivider: true,
+                        durationDisplay: true,
+                        remainingTimeDisplay: false,
+                        fullscreenToggle: true  //全屏按钮
+                    }
+                },
+            }
+        },
+        methods: {
+            play(){
+                this.$refs.videoPlayer.player.play();
+            },
+        },
+        mounted() {
+            this.playerOptions.sources[0].src = this.videoUrl;
+        },
+    }
+</script>
+
+<style lang="scss" scoped>
+    #videoPlay {
+        position: relative;
+
+        .videoPlayer {
+            display: block;
+            height: 100%;
+        }
+
+        .player {
+            width: 20.5%;
+            height: 24%;
+            position: absolute;
+            top: 38%;
+            left: 39.5%;
+            /*background-color: #6cbcff;*/
+        }
+    }
+
+</style>

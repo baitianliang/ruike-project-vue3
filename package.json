@@ -14,13 +14,16 @@
     "core-js": "^3.8.3",
     "crypto-js": "^4.2.0",
     "dhtmlx-gantt": "^9.0.11",
-    "echarts": "^5.6.0",
+    "echarts": "^4.3.0",
     "element-plus": "^2.10.2",
     "file-saver": "^2.0.5",
     "pinia": "^3.0.3",
+    "videojs-flash": "^2.2.1",
     "vue": "^3.2.13",
     "vue-advanced-chat": "^2.1.0",
+    "vue-awesome-swiper": "^5.0.1",
     "vue-router": "^4.5.1",
+    "vue-video-player": "^6.0.0",
     "xlsx": "^0.18.5"
   },
   "devDependencies": {

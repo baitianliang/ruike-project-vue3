@@ -213,7 +213,20 @@
                         :prop="_item.prop">
                         <template #default="scope">
                             <span v-if="_item.prop === 'firstItem'">{{ `${scope.row.TASKCODE && `A${scope.row.TASKCODE.padStart(4, '0')}` || projectCode + (scope.row.WBSCODE && scope.row.WBSCODE || "") }` }}</span>
-                            <span v-else-if="_item.prop.indexOf('TARGETENDDATE') > 0">{{ scope.row[_item.prop]?.substring(0, 10) }}</span>
+                            <span
+                                :style="versionCompareStyle(item.label, scope.row[_item.prop], 'TARGETENDDATE', scope.$index)"
+                                v-else-if="_item.prop.indexOf('TARGETENDDATE') > 0">
+                                {{ scope.row[_item.prop]?.substring(0, 10) }}
+                            </span>
+                            <span
+                                :style="versionCompareStyle(item.label, scope.row[_item.prop], 'TARGETSTARTDATE', scope.$index)"
+                                v-else-if="_item.prop.indexOf('TARGETSTARTDATE') > 0">
+                                {{ scope.row[_item.prop]?.substring(0, 10) }}
+                            </span>
+                            <span :style="versionCompareStyle(item.label, scope.row[_item.prop], 'TARGETDRTNHRCNT', scope.$index)"
+                                v-else-if="_item.prop.indexOf('TARGETDRTNHRCNT') > 0">
+                                {{ scope.row[_item.prop] }}
+                            </span>
                             <span v-else>{{ scope.row[_item.prop] }}</span>
                         </template>
                     </el-table-column>
@@ -228,7 +241,7 @@
 import { Folder, FolderOpened, RefreshLeft, RefreshRight, Key, CreditCard, ArrowDown, ArrowLeft, ArrowRight, Tools, FolderChecked, Calendar, Delete } from '@element-plus/icons-vue'
 import Gantt from "../utils/gantt/dhtmlxgantt.js";
 import { fileDragAndDrop } from "../utils/gantt/snippets/dhx_file_dnd.js";
-import { h, nextTick, onMounted, onUnmounted, reactive, ref, render, useTemplateRef } from 'vue';
+import { computed, h, nextTick, onMounted, onUnmounted, reactive, ref, render, useTemplateRef } from 'vue';
 import { ElSelect, ElOption, ElMessage, ElMessageBox } from "element-plus";
 import axios from "../assets/axios/GanttPage.js"
 import router from '@/router/index.js';
@@ -330,7 +343,7 @@ let readonly = ref(false)
 onMounted(() => {
     readonly.value = router.currentRoute.value.path === "/GanttShow"
     projectId = window.top.getCurrentProjectId ? window.top.getCurrentProjectId() : window.opener?.opener?.getCurrentProjectId() || ''
-    projectId = projectId || window.opener?.top?.getCurrentProjectId() || '1010'
+    projectId = projectId || window.opener?.top?.getCurrentProjectId() || '1090'
     // projectCode = window.top._P ? window.top._P?.data?.recentLocations[0]?.number : window.opener?.opener?._P?.data?.recentLocations[0]?.number || "A-DLS-1-01"
     projectName = window.top.getCurrentShellName ? window.top.getCurrentShellName() : window.opener?.opener?.getCurrentShellName() || "测试项目"
     getGanttData()
@@ -407,6 +420,7 @@ async function getGanttData() {
             el.text = projectName
             el.pmsWbsCode = projectCode
         }
+        if(el.progress > 1) {el.progress = el.progress / 100}
     })
     _initGanttEvents()
     setCalendarConfig(res.data.data.calendars[0])
@@ -472,6 +486,7 @@ function _initGanttEvents() {
 
 	Gantt.attachEvent("onParse", function () {
 		Gantt.eachTask(function (task) {
+            task.progress = calculateSummaryProgress(task);
 			if (Gantt.hasChild(task.id)) {
 				task.type = Gantt.config.types.project;
 				Gantt.updateTask(task.id);
@@ -1136,6 +1151,7 @@ function dynamicData() {
         // Gantt.sort("type", true)
         Gantt.sort("taskCode", false)
         Gantt.sort("wbsCode", false)
+        refreshSummaryProgress(Gantt.getParent(id), true);
         //在这里放置任何自定义逻辑
     });
     // 删除数据后
@@ -1259,6 +1275,7 @@ function _inConfigColumns() {
                 calculatePlannedDates(task.parent)
             }
         })
+        refreshSummaryProgress(Gantt.getParent(id), true);
     });
 
     // 拖拽甘特图完成情况
@@ -1270,7 +1287,7 @@ function _inConfigColumns() {
         // { name: "projectId", label: "项目ID", tree: true },
         // editor: {type: "text", map_to: "wbsCode"}   表格编辑框
         { name: "firstItem", label: "编码", align: "left", min_width: 200, template: firstItemLabel, tree: true, resize: true },
-        { name: "wbsCode", label: "WBS编码", align: "center", min_width: 150, template: wbsCodeLabel, resize: true },
+        { name: "wbsCode", label: "WBS编码", align: "center", min_width: 150, template: wbsCodeLabel, resize: true, hide: true },
         { name: "pmsWbsCode", label: "PMS_WBS编码", align: "center", min_width: 150, editor: {type: "text", map_to: "pmsWbsCode"}, resize: true },
         // { name: "taskCode", label: "作业编码", align: "center", template: taskCodeLabel, resize: true },
         // { name: "wbs", label: "WBS", template: Gantt.getWBSCode }, // 插件自带WBS编码
@@ -1407,7 +1424,6 @@ function _inConfigColumns() {
     //     return value !== currentValue;
     // }
     // Gantt.config.editor_types.date.show = function(id, column, config, placeholder) {
-    //     console.log(id, column, config, placeholder)
     //     let max = config.max
     //     let min = config.min
     //     var html = "<div style='width:140px' role='cell'><input type='date' min='" + min + 
@@ -2261,6 +2277,26 @@ const changeVersionCompareType = async (val) => {
     })
 }
 
+const versionCompareStyle = ((label, value, name, index) => {
+    if(label === "当前版本" || index < 0 || !versionCompareData.value[index][`当前版本_${name}`]) return ""
+    switch (name) {
+        case "TARGETENDDATE":
+            if(value == "NaN-NaN-NaN NaN:NaN") return ""
+            else if(new Date(versionCompareData.value[index][`当前版本_TARGETENDDATE`]?.substring(0, 10)).getTime() < new Date(value?.substring(0, 10)).getTime()) return "color: red";
+            else if(new Date(versionCompareData.value[index][`当前版本_TARGETENDDATE`]?.substring(0, 10)).getTime() > new Date(value?.substring(0, 10)).getTime()) return "color: green";
+            else return "";
+        case "TARGETDRTNHRCNT":
+            if(versionCompareData.value[index][`当前版本_TARGETDRTNHRCNT`] > value) return "color: green";
+            else if(versionCompareData.value[index][`当前版本_TARGETDRTNHRCNT`] < value) return "color: red";
+            else return ""
+        case "TARGETSTARTDATE":
+            if(value == "NaN-NaN-NaN NaN:NaN") return ""
+            else if(new Date(versionCompareData.value[index][`当前版本_TARGETSTARTDATE`]?.substring(0, 10)).getTime() < new Date(value?.substring(0, 10)).getTime()) return "color: red";
+            else if(new Date(versionCompareData.value[index][`当前版本_TARGETSTARTDATE`]?.substring(0, 10)).getTime() > new Date(value?.substring(0, 10)).getTime()) return "color: green";
+            else return "";
+    }
+})
+
 const exportTo = (command) => {
     switch(command) {
         case "PDF":
@@ -2326,7 +2362,6 @@ function uploadProject(file, callback) {
             "Type",
         ],
         callback: function (project) {
-            console.log(project)
             if (project) {
                 Gantt.clearAll();
                 // if (project.config.duration_unit) {
@@ -2399,7 +2434,6 @@ function uploadP6(file, callback) {
             "Milestone",
         ],
         callback: function (project) {
-            console.log(project)
             if (project) {
                 const ActivityStatusList = {
                     NOT_STARTED: "未开始",
@@ -2457,7 +2491,6 @@ function uploadExcel(file, callback) {
         server:"https://dls.4dlp.com.cn:7102/export/gantt",
         data: file,
         callback: function (project) {
-            console.log(project)
             debugger;
             if (project) {
                 Gantt.clearAll();
@@ -2514,11 +2547,6 @@ function uploadExcel(file, callback) {
             }
         }
     });
-}
-
-// Excel数据转换
-function transformExcelData(excelData) {
-    console.log(excelData)
 }
 
 function saveTask() {

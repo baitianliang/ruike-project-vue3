@@ -534,7 +534,6 @@ async function getSecondData() {
     widthMode: 'standard'
   };
   const tableInstance = new PivotTable(document.getElementById('tableContainer'), option);
-  console.log(tableInstance)
   // tableInstance.theme.extend({_scroll: {visible: "always"}});
   // 添加点击事件监听
   tableInstance.on('click_cell', (args) => {

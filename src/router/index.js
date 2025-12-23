@@ -49,6 +49,12 @@ const routes = [
         name: 'Ai聊天室',
         component: () => import('../views/vChat.vue')
     },
+    {
+        path: '/visual',
+        name: '大屏',
+        component: () => import('../views/visual.vue')
+    },
+    
 ]
 
 const router = createRouter({
