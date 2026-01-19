@@ -45,6 +45,11 @@ const routes = [
         component: () => import('../views/finishedProjectPage.vue')
     },
     {
+        path: '/ProjectPage',
+        name: '项目产品追踪',
+        component: () => import('../views/projectPage.vue')
+    },
+    {
         path: '/VChat',
         name: 'Ai聊天室',
         component: () => import('../views/vChat.vue')
@@ -52,7 +57,12 @@ const routes = [
     {
         path: '/visual',
         name: '大屏',
-        component: () => import('../views/visual.vue')
+        component: () => import('../views/visual.vue'),
+    },
+    {
+        path: '/FileList',
+        name: '文件列表',
+        component: () => import('../views/fileList.vue'),
     },
     
 ]

@@ -15,6 +15,8 @@
           <span class="weather-temp">24°C</span>
         </div>
       </div>
+
+      <!-- <img src="../assets/img/中车国际LOGO.ai" alt=""> -->
       
       <div class="time-date">
         <div class="current-time">{{ currentTime }}</div>
@@ -51,7 +53,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, onBeforeUnmount } from 'vue'
+import { ref, onMounted, onBeforeUnmount, computed } from 'vue'
 import router from "@/router";
 
 // 数据

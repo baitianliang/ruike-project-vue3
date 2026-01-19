@@ -1,5 +1,6 @@
 const { defineConfig } = require('@vue/cli-service')
 module.exports = defineConfig({
+  productionSourceMap: false,
   configureWebpack: {
     devtool: 'source-map', // 确保生成完整的 Source Map
   },

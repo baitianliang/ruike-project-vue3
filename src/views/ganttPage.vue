@@ -255,7 +255,7 @@ let userName = window.top._P ? window.top._P.data?.navbean?.user?.userid : windo
 const tasks = reactive({
     data: [
         {id: 1, text: "Office itinerancy", open: true, type: "project", wbsCode: ".1", taskCode: "", taskType: "WBS", taskMilestoneType: "", constraint_type: "", constraint_date: "", taskStatus: "", taskPhase: "", taskPosition: "", taskOwner: "", targetStartDate: "", targetDrtnHrCnt: "", targetEndDate: "", actStartDate: "", actWorkQty: "", remainDrtnHrCnt: "", actEndDate: "", freeFloatHrCnt: "自由浮时1", totalFloatHrCnt: "总浮时1", taskComplete: "20", progress: '0.2'},
-        {id: 2, text: "Office facing", start_date: "", wbsCode: ".1", taskCode: "1000", taskType: "WBS", taskMilestoneType: "项目里程碑", constraint_type: "", constraint_date: "", taskStatus: "未开始", taskPhase: "", taskPosition: "", taskOwner: "", targetStartDate: "2025-07-22", targetDrtnHrCnt: "20", targetEndDate: "", actStartDate: "", actWorkQty: "", remainDrtnHrCnt: "", actEndDate: "", freeFloatHrCnt: "自由浮时2", totalFloatHrCnt: "总浮时2", taskComplete: "20", duration: "", parent: "1", progress: '0.2'},
+        {id: 2, text: "Office facing", start_date: "", wbsCode: ".1", taskCode: "1000", taskType: "WBS", taskMilestoneType: "里程碑", constraint_type: "", constraint_date: "", taskStatus: "未开始", taskPhase: "", taskPosition: "", taskOwner: "", targetStartDate: "2025-07-22", targetDrtnHrCnt: "20", targetEndDate: "", actStartDate: "", actWorkQty: "", remainDrtnHrCnt: "", actEndDate: "", freeFloatHrCnt: "自由浮时2", totalFloatHrCnt: "总浮时2", taskComplete: "20", duration: "", parent: "1", progress: '0.2'},
         {id: 18, text: "Mediate milestone", wbsCode: ".1", start_date: "29-08-2025 00:00", duration: 0, type: "milestone", parent: "1", progress: 0, open: true, duration: 0},
         {id: 19, text: "Final milestone", wbsCode: ".1", start_date: "29-08-2025 00:00", duration: 0, type: "milestone", parent: "1", progress: 0, open: true, duration: 0}
     ],
@@ -791,7 +791,7 @@ const taskTypeOptions = [
 // 里程碑类型
 const taskMilestoneTypeOptions = [
     {key: "", label: ""},
-    {key: "项目里程碑", label: "项目里程碑"},
+    {key: "里程碑", label: "里程碑"},
     {key: "关键节点", label: "关键节点"},
     {key: "合同节点", label: "合同节点"}
 ]
@@ -1739,16 +1739,26 @@ function refreshSummaryProgress(id, submit) {
 function calculateSummaryProgress(task) {
     if (task.type != Gantt.config.types.project)
         return task.progress;
-    var totalToDo = 0;
-    var totalDone = 0;
+    // var totalToDo = 0;
+    // var totalDone = 0;
+    // Gantt.eachTask(function (child) {
+    //     if (child.type != Gantt.config.types.project) {
+    //         totalToDo += child.duration;
+    //         totalDone += (child.progress || 0) * child.duration;
+    //     }
+    // }, task.id);
+    // if (!totalToDo) return 0;
+    // else return totalDone / totalToDo;
+    let allProgress = 0;
+    let num = 0;
     Gantt.eachTask(function (child) {
         if (child.type != Gantt.config.types.project) {
-            totalToDo += child.duration;
-            totalDone += (child.progress || 0) * child.duration;
+            allProgress += child.progress || 0;
+            num++;
         }
     }, task.id);
-    if (!totalToDo) return 0;
-    else return totalDone / totalToDo;
+    if (num === 0) return 0;
+    return allProgress / num;
 }
 // 表格框修改数据
 function firstItemLabel(task) {
