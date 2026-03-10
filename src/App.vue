@@ -3,7 +3,8 @@
 </template>
 
 <script setup>
-import { onMounted } from "vue";
+import { onBeforeMount, onMounted } from "vue";
+// import router from './router'
 onMounted(() => {
   // 跳转单点登录（判断是否通过iframe嵌套此项目）
   if(window === window.parent) {
@@ -11,7 +12,21 @@ onMounted(() => {
   } else {
     console.log(window.parent._P)
   }
+  if(window.location.href.indexOf('/visual') > -1) {
+    window.addEventListener('resize', setRem(2560)) // 监听窗口变化
+    setRem(2560) // 初始化
+  } else {
+    window.addEventListener('resize', setRem(1920)) // 监听窗口变化
+    setRem(1920) // 初始化
+  }
 })
+function setRem(val) {
+  const baseSize = 16 // 基准大小
+  const designWidth = val // 设计稿宽度
+  const currentWidth = Math.min(document.documentElement.clientWidth, val)
+  const rem = (currentWidth / designWidth) * baseSize
+  document.documentElement.style.fontSize = rem + 'px'
+}
 </script>
 
 <style lang="scss">

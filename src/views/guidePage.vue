@@ -178,8 +178,14 @@
                 </el-table-column>
                 <el-table-column label="对应交付物">
                   <template #default="scope">
-                    <div>{{ scope.row.CRRC_PFG_JFW }}</div>
-                    <div>{{ scope.row.CRRC_PFG_JFWSM }}</div>
+                    <div v-if="scope.row.CRRC_HP_PK02" class="jump_link" @click="downFile(scope.row.CRRC_HP_PK02)">
+                      <div>{{ scope.row.CRRC_PFG_JFW }}</div>
+                      <div>{{ scope.row.CRRC_PFG_JFWSM }}</div>
+                    </div>
+                    <div v-else>
+                      <div>{{ scope.row.CRRC_PFG_JFW }}</div>
+                      <div>{{ scope.row.CRRC_PFG_JFWSM }}</div>
+                    </div>
                     <!-- <div
                       v-for="(item, index) in scope.row.deliverableList"
                       :key="index"
@@ -488,6 +494,15 @@ function goLink(row) {
   // window.open(`https://dls.4dlp.com.cn:7102/bp/mod/bp/log?model=${row.CRRC_PFG_ID}&uuu_dataPickerDe=&src_model=&bulk=&logtype=bplog&consolidate=&restr_status=&datapickerDe=&configBpLogType=&__uref=${id}&admin_updates=&isPlanningSheet=0&activePlanningSheetId=0&isPortfolio=false`,
   // '_blank', `width=1200,height=800,top=${(window.innerHeight-800)/2},left=${(window.innerWidth-1200)/2}`)
   window.location.href = url
+}
+
+const downFile = (url) => {
+  const aLink = document.createElement('a');
+  aLink.href = url;
+  aLink.download = '';
+  document.body.appendChild(aLink);
+  aLink.click();
+  document.body.removeChild(aLink);
 }
 
 function initProjectChart() {

@@ -3,7 +3,7 @@
 <!-- <div style="height: 100%;"> -->
 <div v-loading="loading" style="height: 100%;">
     <div style="height: 40px; margin: 0px 20px; display: flex; justify-content: space-between; align-items: center">
-        <div>
+        <div style="display: flex; align-items: center">
             <el-button title="撤销" @click="undo"><el-icon><RefreshLeft /></el-icon></el-button>
             <el-button title="恢复" @click="redo"><el-icon><RefreshRight /></el-icon></el-button>
             <el-button title="折叠" @click="close"><el-icon><Folder /></el-icon></el-button>
@@ -339,11 +339,14 @@ const zoomConfig = {
 let modal;
 let editLinkId;
 let readonly = ref(false)
+const LARGE_PROJECT_IMPORT_SIZE = 3000
+const PROJECT_IMPORT_CHUNK_SIZE = 800
+let isLargeProjectImporting = false
 
 onMounted(() => {
     readonly.value = router.currentRoute.value.path === "/GanttShow"
     projectId = window.top.getCurrentProjectId ? window.top.getCurrentProjectId() : window.opener?.opener?.getCurrentProjectId() || ''
-    projectId = projectId || window.opener?.top?.getCurrentProjectId() || '1090'
+    projectId = projectId || window.opener?.top?.getCurrentProjectId() || '110' || '1090'
     // projectCode = window.top._P ? window.top._P?.data?.recentLocations[0]?.number : window.opener?.opener?._P?.data?.recentLocations[0]?.number || "A-DLS-1-01"
     projectName = window.top.getCurrentShellName ? window.top.getCurrentShellName() : window.opener?.opener?.getCurrentShellName() || "测试项目"
     getGanttData()
@@ -436,6 +439,7 @@ function _initGanttEvents() {
         tooltip: true,
         export_api: true
 	});
+    gantt.config.branch_loading = true;
     Gantt.config.auto_scheduling = true;
     // Gantt.config.scale_unit = "day";
     // Gantt.config.date_scale = "%Y年%m月%d日";
@@ -489,12 +493,13 @@ function _initGanttEvents() {
             task.progress = calculateSummaryProgress(task);
 			if (Gantt.hasChild(task.id)) {
 				task.type = Gantt.config.types.project;
-				Gantt.updateTask(task.id);
 			} else if (task.duration === 0) {
 				task.type = Gantt.config.types.milestone;
-				Gantt.updateTask(task.id);
 			}
 		});
+        if (!isLargeProjectImporting) {
+            Gantt.refreshData();
+        }
 	});
     // 鼠标拖动新增数据
     // Gantt.config.click_drag = {
@@ -665,7 +670,7 @@ function detectIconType(value) {
     } else {
         return "dxi dxi-checkbox-marked";
     }
-};
+}
 
 // 初始化自定义提示
 function _inCustomTooltips() {
@@ -1886,7 +1891,8 @@ const onlyGrid = {
             { view: "scrollbar", id: "gridScroll", group: "horizontalScrolls" }
         ]
     },
-    { resizer: true, width: 1 }]
+    { resizer: true, width: 1 },
+    { view: "scrollbar", id: "scrollVer" }]
 };
 
 const gridAndChart = {
@@ -2341,6 +2347,25 @@ const importFrom = (command) => {
     }
 }
 const fileDnD = fileDragAndDrop()
+// function normalizeProjectTask(el) {
+//     if(el.parent < 1) el.text = projectName
+//     el.taskCode = el.$custom_data.ID && (el.$custom_data.ID + 0)
+//     el.wbsCode = el.$custom_data.WBS && el.$custom_data.WBS.split('').splice(1).join('')
+//     el.targetDrtnHrCnt = el.duration
+//     el.targetStartDate = el.start_date = el.start_date && el.start_date.substring(0, 10) || ""
+//     if(el.targetDrtnHrCnt > 0) {
+//         el.targetEndDate = Gantt.calculateEndDate({start_date: new Date(el.start_date), duration: el.duration})
+//         el.type = "task"
+//     } else {
+//         el.type = "milestone"
+//     }
+//     if(el.$custom_data.Type === "FIXED_UNITS") {
+//         let wbsCodeList = el.wbsCode.split('.')
+//         wbsCodeList.pop()
+//         el.wbsCode = wbsCodeList.join('.')
+//         el.taskStatus = "未开始"
+//     }
+// }
 // 导入project文件
 function importProject() {
     // Gantt.importFromExcel({
@@ -2354,7 +2379,7 @@ function importProject() {
     if (fileInput.files[0]) {
         loading.value = true
         fileDnD.showUpload();
-        uploadProject(fileInput.files[0], function () {})
+        uploadProjectLargeSafe(fileInput.files[0], function () {})
     }
     else ElMessage({
         message: '请先选择文件！',
@@ -2396,8 +2421,9 @@ function uploadProject(file, callback) {
                         el.taskStatus = "未开始"
                     }
                 })
+                console.log(project)
                 Gantt.parse(project.data);
-                Gantt.sort("firstItem", true)
+                // Gantt.sort("firstItem", true)
                 fileDnD.hideOverlay();
                 loading.value = false
             } else {
@@ -2405,6 +2431,86 @@ function uploadProject(file, callback) {
                     message: '导入文件格式错误，请尝试其他导入！',
                     type: 'warning',
                 });
+                fileDnD.hideOverlay();
+                loading.value = false
+            }
+        }
+    });
+}
+function uploadProjectLargeSafe(file, callback) {
+    Gantt.importFromMSProject({
+        server:"https://dls.4dlp.com.cn:7102/import/",
+        data: file,
+        taskProperties: [
+            "ID",
+            "WBS",
+            "ActivityID",
+            "Type",
+        ],
+        callback: function (project) {
+            if (project) {
+                Gantt.clearAll();
+                project.data.data.forEach(el => {
+                    if(el.parent < 1) el.text = projectName
+                    el.taskCode = el.$custom_data.ID && (el.$custom_data.ID + 0)
+                    el.wbsCode = el.$custom_data.WBS && el.$custom_data.WBS.split('').splice(1).join('')
+                    el.targetDrtnHrCnt = el.duration
+                    el.targetStartDate = el.start_date = el.start_date && el.start_date.substring(0, 10) || ""
+                    if(el.targetDrtnHrCnt > 0) {
+                        el.targetEndDate = Gantt.calculateEndDate({start_date: new Date(el.start_date), duration: el.duration})
+                        el.type = "task"
+                    } else {
+                        el.type = "milestone"
+                    }
+                    if(el.$custom_data.Type === "FIXED_UNITS") {
+                        let wbsCodeList = el.wbsCode.split('.')
+                        wbsCodeList.pop()
+                        el.wbsCode = wbsCodeList.join('.')
+                        el.taskStatus = "未开始"
+                    }
+                })
+                console.log(project)
+                const projectTasks = project?.data?.data || []
+                const isLargeImport = projectTasks.length >= LARGE_PROJECT_IMPORT_SIZE
+                isLargeProjectImporting = isLargeImport
+                if (isLargeImport) {
+                    Gantt.config.auto_scheduling = false
+                    Gantt.config.smart_rendering = true
+                }
+
+                // let cursor = 0
+                const finishImport = () => {
+                    Gantt.parse(project.data);
+                    if (isLargeImport) {
+                        Gantt.config.auto_scheduling = true
+                        isLargeProjectImporting = false
+                        close()
+                        Gantt.render()
+                    }
+                    fileDnD.hideOverlay();
+                    loading.value = false
+                }
+                finishImport()
+
+                // const processChunk = () => {
+                //     const end = Math.min(cursor + PROJECT_IMPORT_CHUNK_SIZE, projectTasks.length)
+                //     for (let i = cursor; i < end; i++) {
+                //         normalizeProjectTask(projectTasks[i])
+                //     }
+                //     cursor = end
+                //     if (cursor < projectTasks.length) {
+                //         requestAnimationFrame(processChunk)
+                //         return
+                //     }
+                //     finishImport()
+                // }
+                // processChunk()
+            } else {
+                ElMessage({
+                    message: '导入文件格式错误，请尝试其他导入！',
+                    type: 'warning',
+                });
+                isLargeProjectImporting = false
                 fileDnD.hideOverlay();
                 loading.value = false
             }
@@ -2468,8 +2574,9 @@ function uploadP6(file, callback) {
                         el.type = "milestone"
                     }
                 })
+                console.log(project)
                 Gantt.parse(project.data);
-                Gantt.sort("firstItem", true)
+                // Gantt.sort("firstItem", true)
                 fileDnD.hideOverlay();
                 loading.value = false
             } else {
@@ -2508,16 +2615,17 @@ function uploadExcel(file, callback) {
                 const nowDate = date.getFullYear() + "-" + (date.getMonth() + 1).toString().padStart(2, '0') + "-" + date.getDate() + " 00:00:00"
                 let taskCode = 10
                 const parentList = {}
+                const wbsCodeList = []
                 project.forEach(el => {
                     el.id = Gantt.uid()
-                    if(parentList[el['WBS编号']]) {
-                        el.parent = parentList[el['WBS编号']]
-                    } else if(parentList[el['WBS编号'].split('.').slice(0, -1).join('.')]) {
-                        el.parent = parentList[el['WBS编号'].split('.').slice(0, -1).join('.')]
-                        parentList[el['WBS编号']] = el.id
+                    if(parentList[el['PMS_WBS编码']]) {
+                        el.parent = parentList[el['PMS_WBS编码']]
+                    } else if(parentList[el['PMS_WBS编码'].split('.').slice(0, -1).join('.')]) {
+                        el.parent = parentList[el['PMS_WBS编码'].split('.').slice(0, -1).join('.')]
+                        parentList[el['PMS_WBS编码']] = el.id
                     } else {
                         el.parent = 0
-                        parentList[el['WBS编号']] = el.id
+                        parentList[el['PMS_WBS编码']] = el.id
                     }
                     el.text = el['作业名称']
                     if(el['作业负责人']) {
@@ -2527,20 +2635,39 @@ function uploadExcel(file, callback) {
                         }
                     }
                     if(el.parent < 1) el.text = projectName
+                    else {
+                        if(wbsCodeList.length < 1) {
+                            wbsCodeList.push(el['PMS_WBS编码'])
+                        } else if(wbsCodeList[wbsCodeList.length - 1] !== el['PMS_WBS编码']) {
+                            wbsCodeList.push(el['PMS_WBS编码'])
+                        }
+                        el.wbsCode = `.${wbsCodeList.length}`
+                    }
                     // el.taskCode = el.$custom_data.ID && (el.$custom_data.ID + 0)
-                    el.wbsCode = el['WBS编号'] && el['WBS编号'].split('.').splice(1).join('.') && `.${el['WBS编号'].split('.').splice(1).map(el => Number(el)).join('.')}`
+                    // el.wbsCode = el['PMS_WBS编码'] && el['PMS_WBS编码'].split('.').splice(1).join('.') && `.${el['PMS_WBS编码'].split('.').splice(1).map(el => Number(el)).join('.')}`
+                    projectCode = project[0]['PMS_WBS编码']
+                    el.pmsWbsCode = el['PMS_WBS编码']
                     if(el['里程碑类型']) el.taskMilestoneType = el['里程碑类型']
-                    el.duration = el.targetDrtnHrCnt = el['计划工期']
+                    // el.duration = el.targetDrtnHrCnt = el['计划工期']
                     el.start_date = el['计划开始'] || nowDate
                     el.targetStartDate = el.start_date && el.start_date.substring(0, 10) || ""
-                    if(el.targetDrtnHrCnt > 0) {
-                        el.targetEndDate = Gantt.calculateEndDate({start_date: new Date(el.start_date), duration: el.duration})
+                    if(el['计划完成']) {
+                        el.targetEndDate = el['计划完成'].substring(0, 10)
+                        el.duration = el.targetDrtnHrCnt = Gantt.calculateDuration({start_date: new Date(el.start_date), end_date: new Date(el.targetEndDate)}) + 2
                         el.type = "task"
                         el.taskCode = String(taskCode)
                         taskCode = taskCode + 10
                     } else {
                         el.type = "milestone"
                     }
+                    // if(el.targetDrtnHrCnt > 0) {
+                    //     el.targetEndDate = Gantt.calculateEndDate({start_date: new Date(el.start_date), duration: el.duration})
+                    //     el.type = "task"
+                    //     el.taskCode = String(taskCode)
+                    //     taskCode = taskCode + 10
+                    // } else {
+                    //     el.type = "milestone"
+                    // }
                 })
                 Gantt.parse({data: project});
                 Gantt.sort("firstItem", true)

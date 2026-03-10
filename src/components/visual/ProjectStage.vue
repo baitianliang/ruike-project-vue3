@@ -3,7 +3,6 @@
         multiple
         collapse-tags
         class="title_search"
-        popper-class="title_options"
         v-model="projectInfoSearch"
         @change="projectInfoSearchChange">
         <el-option
@@ -73,7 +72,6 @@ onMounted(() => {
 });
 
 const objectSpanMethod = ({row, column, rowIndex, columnIndex}) => {
-    console.log(rowIndex)
     if(columnIndex < 2) {
         if (rowIndex > 0 && row.WBSMC === tableData.value[rowIndex - 1].WBSMC) {
             return [0, 0]; // 当前单元格不显示（被合并）
@@ -101,7 +99,7 @@ function projectInfoSearchChange(val) {
 <style lang="scss" scoped>
 .table_title {
     font-size: 18px;
-    color: white;
+    // color: white;
     margin-top: 10px;
 }
 .project_info_block {
@@ -123,19 +121,19 @@ function projectInfoSearchChange(val) {
         font-size: 16px;
     }
 }
-:deep(.table_title-row) {
-    background-color: unset!important;
-    color: white;
-    .el-table__cell {
-        background-color: unset!important;
-        // border: 0px;
-        border-color: rgb(59, 222, 245);
-        font-size: 18px;
-    }
-}
-:deep(.table_title-row:hover) {
-    .el-table__cell {
-        background-color: unset!important;
-    }
-}
+// :deep(.table_title-row) {
+//     background-color: unset!important;
+//     color: white;
+//     .el-table__cell {
+//         background-color: unset!important;
+//         // border: 0px;
+//         border-color: rgb(59, 222, 245);
+//         font-size: 18px;
+//     }
+// }
+// :deep(.table_title-row:hover) {
+//     .el-table__cell {
+//         background-color: unset!important;
+//     }
+// }
 </style>

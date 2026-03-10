@@ -69,10 +69,25 @@ function autoWrapLabel(text, maxCharsPerLine = 4) {
 }
 
 function initTaskChart(val) {
+    let num = 0
+    val.planList.forEach((el, index) => {
+        if(val.practicalList[index] < el || !el) {
+            num++
+        }
+    })
     // 1. 初始化图表
     taskStatusChart = echarts.init(projectPhase.value);
     // 2. 设置配置项
     const option = {
+        title: {
+            text: `进度异常项目数量: ${num}`,
+            textStyle: {
+                color: "red",
+                fontSize: fontSize * 18,
+            },
+            right: 100 * fontSize, // 右侧留空间
+            // textAlign: 'right',
+        },
         grid: {
             top: 50 * fontSize, // 上边距（给标题留空间）
             right: 60 * fontSize, // 右边距（给右侧留空间）

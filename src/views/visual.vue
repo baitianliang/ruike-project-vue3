@@ -57,7 +57,7 @@
                 <!-- 年度销售收入 -->
                 <div class="income" style="position: relative;">
                     <div class="title">年度销售收入</div>
-                    <income ref="income" :projectList="projectInfoSearch"></income>
+                    <income ref="income" :projectList="projectInfoSearch" @showTaskDetail="showTaskDetail('项目名称.1')"></income>
                     <button
                         @click="fullscreen('年度销售收入')"
                         class="fullscreen_btn">
@@ -67,7 +67,7 @@
                 <!-- 应收账款总额 -->
                 <div class="receivable" style="position: relative;">
                     <div class="title">应收账款总额</div>
-                    <receivable ref="receivable" :projectList="projectInfoSearch"></receivable>
+                    <receivable ref="receivable" :projectList="projectInfoSearch" @showTaskDetail="showTaskDetail('项目名称.2')"></receivable>
                     <button
                         @click="fullscreen('应收账款总额')"
                         class="fullscreen_btn">
@@ -78,21 +78,21 @@
             <!-- 统计 -->
             <div class="statistics">
                 <!-- <div class="title">统计</div> -->
-                <div>
+                <div @click="showTaskDetail('项目名称.3')">
                     <div class="top"></div>
                     <div>
                         <div>销售收入</div>
                         <div>{{ statisticsData.XSSR }}万元</div>
                     </div>
                 </div>
-                <div>
+                <div @click="showTaskDetail('项目名称.3')">
                     <div class="center"></div>
                     <div>
                         <div>利润</div>
                         <div>{{ statisticsData.LR }}万元</div>
                     </div>
                 </div>
-                <div>
+                <div @click="showTaskDetail('项目名称.3')">
                     <div class="bottom"></div>
                     <div>
                         <div>毛利率（%）</div>
@@ -165,9 +165,10 @@
         </div>
         <el-dialog
             v-model="dialogVisible"
+            :class="['所属阶段', '风险分解结构', '项目名称.1', '项目名称.2', '项目名称.3'].includes(title) ? '' : 'visual_dialog'"
             v-if="dialogVisible"
             :before-close="handleClose"
-            :title="title"
+            :title="title.split('.')[0]"
             fullscreen>
             <div style="height: 100%; width: 100%">
                 <project-phase v-if="title === '各阶段项目分布'" :projectList="projectInfoSearch"></project-phase>
@@ -182,13 +183,22 @@
                 <progress-plan v-if="title === '进度计划'" :projectList="projectInfoSearch"></progress-plan>
                 <project-status v-if="title === '报工情况'" :projectList="projectInfoSearch"></project-status>
                 <div v-if="title === '超期任务提醒'" class="fullscreen_overdue_task">
-                    <overdue-task v-if="title === '超期任务提醒'" :projectList="projectInfoSearch"></overdue-task>
+                    <overdue-task :projectList="projectInfoSearch"></overdue-task>
                 </div>
                 <div v-if="title === '所属阶段'">
                     <project-stage></project-stage>
                 </div>
                 <div v-if="title === '风险分解结构'">
                     <risk-table></risk-table>
+                </div>
+                <div v-if="title === '项目名称.1'">
+                    <income-table :projectList="projectInfoTableData"></income-table>
+                </div>
+                <div v-if="title === '项目名称.2'">
+                    <receivable-table :projectList="projectInfoTableData"></receivable-table>
+                </div>
+                <div v-if="title === '项目名称.3'">
+                    <statistics-table :projectList="projectInfoTableData"></statistics-table>
                 </div>
             </div>
         </el-dialog>
@@ -211,6 +221,9 @@ import ProjectStatus from "../components/visual/ProjectStatus.vue";
 import OverdueTask from "../components/visual/OverdueTask.vue";
 import ProjectStage from "../components/visual/ProjectStage.vue";
 import RiskTable from "../components/visual/RiskTable.vue";
+import IncomeTable from "../components/visual/IncomeTable.vue";
+import ReceivableTable from "../components/visual/ReceivableTable.vue";
+import StatisticsTable from "../components/visual/StatisticsTable.vue";
 
 let updateInterval;
 const weekdays = ['星期日', '星期一', '星期二', '星期三', '星期四', '星期五', '星期六'];
@@ -229,12 +242,12 @@ let overdueTask = ref(null)
 let projectInfoSearch = ref([])
 const projectInfoSearchChange = (value) => {
     nextTick(() => {
-        getStatisticsData()
+        // getStatisticsData()
         projectPhase.value.getData()
         projectNum.value.getData()
         projectInfo.value.getData()
-        income.value.getData()
-        receivable.value.getData()
+        // income.value.getData()
+        // receivable.value.getData()
         projectRisk.value.getData()
         qualityProblem.value.getData()
         progressPlan.value.getData()
@@ -423,6 +436,7 @@ const handleClose = () => {
                 display: flex;
                 align-content: center;
                 justify-content: space-between;
+                cursor: pointer;
                 >div:first-child {
                     height: 100%;
                     width: 40%;
@@ -472,7 +486,7 @@ const handleClose = () => {
     .content:nth-child(2) {
         margin-top: 0px;
     }
-    .el-dialog {
+    .visual_dialog {
         overflow: hidden;
         background-color: rgb(7, 15, 36);
         .el-dialog__header {

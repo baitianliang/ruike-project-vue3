@@ -42,6 +42,7 @@ function getData() {
 
 const income = ref(null)
 let taskStatusChart = null
+const emit = defineEmits(['showTaskDetail'])
 
 function initTaskChart(val) {
     // 1. 初始化图表
@@ -123,6 +124,9 @@ function initTaskChart(val) {
             },
         ],
     };
+    taskStatusChart.on('click', function(params) {
+        emit('showTaskDetail')
+    });
     // 3. 渲染图表
     taskStatusChart.setOption(option);
     taskStatusChart.resize()

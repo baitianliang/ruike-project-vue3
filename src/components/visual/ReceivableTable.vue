@@ -6,27 +6,28 @@
         v-model="projectInfoSearch"
         @change="projectInfoSearchChange">
         <el-option
-            v-for="item in tableDataOption"
-            :key="item"
-            :label="item"
-            :value="item"
+            v-for="item in allTableData"
+            :key="item.XMMC"
+            :label="item.XMMC"
+            :value="item.XMMC"
         />
     </el-select>
-    <div class="table_title">项目阶段分布</div>
+    <div class="table_title">年度应收账款总额</div>
     <div class="project_info_block">
         <el-table
             :data="tableData"
             style="width: 100%; max-height: 100%; background-color: unset;"
             border show-summary
-            :span-method="objectSpanMethod"
+            :summary-method="getSummaries"
             header-row-class-name="table_title-header-row"
             row-class-name="table_title-row">
-            <el-table-column align="center" label="序号" type="index" width="150">
+            <el-table-column align="center" label="序号" type="index" width="150" />
+            <el-table-column align="center" v-for="(item, index) in tableColumn" :key="index" :prop="item.prop" :label="item.label" :width="item.width">
                 <template #default="scope">
-                    {{ riskList.indexOf(scope.row.CRRC_RR_FXFJJG_PD) + 1 }}
+                    <span v-if="['YSZKZE_MBZ', 'YSZKZE_SJZ'].includes(item.prop)">{{ `${scope.row[item.prop]}万` }}</span>
+                    <span v-else>{{ scope.row[item.prop] }}</span>
                 </template>
             </el-table-column>
-            <el-table-column align="center" v-for="(item, index) in tableColumn" :key="index" :prop="item.prop" :label="item.label" :width="item.width" />
         </el-table>
     </div>
 </template>
@@ -48,50 +49,49 @@ function getRemSize() {
 const fontSize = getRemSize()
 
 let projectInfoSearch = ref([])
-let tableDataOption = ref(["业主风险", "设计风险", "工艺风险", "项目管理风险", "采购与供应商风险", "质量管理风险", "成本风险", "人力资源风险", "安全环保风险", "法律风险", "知识产权风险"])
 
 let tableColumn = [
-    {prop: "CRRC_RR_FXFJJG_PD", label: "风险分解结构", width: 500 * fontSize},
     {prop: "XMMC", label: "项目名称"},
-    {prop: "FXSL", label: "风险数量", width: 500 * fontSize},
+    {prop: "YSZKZE_MBZ", label: "目标值"},
+    {prop: "YSZKZE_SJZ", label: "实际值"},
 ]
 let allTableData = ref([])
 let tableData = ref([])
 let riskList = ref([])
+let total = ref({})
 
 onMounted(() => {
     // let str = `viewName=CRRC_JSC_XMXX`
     // axios.getFormData(str)
-    let str = `viewName=XMFX`
+    let str = `viewName=NDYSZKZE`
     axios.getTableData(str)
     .then(res => {
         allTableData.value = res.data.data.list
-        riskList.value = [...new Set(allTableData.value.map(item => item.CRRC_RR_FXFJJG_PD))]
-        tableData.value = allTableData.value
+        tableData.value = [ ...allTableData.value ]
+        const {summbz, sumsjz} = { ...res.data.data }
+        total.value = {summbz, sumsjz}
     })
 });
 
-const objectSpanMethod = ({row, column, rowIndex, columnIndex}) => {
-    if(columnIndex < 2) {
-        if (rowIndex > 0 && row.CRRC_RR_FXFJJG_PD === tableData.value[rowIndex - 1].CRRC_RR_FXFJJG_PD) {
-            return [0, 0]; // 当前单元格不显示（被合并）
-        } else {
-            // 计算相同姓名的行数
-            let rowspan = 1;
-            for (let i = rowIndex + 1; i < tableData.value.length; i++) {
-                if (tableData.value[i].CRRC_RR_FXFJJG_PD === row.CRRC_RR_FXFJJG_PD) rowspan++;
-                else break;
-            }
-            return [rowspan, 1]; // 合并 rowspan 行，1 列
-        }
-    }
-}
-
 function projectInfoSearchChange(val) {
     if(val.length)
-    tableData.value = allTableData.value.filter(item => val.includes(item.CRRC_RR_FXFJJG_PD))
+    tableData.value = allTableData.value.filter(item => val.includes(item.XMMC))
     else
     tableData.value = allTableData.value
+}
+const getSummaries = (param) => {
+    const { columns, data } = param;
+    const sums = [];
+    columns.forEach((column, index) => {
+        if (index === 0) {
+            sums[index] = '总计';
+        } else if (index > 1) {
+            const values = data.map((item) => Number(item[column.property]));
+            const sum = values.reduce((prev, curr) => prev + curr, 0);
+            sums[index] = `${sum}万`;
+        }
+    });
+    return sums;
 }
 
 </script>

@@ -1,5 +1,5 @@
 import axios from '../js/base_axios'
-const params = window.location.href.split('?')[1] || `uuid=55BD60A1B0EF4F4991C0F761BD143058&taskId=2&bpDataId=86&bpName=uxmm&startTime=1755238559000`
+const params = window.location.href.split('?')?.[1] || `uuid=55BD60A1B0EF4F4991C0F761BD143058&taskId=2&bpDataId=86&bpName=uxmm&startTime=1755238559000`
 // uuid=CA1439E625954FD6867892973F32DC0A&taskId=4&bpDataId=13&bpName=uxmm&startTime=1755164786000
 export default {
     // 获取页面数据

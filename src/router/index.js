@@ -64,7 +64,22 @@ const routes = [
         name: '文件列表',
         component: () => import('../views/fileList.vue'),
     },
+    {
+        path: '/RollingRevenueBudget',
+        name: '收入滚动预算',
+        component: () => import('../views/rollingRevenueBudget.vue'),
+    },
+    {
+        path: '/AccountsReceivable',
+        name: '应收账款',
+        component: () => import('../views/accountsReceivable.vue'),
+    },
     
+    {
+        path: '/FormH5',
+        name: 'H5表单',
+        component: () => import('../views/formH5.vue'),
+    },
 ]
 
 const router = createRouter({

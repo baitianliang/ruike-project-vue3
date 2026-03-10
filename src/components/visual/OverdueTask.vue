@@ -33,7 +33,7 @@ const fontSize = getRemSize()
 let tableColumn = [
     {prop: "XMMC", label: "项目名称"},
     {prop: "XMJL", label: "项目经理", width: 120 * fontSize},
-    {prop: "ZYMC", label: "作业名称",},
+    {prop: "ZYMC", label: "作业名称"},
     {prop: "ZYFZR", label: "作业负责人", width: 120 * fontSize},
     {prop: "JHKSSJ", label: "计划开始时间", width: 120 * fontSize},
     {prop: "JHWCSJ", label: "计划完成时间", width: 120 * fontSize},

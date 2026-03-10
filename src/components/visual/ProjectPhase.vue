@@ -67,6 +67,7 @@ function initTaskChart(val) {
         xAxis: [
             {
                 type: "value",
+                minInterval: 1,
                 max: function (value) {
                     return value.max * 1; // 比最大值多10%的空间
                 },
