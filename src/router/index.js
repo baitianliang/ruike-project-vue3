@@ -74,7 +74,38 @@ const routes = [
         name: '应收账款',
         component: () => import('../views/accountsReceivable.vue'),
     },
-    
+    {
+        path: '/hastenWork',
+        name: '任务催办',
+        component: () => import('../views/hastenWork.vue'),
+        meta: {
+            type: 'DQ'
+        }
+    },
+    {
+        path: '/taskOverdueReminder',
+        name: '任务超时催办',
+        component: () => import('../views/hastenWork.vue'),
+        meta: {
+            type: 'CQ'
+        }
+    },
+    {
+        path: '/tenderBudget',
+        name: '项目投标预算',
+        component: () => import('../views/budgetCalculation.vue'),
+        meta: {
+            type: 'TB'
+        }
+    },
+    {
+        path: '/implementBudget',
+        name: '项目实施预算',
+        component: () => import('../views/budgetCalculation.vue'),
+        meta: {
+            type: 'SS'
+        }
+    },
     {
         path: '/FormH5',
         name: 'H5表单',

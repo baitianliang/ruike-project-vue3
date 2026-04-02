@@ -1,11 +1,16 @@
 import axios from '../js/base_axios'
+let params = window.location.href.split('=')[1]
 // let jsonAxios = baseAxios.jsonAxios
 // const Qs = require('qs');
 
 export default {
     // 获取甘特图数据
     getGanttData(projectId) {
-        return axios.get(`gantt/query?projectId=${projectId}`)
+        if(params) {
+            return axios.get(`gantt/overallPlanVersionQuery?projectId=${projectId}&baseline=${params}`)
+        } else {
+            return axios.get(`gantt/query?projectId=${projectId}`)
+        }
     },
     // 获取第一个标签的表格数据
     saveGanttData(query) {

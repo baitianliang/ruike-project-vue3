@@ -17,6 +17,13 @@ module.exports = defineConfig({
             '^/api': '',
         },
       },
+      '/pu': {
+        target: 'https://dls.4dlp.com.cn:7102/',
+        changeOrigin: true,
+        pathRewrite: {
+            '^/pu': '',
+        },
+      },
     },
   }
 })

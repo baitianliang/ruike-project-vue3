@@ -234,6 +234,213 @@
             </el-table>
         </div>
     </el-dialog>
+
+    <el-dialog
+        v-model="taskVisible"
+        v-if="taskVisible"
+        title="任务详情"
+        width="1000"
+        :close-on-click-modal="false">
+        <el-form label-position="left" :model="taskDetail" label-width="150px">
+            <el-divider>常规信息</el-divider>
+            <div class="row_2">
+                <el-form-item label="作业名称">
+                    <el-input v-model="taskDetail.text"></el-input>
+                </el-form-item>
+                <el-form-item label="作业代码">
+                    <el-input disabled :value="'A' + taskDetail.taskCode.padStart(4, '0')"></el-input>
+                </el-form-item>
+            </div>
+            <div class="row_2">
+                <el-form-item>
+                </el-form-item>
+                <el-form-item label="里程碑类型">
+                    <el-select v-model="taskDetail.taskMilestoneType">
+                        <el-option
+                            v-for="(item, index) in taskMilestoneTypeOptions"
+                            :key="index"
+                            :label="item.value"
+                            :value="item.key"
+                        />
+                    </el-select>
+                </el-form-item>
+            </div>
+            <el-divider>责任信息</el-divider>
+            <div class="row_2">
+                <el-form-item label="作业负责人">
+                    <el-select v-model="taskDetail.taskOwner">
+                        <el-option
+                            v-for="(item, index) in taskOwnerOptions"
+                            :key="index"
+                            :label="item.label"
+                            :value="item.key"
+                        />
+                    </el-select>
+                </el-form-item>
+                <el-form-item label="作业负责岗位">
+                    <el-input disabled :value="taskDetail.taskOwner && taskOwnerOptions.find(el => el.key == taskDetail.taskOwner).CRRC_USER_GW"></el-input>
+                </el-form-item>
+            </div>
+            <el-divider>状态与约束</el-divider>
+            <div class="row_2">
+                <el-form-item label="作业状态">
+                    <el-select v-model="taskDetail.taskStatus">
+                        <el-option
+                            v-for="(item, index) in taskStatusOptions"
+                            :key="index"
+                            :label="item.value"
+                            :value="item.key"
+                        />
+                    </el-select>
+                </el-form-item>
+                <el-form-item label="作业完成百分比%">
+                    <el-input-number v-model="taskDetail.progress" controls-position="right" step-strictly :min="0" :max="100">
+                        <template #suffix>
+                            <span>%</span>
+                        </template>
+                    </el-input-number>
+                </el-form-item>
+            </div>
+            <div class="row_2">
+                <el-form-item label="作业约束条件">
+                    <el-select v-model="taskDetail.constraint_type">
+                        <el-option
+                            v-for="(item, index) in constraint_type_option"
+                            :key="index"
+                            :label="item.label"
+                            :value="item.key"
+                        />
+                    </el-select>
+                </el-form-item>
+                <el-form-item label="作业约束日期">
+                    <el-date-picker
+                        v-model="taskDetail.constraint_date"
+                        type="date"
+                        placeholder="作业约束日期"
+                        format="YYYY/MM/DD"
+                        value-format="YYYY-MM-DD"
+                    />
+                </el-form-item>
+            </div>
+            <el-divider>计划与执行</el-divider>
+            <div class="row_3">
+                <el-form-item label="计划开始">
+                    <el-date-picker
+                        v-model="taskDetail.targetStartDate"
+                        type="date"
+                        placeholder="计划开始"
+                        format="YYYY/MM/DD"
+                        value-format="YYYY-MM-DD"
+                        @change="setTargetEndDate"
+                    />
+                </el-form-item>
+                <el-form-item label="计划工期">
+                    <el-input-number v-model="taskDetail.targetDrtnHrCnt" controls-position="right" step-strictly :min="0" @change="setTargetEndDate" />
+                </el-form-item>
+                <el-form-item label="计划完成">
+                    <el-date-picker
+                        v-model="taskDetail.targetEndDate"
+                        type="date"
+                        placeholder="计划完成"
+                        format="YYYY/MM/DD"
+                        @change="setTargetDrtnHrCnt"
+                    />
+                </el-form-item>
+            </div>
+            <div class="row_3">
+                <el-form-item label="实际开始">
+                    <el-date-picker
+                        v-model="taskDetail.actStartDate"
+                        type="date"
+                        placeholder="实际开始"
+                        format="YYYY/MM/DD"
+                        value-format="YYYY-MM-DD"
+                        @change="setActEndDate"
+                    />
+                </el-form-item>
+                <el-form-item label="实际工期">
+                    <el-input-number v-model="taskDetail.actWorkQty" controls-position="right" step-strictly :min="0" @change="setActEndDate" />
+                </el-form-item>
+                <el-form-item label="实际完成">
+                    <el-date-picker
+                        v-model="taskDetail.actEndDate"
+                        type="date"
+                        placeholder="实际完成"
+                        format="YYYY/MM/DD"
+                        @change="setActWorkQty"
+                    />
+                </el-form-item>
+            </div>
+            <div class="row_3">
+                <el-form-item label="尚需工期">
+                    <el-input-number v-model="taskDetail.remainDrtnHrCnt" controls-position="right" step-strictly :min="0" />
+                </el-form-item>
+            </div>
+        </el-form>
+        <el-divider>逻辑关系</el-divider>
+        <el-button @click="addLink">添加</el-button>
+        <el-table :data="linkList" style="width: 100%">
+            <el-table-column prop="taskCode" label="作业代码">
+                <template #default="scope">
+                    {{ scope.row.taskCode && `A${scope.row.taskCode.padStart(4, '0')}` }}
+                </template>
+            </el-table-column>
+            <el-table-column prop="text" label="作业名称">
+                <template #default="scope">
+                    <el-select v-model="scope.row.taskId" @change="selectTask(scope.$index)">
+                        <el-option
+                            v-for="(item, index) in taskList"
+                            :key="index"
+                            :label="item.text"
+                            :value="item.id"
+                            :disabled="linkList.findIndex(link => link.taskId === item.id) !== -1"
+                        />
+                    </el-select>
+                </template>
+            </el-table-column>
+            <el-table-column prop="type" label="关系类型">
+                <template #default="scope">
+                    <el-select v-model="scope.row.type">
+                        <el-option
+                            v-for="(item, index) in typeList"
+                            :key="index"
+                            :label="item.label"
+                            :value="item.key"
+                        />
+                    </el-select>
+                </template>
+            </el-table-column>
+            <el-table-column prop="lag" label="延时">
+                <template #default="scope">
+                    <el-input v-model="scope.row.lag"></el-input>
+                </template>
+            </el-table-column>
+            <el-table-column label="操作" width="100">
+                <template #default="scope">
+                    <el-button type="danger" link @click="deleteLinkIndex(scope.$index)">删除</el-button>
+                </template>
+            </el-table-column>
+        </el-table>
+        
+        <template #footer>
+            <div class="dialog-footer">
+                <el-button type="danger" @click="deleteTask">删除</el-button>
+                <el-button @click="closeTaskDetail">关闭</el-button>
+                <el-button type="primary" @click="saveTaskDetail">保存</el-button>
+            </div>
+        </template>
+    </el-dialog>
+
+
+    <!-- <div id="my-form">
+        <label for="description">Task text
+            <input type="text" name="description" value="" />
+        </label>
+
+        <input type="button" name="save" value="Save"/>
+        <input type="button" name="close" value="Close"/>
+        <input type="button" name="delete" value="Delete"/>
+    </div> -->
 </div>
 </template>
 
@@ -342,6 +549,10 @@ let readonly = ref(false)
 const LARGE_PROJECT_IMPORT_SIZE = 3000
 const PROJECT_IMPORT_CHUNK_SIZE = 800
 let isLargeProjectImporting = false
+const taskVisible = ref(false)
+const taskDetail = ref({})
+const linkList = ref([])
+const taskList = ref([])
 
 onMounted(() => {
     readonly.value = router.currentRoute.value.path === "/GanttShow"
@@ -823,6 +1034,12 @@ const constraint_type_option = [
     { key: "mso", label: "指定开始时间", text: Gantt.locale.labels.mso },
     { key: "mfo", label: "指定完成时间", text: Gantt.locale.labels.mfo }
 ]
+const typeList = [
+    { key: "0", label: "完成-开始（FS）" },
+    { key: "1", label: "开始-开始（SS）" },
+    { key: "2", label: "完成-完成（FF）" },
+    { key: "3", label: "开始-完成（SF）" }
+]
 
 // 初始化基线
 function _inBaselines() {
@@ -1197,35 +1414,51 @@ function dynamicData() {
         //     document.querySelector(".gantt_grid_head_add").style.display = "none";
         // })
     });
+    Gantt.showLightbox = function(id){
+        // 自定义表单的代码
+        taskId = id;
+        let task = Gantt.getTask(id);
+        if(task.type === "project")
+        return false;
+        let links = Gantt.getLinks(id)
+        // taskList.value = Gantt.serialize().data
+        taskList.value = [ ...Gantt.serialize().data ].filter(el => el.type === "task" && el.id != id)
+        taskDetail.value = { ...task };
+        taskDetail.value.taskOwner = Number(taskDetail.value.taskOwner)
+        taskDetail.value.progress *= 100
+        taskDetail.value.targetEndDate = new Date(taskDetail.value.targetEndDate).getTime() - 24 * 60 * 60 * 1000
+        taskDetail.value.actEndDate = taskDetail.value.actEndDate && new Date(taskDetail.value.actEndDate).getTime() - 24 * 60 * 60 * 1000
+        // const targetEndDate = new Date(new Date(taskDetail.value.targetEndDate).getTime() - 24 * 60 * 60 * 1000)
+        // taskDetail.value.targetEndDate = `${targetEndDate.getFullYear()}-${(targetEndDate.getMonth()+1).toString().padStart(2, '0')}-${targetEndDate.getDate().toString().padStart(2, '0')}`
+        // const actEndDate = new Date(new Date(taskDetail.value.actEndDate).getTime() - 24 * 60 * 60 * 1000)
+        // taskDetail.value.actEndDate = `${actEndDate.getFullYear()}-${(actEndDate.getMonth()+1).toString().padStart(2, '0')}-${actEndDate.getDate().toString().padStart(2, '0')}`
 
-    // 自定义删除按钮
-    Gantt.attachEvent("onLightbox", function(id){
-        // if (typeof id === "string" && Gantt.getTask(id).type !== "project") {
-        if (typeof id === "string") {
-            const btnSet = document.querySelector(".gantt_cal_lcontrols_push_right");
-            const haveBtn = document.querySelector(".custom-delete-btn");
-            if (btnSet && !haveBtn) {
-                const deleteBtn = document.createElement("div");
-                deleteBtn.className = "custom-delete-btn";
-                deleteBtn.innerHTML = "删除";
-                deleteBtn.onclick = () => {
-                    ElMessageBox.confirm('确认删除？', '提示',{
-                        distinguishCancelAndClose: true,
-                        confirmButtonText: '确认',
-                        cancelButtonText: '取消',
-                    })
-                    .then(() => {
-                        Gantt.deleteTask(id);
-                        Gantt.hideLightbox();
-                    })
-                    .catch((action) => {
-                    })
-                };
-                btnSet.prepend(deleteBtn);
-            }
-        }
-        return true;
-    });
+        // linkList.value = [ ...links ].filter(el => el.source === id || el.target === id)
+        linkList.value = [ ...links ].filter(el => el.target == id)
+        linkList.value.forEach(el => {
+            el.lag = el.lag || 0
+            let targetData = {}
+            // if(el.source === id) {
+            //     targetData = Gantt.getTask(el.target)
+            // } else {
+            //     targetData = Gantt.getTask(el.source)
+            // }
+            targetData = Gantt.getTask(el.source)
+            el.taskCode = targetData.taskCode
+            el.text = targetData.text
+            el.taskId = targetData.id
+            // el.type = Number(el.type)
+        })
+        taskVisible.value = true
+    }
+    Gantt.hideLightbox = function() {
+        taskVisible.value = false
+        taskId = null;
+        taskList.value = []
+        taskDetail.value = {}
+        linkList.value = []
+        deleteLinkIdList = [];
+    }
     // 拖拽行修改行高
     Gantt.attachEvent("onBeforeRowResizeEnd", function(id, parent, tindex){
         // nextTick(() => {
@@ -1252,6 +1485,88 @@ function dynamicData() {
     });
 }
 
+const setTargetEndDate = () => {
+    if(taskDetail.value.targetStartDate && taskDetail.value.targetDrtnHrCnt) {
+        taskDetail.value.start_date = new Date(`${taskDetail.value.targetStartDate} 00:00:00`)
+        taskDetail.value.duration = taskDetail.value.targetDrtnHrCnt
+        taskDetail.value.targetEndDate = Gantt.calculateEndDate({start_date: new Date(taskDetail.value.targetStartDate), duration: taskDetail.value.duration - 1})
+        taskDetail.value.end_date = taskDetail.value.targetEndDate
+    }
+}
+const setTargetDrtnHrCnt = () => {
+    if(taskDetail.value.targetStartDate && taskDetail.value.targetEndDate) {
+        const duration = Gantt.calculateDuration({start_date: new Date(taskDetail.value.targetStartDate), end_date: new Date(taskDetail.value.targetEndDate)}) + 1
+        taskDetail.value.targetDrtnHrCnt = taskDetail.value.duration = duration
+        taskDetail.value.end_date = taskDetail.value.targetEndDate
+    }
+}
+const setActEndDate = () => {
+    if(taskDetail.value.actStartDate && taskDetail.value.actWorkQty) {
+        taskDetail.value.actEndDate = Gantt.calculateEndDate({start_date: new Date(taskDetail.value.actStartDate), duration: taskDetail.value.actWorkQty - 1})
+    }
+}
+const setActWorkQty = () => {
+    if(taskDetail.value.actStartDate && taskDetail.value.actEndDate) {
+        const duration = Gantt.calculateDuration({start_date: new Date(taskDetail.value.actStartDate), end_date: new Date(taskDetail.value.actEndDate)}) + 1
+        taskDetail.value.actWorkQty = duration
+    }
+}
+let taskId = null;
+let deleteLinkIdList = [];
+const addLink = () => {
+    linkList.value.push({})
+}
+const deleteLinkIndex = (index) => {
+    linkList.value[index].id && deleteLinkIdList.push(linkList.value[index].id)
+    linkList.value.splice(index, 1)
+}
+const selectTask = (index) => {
+    // console.log(index, linkList.value[index].taskId)
+    const taskData = Gantt.getTask(linkList.value[index].taskId)
+    linkList.value[index].text = taskData.text
+    linkList.value[index].taskCode = taskData.taskCode
+    linkList.value[index].lag = 0
+    linkList.value[index].type = "0"
+    // linkList.value[index].taskId = id
+}
+const deleteTask = () => {
+    Gantt.deleteTask(taskId);
+    Gantt.hideLightbox();
+}
+const closeTaskDetail = () => {
+    Gantt.hideLightbox();
+}
+const saveTaskDetail = () => {
+    const task = { ...taskDetail.value }
+    task.progress /= 100
+    const targetEndDate = new Date(new Date(task.targetEndDate).getTime() + 24 * 60 * 60 * 1000)
+    task.targetEndDate = task.targetEndDate && `${targetEndDate.getFullYear()}-${(targetEndDate.getMonth()+1).toString().padStart(2, '0')}-${targetEndDate.getDate().toString().padStart(2, '0')} 00:00:00`
+    task.end_date = task.targetEndDate && new Date(task.targetEndDate)
+    Gantt.updateTask(task.id, task);
+    linkList.value.forEach(el => {
+        if(el.taskId) {
+            if(el.id) {
+                Gantt.getLink(el.id).type = el.type;
+                Gantt.getLink(el.id).source = el.taskId;
+                Gantt.getLink(el.id).target = task.id;
+                Gantt.getLink(el.id).lag = el.lag;
+                Gantt.updateLink(el.id);
+            } else {
+                const link = {
+                    source: el.taskId,
+                    target: task.id,
+                    lag: el.lag,
+                    type: el.type,
+                }
+                Gantt.addLink(link);
+            }
+        }
+    })
+    deleteLinkIdList.forEach(id => {
+        Gantt.deleteLink(id);
+    })
+    Gantt.hideLightbox();
+}
 const gridDateToStr = Gantt.date.date_to_str("%Y-%m-%d");
 // 配置表格列
 function _inConfigColumns() {
@@ -2655,6 +2970,7 @@ function uploadExcel(file, callback) {
                         el.targetEndDate = el['计划完成'].substring(0, 10)
                         el.duration = el.targetDrtnHrCnt = Gantt.calculateDuration({start_date: new Date(el.start_date), end_date: new Date(el.targetEndDate)}) + 2
                         el.type = "task"
+                        el.taskStatus = "未开始"
                         el.taskCode = String(taskCode)
                         taskCode = taskCode + 10
                     } else {
@@ -2961,6 +3277,32 @@ function saveTask() {
                 }
             }
         }   
+    }
+}
+
+.row_2 {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    >div {
+        flex: 1;
+    }
+    >:first-child {
+        margin-right: 40px;
+    }
+    .el-input, .el-input-number {
+        width: 100%;
+    }
+}
+.row_3 {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    >div {
+        width: 30%;
+    }
+    .el-input, .el-input-number {
+        width: 100%;
     }
 }
 // html, body {

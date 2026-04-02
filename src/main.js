@@ -28,12 +28,12 @@ app.directive('auto-scroll', autoScrollDirective)
 app.mount('#app')
 
 
-// function setRem() {
-//   const baseSize = 16 // 基准大小
-//   const designWidth = 2560 // 设计稿宽度
-//   const currentWidth = Math.min(document.documentElement.clientWidth, 2560)
-//   const rem = (currentWidth / designWidth) * baseSize
-//   document.documentElement.style.fontSize = rem + 'px'
-// }
-// window.addEventListener('resize', setRem) // 监听窗口变化
-// setRem() // 初始化
+function setRem() {
+  const baseSize = 16 // 基准大小
+  const designWidth = 2560 // 设计稿宽度
+  const currentWidth = Math.min(document.documentElement.clientWidth, 2560)
+  const rem = (currentWidth / designWidth) * baseSize
+  document.documentElement.style.fontSize = rem + 'px'
+}
+window.addEventListener('resize', setRem) // 监听窗口变化
+setRem() // 初始化

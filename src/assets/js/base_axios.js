@@ -20,6 +20,7 @@ let instance = axios.create({
   // baseURL: "/api/",
   timeout: 60 * 1000000,
   headers: {
+    // "Cookies": "USESSIONID=123",
     // 'Content-Type': 'application/x-www-form-urlencoded',
     // 'Authorization': ''
     // 'Authorization': `Bearer ${handleEncrypt()}`

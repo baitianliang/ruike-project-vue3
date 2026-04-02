@@ -86,6 +86,8 @@ import { onMounted, reactive, ref } from 'vue'
 import { showFailToast, showSuccessToast } from 'vant'
 import * as XLSX from 'xlsx'
 import router from '@/router'
+import axios from '../assets/axios/formH5.js'
+import Cookies from 'js-cookie';
 
 const loading = ref(false)
 const sectionList = ref([])
@@ -98,6 +100,17 @@ const calendar = reactive({
 
 onMounted(() => {
   loadFieldConfig()
+  Cookies.set('USESSIONID', '5e89d5a12a72a2aeab4637d4b96cdf95', { expires: 7 })
+  // console.log(Cookies.get('USESSIONID'));
+  
+  console.log('所有cookies:', Cookies.get());
+  console.log('document.cookie:', document.cookie);
+
+  // 2. 检查USESSIONID是否存在
+  console.log('USESSIONID值:', Cookies.get('USESSIONID'));
+
+  // Cookies.remove('USESSIONID');
+  axios.pushData()
   // router.go(-1)
 })
 
