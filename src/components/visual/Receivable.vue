@@ -30,7 +30,7 @@ function getRemSize() {
 const fontSize = getRemSize()
 
 function getData() {
-    let str = `viewName=CRRC_JSC_NDSRYS`
+    let str = `viewName=CRRC_JSC_NDSRYS_01`
     if(props.projectList.length > 0) {
         str += `&projectIds=${props.projectList.join(',')}`
     }
@@ -58,7 +58,7 @@ function initTaskChart(val) {
         tooltip: {
             formatter: (val) => {
                 if(val.data.value > 0)
-                    return `${val.name}: ${val.data.value}万`
+                    return `${val.name}: ${val.data.value.toLocaleString()}万`
                 else return ''
             },
         },
@@ -110,7 +110,7 @@ function initTaskChart(val) {
                     show: true,
                     formatter: (val) => {
                         if(val.data.value > 0)
-                            return `${val.data.value}万`
+                            return `${val.data.value.toLocaleString()}万`
                         else return ''
                     },
                     position: 'inside',

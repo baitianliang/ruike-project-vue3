@@ -29,7 +29,7 @@
                 </el-button>
                 <template #dropdown>
                 <el-dropdown-menu>
-                    <el-dropdown-item command="PDF">导出到PDF</el-dropdown-item>
+                    <!-- <el-dropdown-item command="PDF">导出到PDF</el-dropdown-item> -->
                     <el-dropdown-item command="Excel">导出到Excel</el-dropdown-item>
                 </el-dropdown-menu>
                 </template>
@@ -557,7 +557,7 @@ const taskList = ref([])
 onMounted(() => {
     readonly.value = router.currentRoute.value.path === "/GanttShow"
     projectId = window.top.getCurrentProjectId ? window.top.getCurrentProjectId() : window.opener?.opener?.getCurrentProjectId() || ''
-    projectId = projectId || window.opener?.top?.getCurrentProjectId() || '110' || '1090'
+    projectId = projectId || window.opener?.top?.getCurrentProjectId() || window.opener?.taskGeneralC?.getElementsByClassName('fieldname-CRRC_PLAN_JHLJ')[0]?.getForm()?.extend()?.loadedValues?.project_id || '1094' || '110'
     // projectCode = window.top._P ? window.top._P?.data?.recentLocations[0]?.number : window.opener?.opener?._P?.data?.recentLocations[0]?.number || "A-DLS-1-01"
     projectName = window.top.getCurrentShellName ? window.top.getCurrentShellName() : window.opener?.opener?.getCurrentShellName() || "测试项目"
     getGanttData()
@@ -2638,15 +2638,154 @@ const exportTo = (command) => {
             break;
     }
 }
+const excelExportColumns = [
+    { id: "firstItem", header: "编码", width: 18, type: "string" },
+    { id: "wbsCodeText", header: "WBS编码", width: 14, type: "string" },
+    { id: "pmsWbsCode", header: "PMS_WBS编码", width: 16, type: "string" },
+    { id: "text", header: "作业名称", width: 24, type: "string" },
+    { id: "typeText", header: "作业类型", width: 10, type: "string" },
+    { id: "taskStatus", header: "作业状态", width: 10, type: "string" },
+    { id: "start_date", header: "开始时间", width: 12, type: "date" },
+    { id: "duration", header: "持续时间", width: 9, type: "number" },
+    { id: "end_date", header: "完成时间", width: 12, type: "date" },
+    { id: "taskOwnerText", header: "作业负责人", width: 12, type: "string" },
+    { id: "taskPosition", header: "作业负责岗位", width: 14, type: "string" },
+    { id: "taskMilestoneType", header: "里程碑类型", width: 12, type: "string" },
+    { id: "constraintTypeText", header: "作业约束类型", width: 14, type: "string" },
+    { id: "constraint_date", header: "作业约束日期", width: 12, type: "date" },
+    { id: "taskPhase", header: "作业阶段", width: 10, type: "string" },
+    { id: "targetStartDate", header: "计划开始", width: 12, type: "date" },
+    { id: "targetDrtnHrCnt", header: "计划工期", width: 9, type: "number" },
+    { id: "targetEndDate", header: "计划完成", width: 12, type: "date" },
+    { id: "actStartDate", header: "实际开始", width: 12, type: "date" },
+    { id: "progressText", header: "完成百分比", width: 10, type: "string" },
+    { id: "actWorkQty", header: "实际工期", width: 9, type: "number" },
+    { id: "remainDrtnHrCnt", header: "尚需工期", width: 9, type: "number" },
+    { id: "actEndDate", header: "实际完成", width: 12, type: "date" },
+    { id: "freeFloatHrCnt", header: "自由浮时", width: 9, type: "number" },
+    { id: "totalFloatHrCnt", header: "总浮时", width: 9, type: "number" },
+]
 // gantt.exportToPNG({ skin:"dark" })broadway skyblue material
 // 导出文件
 function exportToPDF() {
-    Gantt.exportToPDF({server: "https://dls.4dlp.com.cn:7102/export/gantt"})
+    // const data = buildExcelExportData()
+    Gantt.exportToPDF({
+        server: "https://dls.4dlp.com.cn:7102/export/gantt",
+    })
 }
 function exportToExcel() {
-    Gantt.exportToExcel({server: "https://dls.4dlp.com.cn:7102/export/gantt"})
+    const data = buildExcelExportData()
+    Gantt.exportToExcel({
+        server: "https://dls.4dlp.com.cn:7102/export/gantt",
+        data,
+        columns: excelExportColumns,
+    })
 }
 
+function buildExcelExportData() {
+    const serializedTasks = Gantt.serialize().data
+    const treeMeta = buildExcelTreeMeta(serializedTasks)
+    return serializedTasks.map(item => {
+        const task = Gantt.isTaskExists(item.id) ? Gantt.getTask(item.id) : item
+        const owner = getServerListItem("taskOwnerOptions", task.taskOwner)
+        const query = {
+            id: task.id,
+            parent: task.parent || 0,
+            open: !!task.open,
+            firstItem: firstItemLabel(task, treeMeta),
+            wbsCodeText: task.wbsCode ? `${projectCode}${task.wbsCode}` : "",
+            pmsWbsCode: task.pmsWbsCode || "",
+            text: task.text || "",
+            typeText: typeLabel(task),
+            taskStatus: task.taskStatus || "",
+            start_date: formatExcelDate(task.start_date || task.targetStartDate),
+            duration: toExcelNumber(task.duration || task.targetDrtnHrCnt),
+            end_date: formatExcelEndDate(task.end_date || task.targetEndDate),
+            taskOwnerText: owner?.CRRC_USER_QM || "",
+            taskPosition: owner?.CRRC_USER_GW || task.taskPosition || "",
+            taskMilestoneType: task.taskMilestoneType || "",
+            constraintTypeText: getServerListItem("constraint_type_option", task.constraint_type)?.label || "",
+            constraint_date: formatExcelDate(task.constraint_date),
+            taskPhase: task.taskPhase || "",
+            targetStartDate: formatExcelDate(task.targetStartDate || task.start_date),
+            targetDrtnHrCnt: toExcelNumber(task.targetDrtnHrCnt || task.duration),
+            targetEndDate: formatExcelEndDate(task.targetEndDate || task.end_date),
+            actStartDate: formatExcelDate(task.actStartDate),
+            progressText: `${Math.round(Number(task.progress || 0) * 100)}%`,
+            actWorkQty: toExcelNumber(task.actWorkQty),
+            remainDrtnHrCnt: toExcelNumber(task.remainDrtnHrCnt),
+            actEndDate: formatExcelDate(task.actEndDate),
+            freeFloatHrCnt: getSlackValue(task, "free"),
+            totalFloatHrCnt: getSlackValue(task, "total"),
+        }
+        console.log(query)
+        return query
+    })
+}
+function buildExcelTreeMeta(tasks) {
+    const childrenByParent = new Map()
+    tasks.forEach(task => {
+        const parent = String(task.parent || 0)
+        if (!childrenByParent.has(parent)) {
+            childrenByParent.set(parent, [])
+        }
+        childrenByParent.get(parent).push(String(task.id))
+    })
+    return { childrenByParent }
+}
+function getServerListItem(listName, key) {
+    if (key === undefined || key === null || key === "") return null
+    return Gantt.serverList(listName).find(item => item.key == key) || null
+}
+function getExcelFirstItem(task, treeMeta) {
+    console.log(`${task.taskCode && `A${task.taskCode.padStart(4, '0')}` || projectCode + (task.wbsCode && task.wbsCode || "") }`)
+    debugger;
+    task.wbsCode = task.wbsCode || ""
+    task.taskCode = task.type === "project" ? "" : task.taskCode
+    return `${task.taskCode && `A${task.taskCode.padStart(4, '0')}` || projectCode + (task.wbsCode && task.wbsCode || "") }`
+    // const taskCode = task.type === "project" ? "" : task.taskCode
+    // return `${getExcelTreePrefix(task, treeMeta)}${formatTaskCode(taskCode) || `${projectCode}${task.wbsCode || ""}`}`
+}
+function getExcelTreePrefix(task, treeMeta) {
+    let level = 0
+    let parentId = task.parent
+    while (parentId && Gantt.isTaskExists(parentId)) {
+        const parentTask = Gantt.getTask(parentId)
+        level++
+        parentId = parentTask.parent
+    }
+    return "\u00A0".repeat(level * 4)
+}
+function formatTaskCode(taskCode) {
+    return taskCode !== undefined && taskCode !== null && taskCode !== "" ? `A${String(taskCode).padStart(4, '0')}` : ""
+}
+function formatExcelDate(value) {
+    if (!value) return ""
+    const date = value instanceof Date ? value : new Date(value)
+    if (Number.isNaN(date.getTime())) return ""
+    return gridDateToStr(date)
+}
+function toExcelNumber(value) {
+    const number = Number(value)
+    return Number.isFinite(number) ? number : 0
+}
+function getSlackValue(task, type) {
+    try {
+        const value = type === "free" ? Gantt.getFreeSlack(task) : Gantt.getTotalSlack(task)
+        return toExcelNumber(value)
+    } catch {
+        return 0
+    }
+}
+function formatExcelEndDate(value) {
+    if (!value) return ""
+    const date = value instanceof Date ? new Date(value) : new Date(value)
+    if (Number.isNaN(date.getTime())) return ""
+    if (date.getHours() === 0 && date.getMinutes() === 0 && date.getSeconds() === 0) {
+        date.setDate(date.getDate() - 1)
+    }
+    return gridDateToStr(date)
+}
 
 const importFrom = (command) => {
     switch(command) {

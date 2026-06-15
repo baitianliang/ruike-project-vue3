@@ -51,9 +51,16 @@ function getData() {
 
 const projectRisk = ref(null)
 let taskStatusChart = null
-const emit = defineEmits(['showTaskDetail'])
+const emit = defineEmits(['showTaskDetail', 'changeProjectRiskTotal'])
 
 function initTaskChart(val) {
+    let num = 0
+    for (const key in val) {
+        if(key !== 'viewName') {
+            num += val[key]
+        }
+    }
+    emit('changeProjectRiskTotal', num)
     // 1. 初始化图表
     taskStatusChart = echarts.init(projectRisk.value);
     // 2. 设置配置项

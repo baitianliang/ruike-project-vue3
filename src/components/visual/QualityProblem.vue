@@ -42,8 +42,16 @@ function getData() {
 
 const qualityProblem = ref(null)
 let taskStatusChart = null
+const emit = defineEmits(['showTaskDetail', 'changeQualityProblemTotal'])
 
 function initTaskChart(val) {
+    let num = 0
+    for (const key in val) {
+        if(key !== 'viewName') {
+            num += val[key]
+        }
+    }
+    emit('changeQualityProblemTotal', num)
     // 1. 初始化图表
     taskStatusChart = echarts.init(qualityProblem.value);
     // 2. 设置配置项
@@ -81,6 +89,9 @@ ${val.percent}%`
             }
         ],
     };
+    taskStatusChart.on('click', function(params) {
+        emit('showTaskDetail')
+    });
     // 3. 渲染图表
     taskStatusChart.setOption(option);
     taskStatusChart.resize()

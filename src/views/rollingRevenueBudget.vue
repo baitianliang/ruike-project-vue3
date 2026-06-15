@@ -30,7 +30,10 @@
                     <template v-if="item.children">
                         <el-table-column align="center" v-for="(_item, _index) in item.children" :key="_index" :prop="_item.prop" :label="_item.label" :min-width="_item.width" >
                             <template v-if="['税率', '毛利率'].includes(_item.label)" #default="scope">
-                                {{ scope.row[_item.prop] }}%
+                                {{ scope.row[_item.prop] || 0 }}%
+                            </template>
+                            <template v-else #default="scope">
+                                {{ scope.row[_item.prop] || 0 }}
                             </template>
                         </el-table-column>
                     </template>
@@ -54,154 +57,154 @@ let searchForm = ref({
 let tableColumn = ref([
     { prop: "CRRC_XM_XMBH", label: "项目编号", width: "150" },
     { prop: "CRRC_XM_XMMC", label: "项目名称", width: "300" },
-    { prop: "CRRC_RBT_SSNF", label: "所属年份", width: "120" },
+    { prop: "CRRC_RBT_SSNF", label: "所属年份", width: "90" },
     {
         label: "年度预算",
         children: [
-            { prop: "CRRC_RBT_XSSL", label: "销售数量", width: "120" },
-            { prop: "CRRC_RBT_YYSR", label: "营业收入", width: "120" },
+            { prop: "CRRC_RBT_XSSL", label: "销售数量", width: "100" },
+            { prop: "CRRC_RBT_YYSR", label: "营业收入", width: "100" },
         ]
     },
     {
         label: "年度实际完成",
         children: [
-            { prop: "CRRC_RBT_XSSL_SJ", label: "销售数量", width: "120" },
-            { prop: "CRRC_RBT_YYSR_SJ", label: "营业收入", width: "120" },
+            { prop: "CRRC_RBT_XSSL_SJ", label: "销售数量", width: "100" },
+            { prop: "CRRC_RBT_YYSR_SJ", label: "营业收入", width: "100" },
         ]
     },
     {
         label: "1月",
         children: [
-            { prop: "CRRC_RBT_XSSL_1", label: "销售数量", width: "120" },
-            { prop: "CRRC_RBT_YYSR_1", label: "营业收入", width: "120" },
-            { prop: "CRRC_RRB_SL1", label: "税率", width: "120" },
-            { prop: "CRRC_RRB_MLL1", label: "毛利率", width: "120" },
-            { prop: "CRRC_RRB_MLE1", label: "毛利额", width: "120" },
+            { prop: "CRRC_RBT_XSSL_1", label: "销售数量", width: "100" },
+            { prop: "CRRC_RBT_YYSR_1", label: "营业收入", width: "100" },
+            { prop: "CRRC_RRB_SL1", label: "税率", width: "100" },
+            { prop: "CRRC_RRB_MLL1", label: "毛利率", width: "100" },
+            { prop: "CRRC_RRB_MLE1", label: "毛利额", width: "100" },
         ]
     },
     {
         label: "2月",
         children: [
-            { prop: "CRRC_RBT_XSSL_2", label: "销售数量", width: "120" },
-            { prop: "CRRC_RBT_YYSR_2", label: "营业收入", width: "120" },
-            { prop: "CRRC_RRB_SL2", label: "税率", width: "120" },
-            { prop: "CRRC_RRB_MLL2", label: "毛利率", width: "120" },
-            { prop: "CRRC_RRB_MLE2", label: "毛利额", width: "120" },
+            { prop: "CRRC_RBT_XSSL_2", label: "销售数量", width: "100" },
+            { prop: "CRRC_RBT_YYSR_2", label: "营业收入", width: "100" },
+            { prop: "CRRC_RRB_SL2", label: "税率", width: "100" },
+            { prop: "CRRC_RRB_MLL2", label: "毛利率", width: "100" },
+            { prop: "CRRC_RRB_MLE2", label: "毛利额", width: "100" },
         ]
     },
     {
         label: "3月",
         children: [
-            { prop: "CRRC_RBT_XSSL_3", label: "销售数量", width: "120" },
-            { prop: "CRRC_RBT_YYSR_3", label: "营业收入", width: "120" },
-            { prop: "CRRC_RRB_SL3", label: "税率", width: "120" },
-            { prop: "CRRC_RRB_MLL3", label: "毛利率", width: "120" },
-            { prop: "CRRC_RRB_MLE3", label: "毛利额", width: "120" },
+            { prop: "CRRC_RBT_XSSL_3", label: "销售数量", width: "100" },
+            { prop: "CRRC_RBT_YYSR_3", label: "营业收入", width: "100" },
+            { prop: "CRRC_RRB_SL3", label: "税率", width: "100" },
+            { prop: "CRRC_RRB_MLL3", label: "毛利率", width: "100" },
+            { prop: "CRRC_RRB_MLE3", label: "毛利额", width: "100" },
         ]
     },
     {
         label: "4月",
         children: [
-            { prop: "CRRC_RBT_XSSL_4", label: "销售数量", width: "120" },
-            { prop: "CRRC_RBT_YYSR_4", label: "营业收入", width: "120" },
-            { prop: "CRRC_RRB_SL4", label: "税率", width: "120" },
-            { prop: "CRRC_RRB_MLL4", label: "毛利率", width: "120" },
-            { prop: "CRRC_RRB_MLE4", label: "毛利额", width: "120" },
+            { prop: "CRRC_RBT_XSSL_4", label: "销售数量", width: "100" },
+            { prop: "CRRC_RBT_YYSR_4", label: "营业收入", width: "100" },
+            { prop: "CRRC_RRB_SL4", label: "税率", width: "100" },
+            { prop: "CRRC_RRB_MLL4", label: "毛利率", width: "100" },
+            { prop: "CRRC_RRB_MLE4", label: "毛利额", width: "100" },
         ]
     },
     {
         label: "5月",
         children: [
-            { prop: "CRRC_RBT_XSSL_5", label: "销售数量", width: "120" },
-            { prop: "CRRC_RBT_YYSR_5", label: "营业收入", width: "120" },
-            { prop: "CRRC_RRB_SL5", label: "税率", width: "120" },
-            { prop: "CRRC_RRB_MLL5", label: "毛利率", width: "120" },
-            { prop: "CRRC_RRB_MLE5", label: "毛利额", width: "120" },
+            { prop: "CRRC_RBT_XSSL_5", label: "销售数量", width: "100" },
+            { prop: "CRRC_RBT_YYSR_5", label: "营业收入", width: "100" },
+            { prop: "CRRC_RRB_SL5", label: "税率", width: "100" },
+            { prop: "CRRC_RRB_MLL5", label: "毛利率", width: "100" },
+            { prop: "CRRC_RRB_MLE5", label: "毛利额", width: "100" },
         ]
     },
     {
         label: "6月",
         children: [
-            { prop: "CRRC_RBT_XSSL_6", label: "销售数量", width: "120" },
-            { prop: "CRRC_RBT_YYSR_6", label: "营业收入", width: "120" },
-            { prop: "CRRC_RRB_SL6", label: "税率", width: "120" },
-            { prop: "CRRC_RRB_MLL6", label: "毛利率", width: "120" },
-            { prop: "CRRC_RRB_MLE6", label: "毛利额", width: "120" },
+            { prop: "CRRC_RBT_XSSL_6", label: "销售数量", width: "100" },
+            { prop: "CRRC_RBT_YYSR_6", label: "营业收入", width: "100" },
+            { prop: "CRRC_RRB_SL6", label: "税率", width: "100" },
+            { prop: "CRRC_RRB_MLL6", label: "毛利率", width: "100" },
+            { prop: "CRRC_RRB_MLE6", label: "毛利额", width: "100" },
         ]
     },
     {
         label: "7月",
         children: [
-            { prop: "CRRC_RBT_XSSL_7", label: "销售数量", width: "120" },
-            { prop: "CRRC_RBT_YYSR_7", label: "营业收入", width: "120" },
-            { prop: "CRRC_RRB_SL7", label: "税率", width: "120" },
-            { prop: "CRRC_RRB_MLL7", label: "毛利率", width: "120" },
-            { prop: "CRRC_RRB_MLE7", label: "毛利额", width: "120" },
+            { prop: "CRRC_RBT_XSSL_7", label: "销售数量", width: "100" },
+            { prop: "CRRC_RBT_YYSR_7", label: "营业收入", width: "100" },
+            { prop: "CRRC_RRB_SL7", label: "税率", width: "100" },
+            { prop: "CRRC_RRB_MLL7", label: "毛利率", width: "100" },
+            { prop: "CRRC_RRB_MLE7", label: "毛利额", width: "100" },
         ]
     },
     {
         label: "8月",
         children: [
-            { prop: "CRRC_RBT_XSSL_8", label: "销售数量", width: "120" },
-            { prop: "CRRC_RBT_YYSR_8", label: "营业收入", width: "120" },
-            { prop: "CRRC_RRB_SL8", label: "税率", width: "120" },
-            { prop: "CRRC_RRB_MLL8", label: "毛利率", width: "120" },
-            { prop: "CRRC_RRB_MLE8", label: "毛利额", width: "120" },
+            { prop: "CRRC_RBT_XSSL_8", label: "销售数量", width: "100" },
+            { prop: "CRRC_RBT_YYSR_8", label: "营业收入", width: "100" },
+            { prop: "CRRC_RRB_SL8", label: "税率", width: "100" },
+            { prop: "CRRC_RRB_MLL8", label: "毛利率", width: "100" },
+            { prop: "CRRC_RRB_MLE8", label: "毛利额", width: "100" },
         ]
     },
     {
         label: "9月",
         children: [
-            { prop: "CRRC_RBT_XSSL_9", label: "销售数量", width: "120" },
-            { prop: "CRRC_RBT_YYSR_9", label: "营业收入", width: "120" },
-            { prop: "CRRC_RRB_SL9", label: "税率", width: "120" },
-            { prop: "CRRC_RRB_MLL9", label: "毛利率", width: "120" },
-            { prop: "CRRC_RRB_MLE9", label: "毛利额", width: "120" },
+            { prop: "CRRC_RBT_XSSL_9", label: "销售数量", width: "100" },
+            { prop: "CRRC_RBT_YYSR_9", label: "营业收入", width: "100" },
+            { prop: "CRRC_RRB_SL9", label: "税率", width: "100" },
+            { prop: "CRRC_RRB_MLL9", label: "毛利率", width: "100" },
+            { prop: "CRRC_RRB_MLE9", label: "毛利额", width: "100" },
         ]
     },
     {
         label: "10月",
         children: [
-            { prop: "CRRC_RBT_XSSL_10", label: "销售数量", width: "120" },
-            { prop: "CRRC_RBT_YYSR_10", label: "营业收入", width: "120" },
-            { prop: "CRRC_RRB_SL10", label: "税率", width: "120" },
-            { prop: "CRRC_RRB_MLL10", label: "毛利率", width: "120" },
-            { prop: "CRRC_RRB_MLE10", label: "毛利额", width: "120" },
+            { prop: "CRRC_RBT_XSSL_10", label: "销售数量", width: "100" },
+            { prop: "CRRC_RBT_YYSR_10", label: "营业收入", width: "100" },
+            { prop: "CRRC_RRB_SL10", label: "税率", width: "100" },
+            { prop: "CRRC_RRB_MLL10", label: "毛利率", width: "100" },
+            { prop: "CRRC_RRB_MLE10", label: "毛利额", width: "100" },
         ]
     },
     {
         label: "11月",
         children: [
-            { prop: "CRRC_RBT_XSSL_11", label: "销售数量", width: "120" },
-            { prop: "CRRC_RBT_YYSR_11", label: "营业收入", width: "120" },
-            { prop: "CRRC_RRB_SL11", label: "税率", width: "120" },
-            { prop: "CRRC_RRB_MLL11", label: "毛利率", width: "120" },
-            { prop: "CRRC_RRB_MLE11", label: "毛利额", width: "120" },
+            { prop: "CRRC_RBT_XSSL_11", label: "销售数量", width: "100" },
+            { prop: "CRRC_RBT_YYSR_11", label: "营业收入", width: "100" },
+            { prop: "CRRC_RRB_SL11", label: "税率", width: "100" },
+            { prop: "CRRC_RRB_MLL11", label: "毛利率", width: "100" },
+            { prop: "CRRC_RRB_MLE11", label: "毛利额", width: "100" },
         ]
     },
     {
         label: "12月",
         children: [
-            { prop: "CRRC_RBT_XSSL_12", label: "销售数量", width: "120" },
-            { prop: "CRRC_RBT_YYSR_12", label: "营业收入", width: "120" },
-            { prop: "CRRC_RRB_SL12", label: "税率", width: "120" },
-            { prop: "CRRC_RRB_MLL12", label: "毛利率", width: "120" },
-            { prop: "CRRC_RRB_MLE12", label: "毛利额", width: "120" },
+            { prop: "CRRC_RBT_XSSL_12", label: "销售数量", width: "100" },
+            { prop: "CRRC_RBT_YYSR_12", label: "营业收入", width: "100" },
+            { prop: "CRRC_RRB_SL12", label: "税率", width: "100" },
+            { prop: "CRRC_RRB_MLL12", label: "毛利率", width: "100" },
+            { prop: "CRRC_RRB_MLE12", label: "毛利额", width: "100" },
         ]
     },
 ])
 let tableData = ref([])
-let lastData = []
-const openerForm = window.opener?.formUpper?.getValues() || {}
+let lastData = ref([])
+const openerForm = window.opener?.formUpper?.getValues() || window.opener?.taskGeneralC?.getElementsByClassName('fieldname-CRRC_PASD_BBH ')[0]?.getForm()?.extend()?.loadedValues || {}
 
-const cellStyle = (row) => {
-    if(lastData.length === 0) return {}
+const cellStyle = ({row, column, rowIndex, columnIndex}) => {
+    if(lastData.value.length === 0) return {}
     if(query.crrcPasdBbh > 1) {
-        const lastRow = lastData.find(item => item.CRRC_WYBS === row.CRRC_WYBS)
+        const lastRow = lastData.value.find(item => item.CRRC_WYBS === row.CRRC_WYBS)
         if(!lastRow) {
-            return { color: 'red' }
-        } else if (row.columnIndex > 0) {
-            if(row[column.prop] !== lastRow[column.prop]) {
+            return {}
+        } else if (columnIndex > 0) {
+            if(row[column.property] !== lastRow[column.property]) {
                 return { color: 'red' }
             }
         }
@@ -221,8 +224,8 @@ const getTableData = async () => {
     tableData.value = res.data.data || []
     if(query.crrcPasdBbh && query.crrcPasdBbh > '1') {
         const lastRes = await axios.getFormData(str, { crrcPasdBbh: query.crrcPasdBbh - 1 })
-        lastData = lastRes.data.data || []
-        if(lastData.length === 0 && lastRes.data.msg !== '1') lastData = [{}]
+        lastData.value = lastRes.data.data || []
+        if(lastData.value.length === 0 && lastRes.data.msg !== '1') lastData.value = [{}]
     }
 }
 
@@ -245,6 +248,7 @@ const getSummaries = (param) => {
             sums[index] = `${sum}`;
         }
     });
+    console.log(sums)
     return sums;
 }
 </script>

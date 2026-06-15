@@ -46,8 +46,12 @@ function getData() {
 
 const projectNum = ref(null)
 let taskStatusChart = null
+const emit = defineEmits(['changeProjectNumTotal'])
 
 function initTaskChart(val) {
+    
+    const num = val.GSJGNXM + val.GSJGWXM + val.BMJGNXM + val.BMJGWXM + val.TCZGSXM
+    emit('changeProjectNumTotal', num)
     // 1. 初始化图表
     taskStatusChart = echarts.init(projectNum.value);
     // 2. 设置配置项
@@ -57,6 +61,16 @@ function initTaskChart(val) {
         //     right: 10, // 右边距（给右侧留空间）
         //     bottom: 20,
         //     left: 130, // 左边距（给Y轴标签留空间）
+        // },
+        // title: {
+        //     text: `项目总数: ${num}`,
+        //     textStyle: {
+        //         color: "white",
+        //         fontSize: fontSize * 22,
+        //     },
+        //     right: 10 * fontSize, // 右侧留空间
+        //     top: 20 * fontSize, // 上侧留空间
+        //     // textAlign: 'right',
         // },
         tooltip: {
             trigger: 'item'
@@ -83,6 +97,7 @@ function initTaskChart(val) {
                     { value: val.GSJGWXM, name: '公司级-国外', itemStyle: { color: 'rgb(240, 173, 78)' }},
                     { value: val.BMJGNXM, name: '部门级-国内', itemStyle: { color: 'rgb(91, 192, 222)' }},
                     { value: val.BMJGWXM, name: '部门级-国外', itemStyle: { color: 'rgb(217, 83, 79)' } },
+                    { value: val.TCZGSXM, name: '统筹子公司项目', itemStyle: { color: 'rgb(155, 89, 182)' } },
                 ],
                 label: {
                     formatter: (val) => {

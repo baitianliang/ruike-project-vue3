@@ -83,7 +83,7 @@ function initTaskChart(val) {
         yAxis: [
             {
                 type: "category",
-                data: ["售后服务", "联调联试及试运行", "项目收尾及总结", "现场实施阶段", "采购阶段", "设计阶段", "策划阶段", "启动阶段"],
+                data: ["售后服务", "项目收尾及总结", "联调联试及试运行", "现场实施阶段", "采购阶段", "设计阶段", "策划阶段", "启动阶段"],
                 axisLabel: {
                     color: "#fff",
                     fontSize: 14 * fontSize,
@@ -95,8 +95,8 @@ function initTaskChart(val) {
                 type: "bar",
                 data: [
                     { value: val.SHFW, },
-                    { value: val.LTLSJSYX, },
                     { value: val.XMSWJZJ, },
+                    { value: val.LTLSJSYX, },
                     { value: val.XCSSJD, },
                     { value: val.CGJD, },
                     { value: val.SJJD, },

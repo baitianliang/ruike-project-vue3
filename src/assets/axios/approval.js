@@ -7,8 +7,12 @@ export default {
         return axios.get(`api/process/query-formatted1?${params}`)
     },
     // 同意
-    agreement(query) {
-        return axios.post(`api/process/agreement`, query)
+    async agreement(query) {
+        await axios.post(`api/process/agreement`, query)
+        return axios.post(`dlstopmp/pushTodoItems`, {
+            id: window.location.href.split('=')[3].split('&')[0],
+            bpName: window.location.href.split('=')[4].split('&')[0]
+        })
     },
     // 办结
     conclude(query) {
@@ -16,6 +20,6 @@ export default {
     },
     // 推送
     pushPms(query) {
-        return axios.post(`api/dlstopmp/to-DoToDone`, query)
+        return axios.post(`dlstopmp/to-DoToDone`, query)
     },
 }

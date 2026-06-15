@@ -79,7 +79,9 @@
             </div>
             <!-- 阶段说明 -->
             <div class="explanation" v-if="showContent !== 1">
-              <div class="explanation_title">阶段说明</div>
+              <div class="explanation_title">
+                阶段说明 <span v-if="startTime">({{startTime}} —— {{endTime}})</span>
+              </div>
               <div class="explanation_value">
                 {{ stageDescription || "暂无说明！" }}
               </div>
@@ -218,6 +220,8 @@ const loading = ref(true)
 const showContent = ref(2)
 const title = ref("")
 const stageStatus = ref("")
+const startTime = ref("")
+const endTime = ref("")
 const stageDescription = ref("前期阶段主要包括投标管理和投标结果处理，为项目启动奠定基础。")
 const projectTimeline = ref(null)
 const allTask = ref(null)
@@ -442,6 +446,8 @@ function getMenuList() {
           id: el.ID,
           name: el.CRRC_PFG_JDMC,
           status: el.ONESTU,
+          startTime: el.TARGET_START_DATE || "",
+          endTime: el.TARGET_END_DATE && el.TARGET_END_DATE.substr(0, 10) || "",
           nextList: [
             {
               id: el.ID,
@@ -459,6 +465,8 @@ function getMenuList() {
     title.value = menu.menuList[0].name;
     titleText.value = menu.menuList[0].name
     stageStatus.value = menu.menuList[0].status
+    startTime.value = menu.menuList[0].startTime
+    endTime.value = menu.menuList[0].endTime
     loading.value = false
   })
 }
@@ -729,6 +737,8 @@ function changePage(val) {
     showContent.value = 2;
     title.value = val.name;
     titleText.value = val.name;
+    startTime.value = val.startTime
+    endTime.value = val.endTime
     // nextTick(() => {
     //   initTaskChart();
     // });
@@ -738,6 +748,8 @@ function changePage(val) {
     showContent.value = 3;
     title.value = val.name;
     titleText.value = val._name;
+    startTime.value = val.startTime
+    endTime.value = val.endTime
   }
 }
 </script>

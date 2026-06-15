@@ -1,12 +1,24 @@
 <template>
-    <div
-        ref="projectPhase"
-        style="width: 100%; height: 100%; margin: 0px auto;"
-    ></div>
+    <div style="width: 100%; height: 100%; margin: 0px auto;" @mouseenter="isActive = false" @mouseleave="isActive = true">
+        <div
+            ref="projectPhase"
+            style="width: 100%; height: 90%; margin: 0px auto;"
+        ></div>
+        <!-- 底部综合区域 -->
+        <div class="footer-container">
+            <div class="pagination-row">
+                <button class="page-arrow" @click="changePage(-1)">◀</button>
+                <span>第</span>
+                <input v-model="currentPage" type="number" class="page-input" min="1">
+                <span>/ <span>{{ totalPages }}</span> 页</span>
+                <button class="page-arrow" @click="changePage(1)">▶</button>
+            </div>
+        </div>
+    </div>
 </template>
 
 <script setup>
-import { nextTick, onMounted, ref } from "vue";
+import { nextTick, onMounted, onUnmounted, ref } from "vue";
 import * as echarts from "echarts";
 import axios from "../../assets/axios/visual.js"
 
@@ -19,6 +31,10 @@ onMounted(() => {
     // initTaskChart({projectList:['测试', '2'], planList:[50, 50], practicalList:[60, 60], deviationList:[1, -50]})
     getData()
 });
+onUnmounted(() => {
+    clearTimeout(timerId)
+})
+
 function getRemSize() {
   const html = document.documentElement;
   const clientWidth = html.clientWidth;
@@ -26,6 +42,7 @@ function getRemSize() {
 }
 const fontSize = getRemSize()
 
+const data = ref([]), projectList = ref([]), planList = ref([]), practicalList = ref([]), deviationList = ref([])
 function getData() {
     let str = `viewName=CRRC_JSC_JDJH`
     if(props.projectList.length > 0) {
@@ -33,12 +50,13 @@ function getData() {
     }
     axios.getFormData(str)
     .then(res => {
-        const data = res.data.data
-        const projectList = data.map(el => el.XMMC)
-        const planList = data.map(el => el.JHWCB)
-        const practicalList = data.map(el => el.SJWCB)
-        const deviationList = data.map(el => el.JDPC)
-        initTaskChart({ projectList, planList, practicalList, deviationList })
+        data.value = res.data.data
+        totalPages.value = Math.ceil(data.value.length / 6)
+        projectList.value = data.value.map(el => el.XMMC)
+        planList.value = data.value.map(el => el.JHWCB)
+        practicalList.value = data.value.map(el => el.SJWCB)
+        // deviationList.value = data.value.map(el => el.JDPC)
+        initTaskChart()
     })
 }
 
@@ -68,10 +86,26 @@ function autoWrapLabel(text, maxCharsPerLine = 4) {
   return result.join('\n');
 }
 
-function initTaskChart(val) {
+let currentPage = ref(1);
+let totalPages = ref(1);
+
+let isActive = ref(true)
+let timerId = null
+function initTaskChart() {
+    let startNum = 0, endNum = 6
+    if(totalPages.value > 1) {
+        startNum = (currentPage.value - 1) * 6
+        endNum = currentPage.value * 6
+        timerId = setTimeout(() => {
+            if(isActive.value) {
+                nextPage()
+            }
+            initTaskChart();
+        }, 5000)
+    }
     let num = 0
-    val.planList.forEach((el, index) => {
-        if(val.practicalList[index] < el || !el) {
+    planList.value.forEach((el, index) => {
+        if(practicalList.value[index] < el || !el) {
             num++
         }
     })
@@ -125,26 +159,22 @@ function initTaskChart(val) {
         xAxis: [
             {
                 type: 'category',
-                data: val.projectList,
+                data: projectList.value.slice(startNum, endNum),
                 axisPointer: {
                     type: 'shadow'
                 },
                 axisLabel: {
                     // color: "#fff",
                     color(value, index) {
-                        if(val.planList[index] > val.practicalList[index] || !val.planList[index])
+                        if(planList.value.slice(startNum, endNum)[index] > practicalList.value.slice(startNum, endNum)[index] || !planList.value.slice(startNum, endNum)[index])
                         return "rgb(211, 49, 21)"
                         else
                         return "#fff"
                     },
                     fontSize: fontSize * 14,
                     formatter: function(value) {
-                        return autoWrapLabel(value, 11)
+                        return autoWrapLabel(value, projectList.value.length > 7 ? 7 : 11)
                     }
-                //     formatter: function(value) {
-                //         // 每3个字符换行
-                //         return value.replace(/(.{6})/g, '$1\n');
-                //     },
                 },
             }
         ],
@@ -167,19 +197,6 @@ function initTaskChart(val) {
                     show: false, // 隐藏水平网格线（可选）
                 },
             },
-            // {
-            //     type: 'value',
-            //     name: '进度偏差',
-            //     interval: 10,
-            //     axisLabel: {
-            //         color: "#fff",
-            //         formatter: '{value}%',
-            //         fontSize: fontSize * 14,
-            //     },
-            //     splitLine: {
-            //         show: false, // 隐藏水平网格线（可选）
-            //     },
-            // }
         ],
         series: [
             {
@@ -196,10 +213,7 @@ function initTaskChart(val) {
                         { offset: 1, color: 'rgb(191, 191, 191)' }
                     ]),
                 },
-                // data: [
-                //     53.85, 47.62, 51.85, 64.52, 80.00, 76.00, 59.00
-                // ],
-                data: val.planList,
+                data: planList.value.slice(startNum, endNum),
                 barWidth: 20,
             },
             {
@@ -212,42 +226,15 @@ function initTaskChart(val) {
                 },
                 itemStyle: {
                     color(value) {
-                        // if(val.planList[value.dataIndex] > value.value)
-                        // return new echarts.graphic.LinearGradient(0, 1, 0, 0, [
-                        //     { offset: 0, color: 'rgba(211, 49, 21, 0.5)' },
-                        //     { offset: 1, color: 'rgb(211, 49, 21)' }
-                        // ])
                         return new echarts.graphic.LinearGradient(0, 1, 0, 0, [
                             { offset: 0, color: 'rgba(104, 188, 0, 0.5)' },
                             { offset: 1, color: 'rgb(104, 188, 0)' }
                         ])
                     }
                 },
-                // data: [
-                //     52.00, 11.90, 51.85, 61.29, 80.00, 82.00, 61.00
-                // ],
-                data: val.practicalList,
+                data: practicalList.value.slice(startNum, endNum),
                 barWidth: 20,
             },
-            // {
-            //     name: '进度偏差',
-            //     type: 'line',
-            //     yAxisIndex: 1,
-            //     tooltip: {
-            //         valueFormatter: function (value) {
-            //             return value + ' °C';
-            //         }
-            //     },
-            //     itemStyle: {
-            //         color: new echarts.graphic.LinearGradient(0, 1, 0, 0, [
-            //             { offset: 0, color: 'rgba(144, 205, 151, 0.5)' },
-            //             { offset: 1, color: 'rgb(144, 205, 151)' }
-            //         ])
-            //     },
-                
-            //     // data: [-1.85, -35.72, 0.00, -3.23, 0.00, 6.00, 2.00]
-            //     data: val.deviationList,
-            // }
         ]
     };
     // 3. 渲染图表
@@ -256,6 +243,19 @@ function initTaskChart(val) {
     // 窗口变化时自适应
     window.addEventListener('resize', taskStatusChartResize);
 }
+function nextPage()  {
+    currentPage.value = currentPage.value < totalPages.value ? currentPage.value + 1 : 1;
+}
+
+function changePage(direction) {
+    let newPage = currentPage.value + direction;
+    if (newPage < 1) newPage = totalPages.value; // 循环到最后
+    if (newPage > totalPages.value) newPage = 1; // 循环到第一
+    currentPage.value = newPage;
+    clearTimeout(timerId)
+    initTaskChart()
+}
+
 function taskStatusChartResize() {
     // nextTick(() => {
         taskStatusChart.resize()
@@ -268,5 +268,64 @@ defineExpose({
 </script>
 
 <style lang="scss">
+.footer-container {
+    width: 100%;
+    // margin-top: -10px;
+    height: 10%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    .pagination-row {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-size: 16px;
+        color: #fff;
+        /* 翻页箭头按钮样式 */
+        .page-arrow {
+            background: transparent;
+            border: 1px solid #555;
+            color: #fff;
+            width: 30px;
+            height: 28px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            padding: 0;
+        }
+        .page-arrow:hover {
+            border-color: #52c41a;
+            color: #52c41a;
+        }
+        /* 输入框样式 */
+        .page-input {
+            background: transparent;
+            border: 1px solid #555;
+            color: #fff;
+            padding: 2px 8px;
+            width: 30px;
+            text-align: center;
+            border-radius: 4px;
+            font-size: 16px;
+        }
+        .page-input:focus {
+            outline: none;
+            border-color: #52c41a;
+        }
 
+        /* 隐藏 input type="number" 自带的上下小箭头 */
+        .page-input::-webkit-outer-spin-button,
+        .page-input::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+        .page-input[type=number] {
+            -moz-appearance: textfield;
+        }
+    }
+}
 </style>

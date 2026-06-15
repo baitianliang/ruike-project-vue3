@@ -163,7 +163,7 @@ async function getFormData() {
     
     tabList.value.forEach(el => {el.tableData = []})
     formValue.value = res.data.data.unifierData
-    if(res.data.data.unifierData._bp_lineitems.length) {
+    if(res.data.data.unifierData._bp_lineitems?.length) {
         res.data.data.unifierData._bp_lineitems.forEach(item => {
             const obj = tabList.value.find(el => el.designName === item.uuu_tab_id)
             if(obj) obj.tableData.push(item)
@@ -209,8 +209,8 @@ const agreement = () => {
         .then(res => {
             if(res.data.code === 200) {
                 ElMessage.success('审批成功');
-                dialogVisible.value = false;
                 window.close();
+                dialogVisible.value = false;
             } else {
                 ElMessage.error(res.data.msg);
             }
@@ -231,8 +231,8 @@ const conclude = () => {
         .then(res => {
             if(res.data.code === 200) {
                 ElMessage.success('办结成功');
-                dialogVisible2.value = false;
                 window.close();
+                dialogVisible2.value = false;
             } else {
                 ElMessage.error(res.data.msg);
             }
@@ -245,7 +245,8 @@ const conclude = () => {
 
 const pushPms = (nextFun) => {
     axios.pushPms({
-        taskId: window.location.href.split('=')[2].split('&')[0],
+        taskId: uuid,
+        // taskId: window.location.href.split('=')[2].split('&')[0],
     })
     .then(res => {
         nextFun()

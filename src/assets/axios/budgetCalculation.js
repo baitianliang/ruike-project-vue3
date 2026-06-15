@@ -16,4 +16,16 @@ export default {
     saveSsTableData(query) {
         return axios.post(`strengthen/saveProImplementationData`, query)
     },
+    // 下载模板
+    downloadFile(type, query) {
+        if(type === 'TB') {
+            return axios.post(`strengthen/excel/bidBudgetExport`, query, {
+                responseType: 'blob'
+            })
+        } else {
+            return axios.post(`strengthen/excel/putIntoEffectBudgetExport`, query, {
+                responseType: 'blob'
+            })
+        }
+    },
 }

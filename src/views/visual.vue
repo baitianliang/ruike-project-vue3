@@ -15,12 +15,12 @@
                     ⛶ 全屏
                 </button>
             </div>
-            <!-- 项目数量 -->
+            <!-- 在执行项目数量 -->
             <div class="project_num">
-                <div class="title">项目数量</div>
-                <project-num ref="projectNum" :projectList="projectInfoSearch"></project-num>
+                <div class="title">在执行项目数量 总计：{{ projectNumTotal }}</div>
+                <project-num ref="projectNum" :projectList="projectInfoSearch" @changeProjectNumTotal="changeProjectNumTotal"></project-num>
                 <button
-                    @click="fullscreen('项目数量')"
+                    @click="fullscreen('在执行项目数量')"
                     class="fullscreen_btn">
                     ⛶ 全屏
                 </button>
@@ -103,9 +103,9 @@
             <!-- 项目风险 -->
             <div class="project_risk">
                 <div class="title">
-                    项目风险
+                    项目风险 总计：{{ projectRiskTotal }}
                 </div>
-                <project-risk ref="projectRisk" :projectList="projectInfoSearch" @showTaskDetail="showTaskDetail('风险分解结构')"></project-risk>
+                <project-risk ref="projectRisk" :projectList="projectInfoSearch" @showTaskDetail="showTaskDetail('风险分解结构')" @changeProjectRiskTotal="changeProjectRiskTotal"></project-risk>
                 <button
                     @click="fullscreen('项目风险')"
                     class="fullscreen_btn">
@@ -115,14 +115,26 @@
             <!-- 质量问题 -->
             <div class="quality_problem">
                 <div class="title">
-                    质量问题
+                    质量问题 总计：{{ qualityProblemTotal }}
                 </div>
-                <quality-problem ref="qualityProblem" :projectList="projectInfoSearch"></quality-problem>
+                <quality-problem ref="qualityProblem" :projectList="projectInfoSearch" @showTaskDetail="showTaskDetail('质量问题结构')" @changeQualityProblemTotal="changeQualityProblemTotal"></quality-problem>
                 <button
                     @click="fullscreen('质量问题')"
                     class="fullscreen_btn">
                     ⛶ 全屏
                 </button>
+            </div>
+            <!-- 采购物料信息 -->
+            <div class="procurement_material_information">
+                <div class="title">
+                    采购物料信息
+                </div>
+                <procurement-material-information ref="procurementMaterialInformation" @showTaskDetail="showTaskDetail('采购物料信息')"></procurement-material-information>
+                <!-- <button
+                    @click="fullscreen('采购物料信息')"
+                    class="fullscreen_btn">
+                    ⛶ 全屏
+                </button> -->
             </div>
         </div>
         <div class="content">
@@ -165,14 +177,14 @@
         </div>
         <el-dialog
             v-model="dialogVisible"
-            :class="['所属阶段', '风险分解结构', '项目名称.1', '项目名称.2', '项目名称.3'].includes(title) ? '' : 'visual_dialog'"
+            :class="['所属阶段', '风险分解结构', '质量问题结构', '项目名称.1', '项目名称.2', '项目名称.3', '采购物料信息'].includes(title) ? '' : 'visual_dialog'"
             v-if="dialogVisible"
             :before-close="handleClose"
-            :title="title.split('.')[0]"
+            :title="title === '质量问题结构' ? '' :title === '在执行项目数量' ? title + ' 总计：' + projectNumTotal : title.split('.')[0]"
             fullscreen>
             <div style="height: 100%; width: 100%">
                 <project-phase v-if="title === '各阶段项目分布'" :projectList="projectInfoSearch"></project-phase>
-                <project-num v-if="title === '项目数量'" :projectList="projectInfoSearch"></project-num>
+                <project-num v-if="title === '在执行项目数量'" :projectList="projectInfoSearch"></project-num>
                 <div v-if="title === '项目信息'" class="fullscreen_project_info">
                     <project-info :projectList="projectInfoSearch"></project-info>
                 </div>
@@ -180,6 +192,7 @@
                 <receivable v-if="title === '应收账款总额'" :projectList="projectInfoSearch"></receivable>
                 <project-risk v-if="title === '项目风险'" :projectList="projectInfoSearch"></project-risk>
                 <quality-problem v-if="title === '质量问题'" :projectList="projectInfoSearch"></quality-problem>
+                <!-- <procurement-material-information v-if="title === '采购物料信息'"></procurement-material-information> -->
                 <progress-plan v-if="title === '进度计划'" :projectList="projectInfoSearch"></progress-plan>
                 <project-status v-if="title === '报工情况'" :projectList="projectInfoSearch"></project-status>
                 <div v-if="title === '超期任务提醒'" class="fullscreen_overdue_task">
@@ -190,6 +203,12 @@
                 </div>
                 <div v-if="title === '风险分解结构'">
                     <risk-table></risk-table>
+                </div>
+                <div v-if="title === '质量问题结构'">
+                    <quality-table></quality-table>
+                </div>
+                <div v-if="title === '采购物料信息'">
+                    <procurement-material-table></procurement-material-table>
                 </div>
                 <div v-if="title === '项目名称.1'">
                     <income-table :projectList="projectInfoTableData"></income-table>
@@ -216,11 +235,16 @@ import Income from "../components/visual/Income.vue";
 import Receivable from "../components/visual/Receivable.vue";
 import ProjectRisk from "../components/visual/ProjectRisk.vue";
 import QualityProblem from "../components/visual/QualityProblem.vue";
+import ProcurementMaterialInformation from "../components/visual/ProcurementMaterialInformation.vue";
+
 import ProgressPlan from "../components/visual/ProgressPlan.vue";
 import ProjectStatus from "../components/visual/ProjectStatus.vue";
 import OverdueTask from "../components/visual/OverdueTask.vue";
 import ProjectStage from "../components/visual/ProjectStage.vue";
 import RiskTable from "../components/visual/RiskTable.vue";
+import QualityTable from "../components/visual/QualityTable.vue";
+import ProcurementMaterialTable from "../components/visual/ProcurementMaterialTable.vue";
+
 import IncomeTable from "../components/visual/IncomeTable.vue";
 import ReceivableTable from "../components/visual/ReceivableTable.vue";
 import StatisticsTable from "../components/visual/StatisticsTable.vue";
@@ -236,6 +260,7 @@ let income = ref(null)
 let receivable = ref(null)
 let projectRisk = ref(null)
 let qualityProblem = ref(null)
+let procurementMaterialInformation = ref(null)
 let progressPlan = ref(null)
 let projectStatus = ref(null)
 let overdueTask = ref(null)
@@ -243,8 +268,8 @@ let projectInfoSearch = ref([])
 const projectInfoSearchChange = (value) => {
     nextTick(() => {
         // getStatisticsData()
-        projectPhase.value.getData()
-        projectNum.value.getData()
+        // projectPhase.value.getData()
+        // projectNum.value.getData()
         projectInfo.value.getData()
         // income.value.getData()
         // receivable.value.getData()
@@ -269,6 +294,22 @@ onMounted(() => {
 onUnmounted(() => {
     clearInterval(updateInterval);
 })
+
+const projectNumTotal = ref(0)
+const changeProjectNumTotal = (val) => {
+    projectNumTotal.value = val
+}
+
+const projectRiskTotal = ref(0)
+const changeProjectRiskTotal = (val) => {
+    projectRiskTotal.value = val
+}
+
+let qualityProblemTotal = ref(0)
+const changeQualityProblemTotal = (val) => {
+    qualityProblemTotal.value = val
+}
+
 // 更新显示
 function updateDisplay() {
     const now = new Date();
@@ -463,10 +504,13 @@ const handleClose = () => {
             }
         }
         .project_risk {
-            width: 22%;
+            width: 14%;
         }
         .quality_problem {
-            width: 22%;
+            width: 14%;
+        }
+        .procurement_material_information {
+            width: 14%;
         }
         .progress_plan {
             width: 59%;

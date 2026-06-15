@@ -5,7 +5,10 @@
                 <el-button @click="toggleAll(tableData, true)">全部展开</el-button>
                 <el-button @click="toggleAll(tableData, false)">全部折叠</el-button>
             </div>
-            <el-button type="primary" @click="save" :disabled="disabled">保存</el-button>
+            <div>
+                <el-button type="primary" @click="save" :disabled="disabled">保存</el-button>
+                <el-button type="primary" @click="downloadFile">下载</el-button>
+            </div>
         </el-card>
         <el-card class="tableCard" body-style="height: calc(100% - 40px)">
             <el-table
@@ -325,6 +328,45 @@ const save = () => {
         })
     }
 }
+
+const downloadFile = () => {
+    const query = {
+        crrcPasdBbh: openerForm.CRRC_PASD_BBH,
+        rows: tableData.value
+    }
+    axios.downloadFile(type, query)
+    .then(res => {
+        if (res.data.type === 'application/json') {
+            const reader = new FileReader();
+            reader.onload = () => {
+                // 将 Blob 读出的字符串转回 ResultBean 对象
+                const result = JSON.parse(reader.result);
+                // 使用您 UI 框架的消息提示（例如 Element UI 的 $message）
+                ElMessage.error(result.msg || '文件读取失败');
+            };
+            reader.readAsText(res.data);
+            return; // 报错了就直接返回，不执行后面的下载逻辑
+        }
+
+        const blob = new Blob([res.data]);
+        const fileName =  type === 'TB' ? '项目投标预算表.xlsx' : '项目实施预算表.xlsx';
+        
+        if (window.navigator && window.navigator.msSaveOrOpenBlob) {
+            window.navigator.msSaveOrOpenBlob(blob, fileName);
+        } else {
+            const url = window.URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.setAttribute('download', fileName);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            window.URL.revokeObjectURL(url); // 释放内存
+        }
+        ElMessage.success('开始下载...');
+    })
+}
+
 const getTbTableData = async () => {
     loading.value = true
     let res = await axios.getTbTableData(openerForm.CRRC_BOI_QQXMBH, openerForm.CRRC_PASD_BBH)

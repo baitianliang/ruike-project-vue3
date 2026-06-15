@@ -111,6 +111,11 @@ const routes = [
         name: 'H5表单',
         component: () => import('../views/formH5.vue'),
     },
+    {
+        path: '/ListH5',
+        name: 'H5列表',
+        component: () => import('../views/listH5.vue'),
+    },
 ]
 
 const router = createRouter({

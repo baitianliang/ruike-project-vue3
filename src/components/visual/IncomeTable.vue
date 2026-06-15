@@ -52,7 +52,7 @@ let projectInfoSearch = ref([])
 
 let tableColumn = [
     {prop: "XMMC", label: "项目名称"},
-    {prop: "NDXSSR_MBZ", label: "目标值"},
+    // {prop: "NDXSSR_MBZ", label: "目标值"},
     {prop: "NDXSSR_SJZ", label: "实际值"},
 ]
 let allTableData = ref([])
