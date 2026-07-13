@@ -80,11 +80,13 @@ function initTaskChart(val) {
             orient: 'vertical',
             // type: 'scroll',
             // left: 'right',
+            itemWidth: 16 * fontSize,
+            itemHeight: 16 * fontSize,
             right: 0,
             bottom: 'center',
             textStyle: {
                 color: '#ffffff',
-                fontSize: 16 * fontSize
+                fontSize: 16 * fontSize,
             }
         },
         series: [
@@ -93,16 +95,17 @@ function initTaskChart(val) {
                 center: ['40%', '50%'],
                 radius: '80%',
                 data: [
-                    { value: val.GSJGNXM, name: '公司级-国内', itemStyle: { color: 'rgb(92, 184, 92)' }},
-                    { value: val.GSJGWXM, name: '公司级-国外', itemStyle: { color: 'rgb(240, 173, 78)' }},
-                    { value: val.BMJGNXM, name: '部门级-国内', itemStyle: { color: 'rgb(91, 192, 222)' }},
-                    { value: val.BMJGWXM, name: '部门级-国外', itemStyle: { color: 'rgb(217, 83, 79)' } },
-                    { value: val.TCZGSXM, name: '统筹子公司项目', itemStyle: { color: 'rgb(155, 89, 182)' } },
+                    { value: val.GSJGNXM, name: '公司级-国内', itemStyle: { color: '#f5a623' }},
+                    { value: val.BMJGNXM, name: '部门级-国内', itemStyle: { color: '#d94f4f' }},
+                    { value: val.GSJGWXM, name: '公司级-国外', itemStyle: { color: '#55b8e8' }},
+                    { value: val.BMJGWXM, name: '部门级-国外', itemStyle: { color: '#00c877' } },
+                    { value: val.TCZGSXM, name: '统筹子公司项目', itemStyle: { color: '#a569bd' } },
                 ],
                 label: {
                     formatter: (val) => {
                         if(val.data.value > 0)
-                            return `${val.data.name}(${val.data.value})`
+                            return `${val.data.value}`
+                            // return `${val.data.name}(${val.data.value})`
                         else return ''
                     },
                     position: 'inside',
@@ -111,7 +114,9 @@ function initTaskChart(val) {
                     }
                 },
                 itemStyle: {
-                    borderColor: "#fff",
+                    // borderColor: "#fff",
+                    borderColor: '#0F2449',
+                    borderWidth: 3,
                 },
             }
         ],

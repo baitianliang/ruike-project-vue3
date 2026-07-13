@@ -2,11 +2,11 @@
     <div class="project_info_block" v-auto-scroll>
         <el-table
             :data="tableData"
-            style="width: 100%; height: 100%; background-color: unset;"
+            style="width: 100%; height: 100%; background-color: unset; border-bottom: 1px solid #1E4A88;"
             height="100%"
             header-row-class-name="project-info-header-row"
             row-class-name="project-info-row">
-            <el-table-column label="序号" type="index" width="70" />
+            <el-table-column align="center" label="序号" type="index" width="60" />
             <el-table-column align="center" v-for="(item, index) in tableColumn" :key="index" :prop="item.prop" :label="item.label" :width="item.width" />
         </el-table>
     </div>
@@ -70,11 +70,19 @@ defineExpose({
     height: 0px!important;
 }
 :deep(.project-info-header-row) {
-    background-color: unset!important;
+    background-color: #143062!important;
     color: white;
     .el-table__cell {
-        background-color: unset!important;
+        background-color: #143062!important;
         font-size: 16px;
+        border-top: 1px solid #1E4A88!important;
+        border-bottom: 1px solid #1E4A88!important;
+    }
+    >:first-child {
+        border-left: 1px solid #1E4A88!important;
+    }
+    >:last-child {
+        border-right: 1px solid #1E4A88!important;
     }
 }
 :deep(.project-info-row) {
@@ -84,6 +92,14 @@ defineExpose({
         background-color: unset!important;
         border: 0px!important;
         font-size: 18px;
+        border-top: 1px solid #1E4A88!important;
+        border-bottom: 1px solid #1E4A88!important;
+    }
+    >:first-child {
+        border-left: 1px solid #1E4A88!important;
+    }
+    >:last-child {
+        border-right: 1px solid #1E4A88!important;
     }
 }
 :deep(.project-info-row:hover) {

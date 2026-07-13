@@ -1,14 +1,15 @@
 <template>
     <div class="title">
         超期任务提醒
-        <div style="margin-left: 10px; color: red">已超期数量: {{ tableData.length }}</div>
+        <div style="margin-left: 10px; color: rgb(211, 49, 21)">已超期数量: {{ tableData.length }}</div>
     </div>
     <div class="overdue_task_block" v-auto-scroll>
         <el-table
             :data="tableData"
-            style="width: 100%; height: 100%; background-color: unset;"
+            style="width: 100%; height: 100%; background-color: unset; border-bottom: 1px solid #1E4A88;"
             header-row-class-name="overdue_task-header-row"
             row-class-name="overdue_task-row">
+            <el-table-column align="center" label="序号" type="index" width="60" />
             <el-table-column align="center" v-for="(item, index) in tableColumn" :key="index" :prop="item.prop" :label="item.label" :width="item.width" />
         </el-table>
     </div>
@@ -35,8 +36,8 @@ let tableColumn = [
     {prop: "XMJL", label: "项目经理", width: 120 * fontSize},
     {prop: "ZYMC", label: "作业名称"},
     {prop: "ZYFZR", label: "作业负责人", width: 120 * fontSize},
-    {prop: "JHKSSJ", label: "计划开始时间", width: 120 * fontSize},
-    {prop: "JHWCSJ", label: "计划完成时间", width: 120 * fontSize},
+    {prop: "JHKSSJ", label: "计划开始时间", width: 123 * fontSize},
+    {prop: "JHWCSJ", label: "计划完成时间", width: 125 * fontSize},
 ]
 let tableData = ref([])
 
@@ -70,21 +71,38 @@ defineExpose({
     height: 0px!important;
 }
 :deep(.overdue_task-header-row) {
-    background-color: unset;
+    background-color: #143062!important;
     color: white;
     .el-table__cell {
         background-color: unset;
         border: 0px;
         font-size: 16px;
+        border-top: 1px solid #1E4A88!important;
+        border-bottom: 1px solid #1E4A88!important;
+    }
+    >:first-child {
+        border-left: 1px solid #1E4A88!important;
+    }
+    >:last-child {
+        border-right: 1px solid #1E4A88!important;
     }
 }
 :deep(.overdue_task-row) {
     background-color: unset;
-    color: red;
+    color: #fff;
+    // color: red;
     .el-table__cell {
         background-color: unset;
         border: 0px;
         font-size: 18px;
+        border-top: 1px solid #1E4A88!important;
+        border-bottom: 1px solid #1E4A88!important;
+    }
+    >:first-child {
+        border-left: 1px solid #1E4A88!important;
+    }
+    >:last-child {
+        border-right: 1px solid #1E4A88!important;
     }
 }
 :deep(.overdue_task-row:hover) {

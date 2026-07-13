@@ -9,4 +9,8 @@ export default {
     getTableData(str) {
         return axios.get(`poilotscabin/getDrillDownList?${str}`)
     },
+    // 下载文件
+    downloadFile(data) {
+        return axios.get(`strengthen/pilotscabindownload?${data}`, {responseType: 'blob'})
+    }
 }

@@ -28,7 +28,7 @@
             </el-table-column>
             <el-table-column align="center" v-for="(item, index) in tableColumn" :key="index" :prop="item.prop" :label="item.label" :width="item.width">
                 <template v-if="item.prop === 'XMCGRYL'" #default="scope">
-                    {{ XMCGRYLList[tableDataOption.indexOf(scope.row.CRRC_XM_XMMC)] }}%
+                    {{ XMCGRYLList[tableDataOption.indexOf(scope.row.CRRC_XM_XMMC)] }}
                 </template>
             </el-table-column>
         </el-table>
@@ -56,12 +56,17 @@ let tableDataOption = ref([])
 
 let tableColumn = [
     {prop: "CRRC_XM_XMMC", label: "项目名称"},
-    {prop: "XMCGRYL", label: "项目采购冗余率"},
+    // {prop: "XMCGRYL", label: "项目采购冗余率"},
+    {prop: "XMCGRYL", label: "库存金额"},
     {prop: "CRRC_MCL_WLBM", label: "物料编码"},
     {prop: "CRRC_MCL_WLMS", label: "物料名称"},
-    {prop: "CRRC_CGDDSL", label: "采购订单数量"},
-    {prop: "CRRC_XSDDSL", label: "销售订单数量"},
-    {prop: "CGRYL", label: "采购冗余率"},
+    {prop: "CRRC_CGDDSL", label: "采购物料数量"},
+    {prop: "CRRC_CGDDJEBHS", label: "采购订单金额"},
+    {prop: "CRRC_XSDDSL", label: "销售物料数量"},
+    {prop: "CRRC_XSDDJEBHS", label: "销售订单金额"},
+    {prop: "CRRC_KCSL", label: "库存数量"},
+    {prop: "CRRC_KCJE", label: "库存金额"},
+    // {prop: "CGRYL", label: "采购冗余率"},
 ]
 let allTableData = ref([])
 let tableData = ref([])
@@ -75,10 +80,12 @@ onMounted(() => {
         tableData.value = allTableData.value
         tableDataOption.value = [...new Set(allTableData.value.map(item => item.CRRC_XM_XMMC))]
         tableDataOption.value.forEach(el => {
-            const CRRC_CGDDSLNum = allTableData.value.filter(item => item.CRRC_XM_XMMC === el).map(item => item.CRRC_CGDDSL).reduce((accumulator, current) => accumulator + current, 0)
-            const CRRC_XSDDSLNum = allTableData.value.filter(item => item.CRRC_XM_XMMC === el).map(item => item.CRRC_XSDDSL).reduce((accumulator, current) => accumulator + current, 0)
-            const XMCGRYLNum = (CRRC_CGDDSLNum == 0 ? 0 : 100 * (CRRC_CGDDSLNum - CRRC_XSDDSLNum) / CRRC_CGDDSLNum).toFixed(2)
-            XMCGRYLList.value.push(XMCGRYLNum) // 计算冗余率
+            // const CRRC_CGDDSLNum = allTableData.value.filter(item => item.CRRC_XM_XMMC === el).map(item => item.CRRC_CGDDSL).reduce((accumulator, current) => accumulator + current, 0)
+            // const CRRC_XSDDSLNum = allTableData.value.filter(item => item.CRRC_XM_XMMC === el).map(item => item.CRRC_XSDDSL).reduce((accumulator, current) => accumulator + current, 0)
+            // const XMCGRYLNum = (CRRC_CGDDSLNum == 0 ? 0 : 100 * (CRRC_CGDDSLNum - CRRC_XSDDSLNum) / CRRC_CGDDSLNum).toFixed(2)
+            const CRRC_KCJENum = allTableData.value.filter(item => item.CRRC_XM_XMMC === el).map(item => item.CRRC_KCJE).reduce((accumulator, current) => (100 * accumulator + 100 * current) / 100, 0)
+            // .toLocaleString()
+            XMCGRYLList.value.push(CRRC_KCJENum) // 计算冗余率
         })
     })
 });

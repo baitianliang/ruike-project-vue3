@@ -77,7 +77,7 @@ let ZGZTOption = ref(["已整改", "未整改"])
 
 let tableColumn = [
     {prop: "XMMC", label: "项目名称"},
-    {prop: "XMJL", label: "项日经理"},
+    {prop: "XMJL", label: "项目经理"},
     {prop: "ZGZT", label: "整改状态"},
     {prop: "JCRY", label: "检查人员"},
     {prop: "JCRQ", label: "检查日期"},

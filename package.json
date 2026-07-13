@@ -15,6 +15,7 @@
     "crypto-js": "^4.2.0",
     "dhtmlx-gantt": "^9.0.11",
     "echarts": "^4.3.0",
+    "echarts-gl": "^1.1.2",
     "element-plus": "^2.10.2",
     "file-saver": "^2.0.5",
     "js-cookie": "^3.0.5",

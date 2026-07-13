@@ -60,6 +60,11 @@ const routes = [
         component: () => import('../views/visual.vue'),
     },
     {
+        path: '/dashboardContainer',
+        name: '项目层级大屏',
+        component: () => import('../views/dashboardContainer.vue'),
+    },
+    {
         path: '/FileList',
         name: '文件列表',
         component: () => import('../views/fileList.vue'),

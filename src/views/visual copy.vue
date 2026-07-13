@@ -78,43 +78,25 @@
             <!-- 统计 -->
             <div class="statistics">
                 <!-- <div class="title">统计</div> -->
-                <div class="finance-bg-animation">
-                    <div class="orbit-ring orbit-ring-1"></div>
-                    <div class="orbit-ring orbit-ring-2"></div>
-                    <div class="orbit-ring orbit-ring-3"></div>
-                    <div class="orbit-ring orbit-ring-4"></div>
-                    <div class="glow-core"></div>
-                </div>
-                <div>
-                    <div @click="showTaskDetail('项目名称.3')">
-                        <div class="finance-icon">📊</div>
-                        <div>
-                            <div>销售收入</div>
-                            <div>{{ statisticsData.XSSR }}万</div>
-                        </div>
-                    </div>
-                    <div @click="showTaskDetail('项目名称.3')">
-                        <div class="finance-icon">📈</div>
-                        <div>
-                            <div>毛利率</div>
-                            <div>{{ statisticsData.MLL }}%</div>
-                        </div>
+                <div @click="showTaskDetail('项目名称.3')">
+                    <div class="top"></div>
+                    <div>
+                        <div>销售收入</div>
+                        <div>{{ statisticsData.XSSR }}万元</div>
                     </div>
                 </div>
-                <div>
-                    <div @click="showTaskDetail('项目名称.3')">
-                        <div class="finance-icon">💰</div>
-                        <div>
-                            <div>毛利润</div>
-                            <div>{{ statisticsData.LR }}万</div>
-                        </div>
+                <div @click="showTaskDetail('项目名称.3')">
+                    <div class="center"></div>
+                    <div>
+                        <div>利润</div>
+                        <div>{{ statisticsData.LR }}万元</div>
                     </div>
-                    <div @click="showTaskDetail('采购物料信息')">
-                        <div class="finance-icon">📦</div>
-                        <div>
-                            <div>原材料和在产品</div>
-                            <div>{{ productNum }}万</div>
-                        </div>
+                </div>
+                <div @click="showTaskDetail('项目名称.3')">
+                    <div class="bottom"></div>
+                    <div>
+                        <div>毛利率（%）</div>
+                        <div>{{ statisticsData.MLL }}%</div>
                     </div>
                 </div>
             </div>
@@ -143,7 +125,7 @@
                 </button>
             </div>
             <!-- 采购物料信息 -->
-            <div v-if="false" class="procurement_material_information">
+            <div class="procurement_material_information">
                 <div class="title">
                     采购物料信息
                 </div>
@@ -159,9 +141,9 @@
             <!-- 进度计划 -->
             <div class="progress_plan">
                 <div class="title">
-                    进度计划&nbsp;<span style="color: rgb(211, 49, 21)">(⚠进度异常项目数量: {{ progressPlanTotal }})</span>
+                    进度计划
                 </div>
-                <progress-plan ref="progressPlan" :projectList="projectInfoSearch" @changeProgressPlanTotal="changeProgressPlanTotal"></progress-plan>
+                <progress-plan ref="progressPlan" :projectList="projectInfoSearch"></progress-plan>
                 <button
                     @click="fullscreen('进度计划')"
                     class="fullscreen_btn">
@@ -208,8 +190,8 @@
                 </div>
                 <income v-if="title === '年度销售收入'" :projectList="projectInfoSearch"></income>
                 <receivable v-if="title === '应收账款总额'" :projectList="projectInfoSearch"></receivable>
-                <project-risk v-if="title === '项目风险'" :projectList="projectInfoSearch" viewBox></project-risk>
-                <quality-problem v-if="title === '质量问题'" :projectList="projectInfoSearch" viewBox></quality-problem>
+                <project-risk v-if="title === '项目风险'" :projectList="projectInfoSearch"></project-risk>
+                <quality-problem v-if="title === '质量问题'" :projectList="projectInfoSearch"></quality-problem>
                 <!-- <procurement-material-information v-if="title === '采购物料信息'"></procurement-material-information> -->
                 <progress-plan v-if="title === '进度计划'" :projectList="projectInfoSearch"></progress-plan>
                 <project-status v-if="title === '报工情况'" :projectList="projectInfoSearch"></project-status>
@@ -300,17 +282,11 @@ const projectInfoSearchChange = (value) => {
 }
 
 let projectInfoTableData = ref([])
-let productNum = ref(0)
 onMounted(() => {
     // 首次加载立即更新显示
     updateDisplay();
     getProjectList()
     getStatisticsData()
-    
-    axios.getFormData(`viewName=CRRC_JSC_WL`)
-    .then(res => {
-        productNum.value = res.data.data[0].CRRC_KCJE
-    })
     // 开始定时更新
     updateInterval = setInterval(updateDisplay, 1000);
 })
@@ -332,11 +308,6 @@ const changeProjectRiskTotal = (val) => {
 let qualityProblemTotal = ref(0)
 const changeQualityProblemTotal = (val) => {
     qualityProblemTotal.value = val
-}
-
-let progressPlanTotal = ref(0)
-const changeProgressPlanTotal = (val) => {
-    progressPlanTotal.value = val
 }
 
 // 更新显示
@@ -399,8 +370,7 @@ const handleClose = () => {
 #visual {
     height: 100%;
     width: 100%;
-    background-color: #0F2449;
-    // background: linear-gradient(180deg, rgba(5, 15, 30, 0.98) 0%, rgba(3, 10, 20, 0.95) 100%);
+    background-color: rgb(7, 15, 36);
     .title_search {
         width: 450px!important;
         margin-left: 10px;
@@ -414,10 +384,8 @@ const handleClose = () => {
         display: flex;
         justify-content: center;
         align-items: center;
-        // color: rgb(59, 222, 245);
-        color: #fff;
+        color: rgb(59, 222, 245);
         font-size: 32px;
-        font-weight: bold;
         line-height: 32px;
         letter-spacing: 10px;
         height: 70px;
@@ -434,7 +402,6 @@ const handleClose = () => {
             right: -90px;
             top: 42px;
             font-size: 16px;
-            font-weight: 400;
             color: white;
             letter-spacing: 0px;
         }
@@ -486,220 +453,75 @@ const handleClose = () => {
         .project_info {
             width: calc(55% - 200px);
             height: calc(100% - 40px);
-            // background-image: url("../assets/img/blockBackground.jpg");
+            background-image: url("../assets/img/blockBackground.jpg");
             background-size: 100% 95%;
             background-repeat: no-repeat;
             background-position: bottom;
         }
         .left {
-            width: 25%;
+            width: 31%;
             >div {
                 height: 55%;
             }
         }
         .statistics {
-            width: 24%;
+            width: 12%;
             color: white;
             font-size: 22px;
-            display: flex;
-            gap: 20px;
-            .finance-bg-animation {
-                position: absolute;
-                top: 50%;
-                left: 50%;
-                width: 200%;
-                height: 200%;
-                transform: translate(-50%, -50%);
-                pointer-events: none;
-                z-index: 0;
-            }
-            .orbit-ring {
-                position: absolute;
-                top: 50%;
-                left: 50%;
-                border-radius: 50%;
-                border: 1px solid rgba(0, 168, 255, 0.2);
-            }
-
-            .orbit-ring-1 {
-                width: 60%;
-                height: 60%;
-                margin: -30% 0 0 -30%;
-                border: 2px solid rgba(0, 168, 255, 0.22);
-                animation: rotateOrbit 20s linear infinite;
-            }
-
-            .orbit-ring-2 {
-                width: 75%;
-                height: 75%;
-                margin: -37.5% 0 0 -37.5%;
-                border: 1px solid rgba(0, 168, 255, 0.16);
-                animation: rotateOrbit 25s linear infinite reverse;
-            }
-
-            .orbit-ring-2::before {
-                content: '';
-                position: absolute;
-                top: 0;
-                left: 50%;
-                width: 8px;
-                height: 8px;
-                margin-left: -4px;
-                background: rgba(0, 212, 255, 0.85);
-                border-radius: 50%;
-                box-shadow: 0 0 10px rgba(0, 212, 255, 0.85), 0 0 20px rgba(0, 212, 255, 0.5);
-            }
-
-            .orbit-ring-3 {
-                width: 90%;
-                height: 90%;
-                margin: -45% 0 0 -45%;
-                border: 1px dashed rgba(0, 168, 255, 0.14);
-                animation: rotateOrbit 30s linear infinite;
-            }
-
-            .orbit-ring-4 {
-                width: 45%;
-                height: 45%;
-                margin: -22.5% 0 0 -22.5%;
-                border: 1px solid rgba(0, 168, 255, 0.16);
-                animation: rotateOrbit 35s linear infinite reverse;
-            }
-
-            .orbit-ring-4::before {
-                content: '';
-                position: absolute;
-                top: 0;
-                left: 50%;
-                width: 6px;
-                height: 6px;
-                margin-left: -3px;
-                background: rgba(0, 212, 255, 0.7);
-                border-radius: 50%;
-                box-shadow: 0 0 8px rgba(0, 212, 255, 0.7), 0 0 15px rgba(0, 212, 255, 0.3);
-            }
-            @keyframes rotateOrbit {
-                from { transform: rotate(0deg); }
-                to { transform: rotate(360deg); }
-            }
-            .glow-core {
-                display: none;
-            }
             >div {
-                flex: 1;
-                >div {
-                    border: 1px solid rgba(0, 168, 255, 0.25);
-                    border-radius: 14px;
-                    height: 51%;
-                    margin-top: 3%;
-                    // background-image: url("../assets/img/blockBackground2.jpg");
+                height: 34%;
+                margin-top: 3%;
+                background-image: url("../assets/img/blockBackground2.jpg");
+                background-size: 100% 100%;
+                background-repeat: no-repeat;
+                display: flex;
+                align-content: center;
+                justify-content: space-between;
+                cursor: pointer;
+                >div:first-child {
+                    height: 100%;
+                    width: 40%;
                     background-size: 100% 100%;
                     background-repeat: no-repeat;
+                    background-position: center;    /* 居中 */
+                }
+                .top {
+                    background-image: url("../assets/img/trumpet.jpg");
+                }
+                .center {
+                    background-image: url("../assets/img/profit.jpg");
+                }
+                .bottom {
+                    background-image: url("../assets/img/trophy.jpg");
+                }
+                >div:last-child {
+                    width: 60%;
                     display: flex;
                     align-items: center;
-                    justify-content: space-between;
-                    cursor: pointer;
-                    animation: cardPulse 4s ease-in-out infinite;
-                    @keyframes cardPulse {
-                        0%, 100% { border-color: rgba(0, 168, 255, 0.25); box-shadow: 0 0 0 1px rgba(0, 168, 255, 0.2), 0 8px 35px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.1); }
-                        50% { border-color: rgba(0, 168, 255, 0.4); box-shadow: 0 0 0 1px rgba(0, 168, 255, 0.3), 0 0 15px rgba(0, 168, 255, 0.15), 0 8px 35px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.1); }
-                    }
-
-                    .finance-icon {
-                        margin: 0 auto;
-                        width: 58px;
-                        height: 58px;
-                        background: linear-gradient(145deg, #0077dd, #0044aa);
-                        border-radius: 14px;
-                        display: flex;
-                        justify-content: center;
-                        align-items: center;
-                        font-size: 28px;
-                        flex-shrink: 0;
-                        box-shadow: 
-                            0 6px 20px rgba(0, 100, 200, 0.5),
-                            inset 0 2px 6px rgba(255, 255, 255, 0.15),
-                            inset 0 -3px 6px rgba(0, 0, 0, 0.25);
-                        position: relative;
-                    }
-                    .finance-icon::after {
-                        content: '';
-                        position: absolute;
-                        top: 2px;
-                        left: 2px;
-                        right: 2px;
-                        bottom: 50%;
-                        background: linear-gradient(180deg, rgba(255, 255, 255, 0.3), transparent);
-                        border-radius: 14px 14px 0 0;
-                    }
-                    .finance-icon::before {
-                        content: '';
-                        position: absolute;
-                        top: 50%;
-                        left: 50%;
-                        width: 85%;
-                        height: 85%;
-                        transform: translate(-50%, -50%);
-                        background: radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.2), transparent 60%);
-                        border-radius: 50%;
-                    }
-                    // >div:first-child {
-                    //     height: 100%;
-                    //     width: 40%;
-                    //     background-size: 100% 100%;
-                    //     background-repeat: no-repeat;
-                    //     background-position: center;    /* 居中 */
-                    // }
-                    // .top {
-                    //     background-image: url("../assets/img/trumpet.jpg");
-                    // }
-                    // .center {
-                    //     background-image: url("../assets/img/profit.jpg");
-                    // }
-                    // .bottom {
-                    //     background-image: url("../assets/img/trophy.jpg");
-                    // }
-                    >div:last-child {
-                        width: 60%;
-                        font-size: 22px;
-                        font-weight: bold;
-                        display: flex;
-                        align-items: center;
-                        justify-content: center;
-                        flex-direction: column;
-                        >div:last-child {
-                            font-size: 28px;
-                        }
-                    }
-                }
-                >div:hover .finance-icon {
-                    transform: scale(1.1);
-                    box-shadow: 
-                        0 12px 35px rgba(0, 168, 255, 0.7),
-                        inset 0 2px 8px rgba(255, 255, 255, 0.2),
-                        inset 0 -4px 8px rgba(0, 0, 0, 0.25);
+                    justify-content: center;
+                    flex-direction: column;
                 }
             }
         }
         .project_risk {
-            width: 20%;
+            width: 14%;
         }
         .quality_problem {
-            width: 20%;
+            width: 14%;
         }
         .procurement_material_information {
             width: 14%;
         }
         .progress_plan {
-            width: 55%;
+            width: 59%;
         }
         .project_status {
             width: 22%;
         }
         .overdue_task {
-            width: calc(48% - 210px);
+            width: calc(44% - 210px);
             height: calc(100% - 40px);
-            // background-image: url("../assets/img/blockBackground.jpg");
+            background-image: url("../assets/img/blockBackground.jpg");
             background-size: 100% 95%;
             background-repeat: no-repeat;
             background-position: bottom;
@@ -718,13 +540,13 @@ const handleClose = () => {
         }
         .el-dialog__body {
             height: calc(100% - 36px);
-            // .fullscreen_project_info, .fullscreen_overdue_task {
-            //     background-image: url("../assets/img/blockBackground.jpg");
-            //     background-size: 100% 98%;
-            //     background-repeat: no-repeat;
-            //     background-position: top;
-            //     z-index: 100;
-            // }
+            .fullscreen_project_info, .fullscreen_overdue_task {
+                background-image: url("../assets/img/blockBackground.jpg");
+                background-size: 100% 98%;
+                background-repeat: no-repeat;
+                background-position: top;
+                z-index: 100;
+            }
             >div >div {
                 height: 100%!important;
                 width: 100%!important;

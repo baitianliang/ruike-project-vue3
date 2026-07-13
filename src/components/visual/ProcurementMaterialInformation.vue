@@ -60,7 +60,6 @@ let taskStatusChart = null
 const emit = defineEmits(['showTaskDetail'])
 
 function initTaskChart(val) {
-    console.log(100 - val)
     // 1. 初始化图表
     taskStatusChart = echarts.init(qualityProblem.value);
     // 2. 设置配置项
@@ -77,30 +76,13 @@ function initTaskChart(val) {
             left: 'center',
             top: 'center',
             style: {
-                text: `${val}%`,  // 显示数值
+                text: `${val}%\n采购冗余率`,  // 显示数值
                 fill: 'white',
                 fontSize: 32 * fontSize,
-                fontWeight: 'bold'
+                fontWeight: 'bold',
+                textAlign: 'center',
             },
             z: 100
-        }, {
-            type: 'text',
-            left: 'center',
-            top: 'center',
-            style: {
-                text: '采购冗余率',  // 显示标题（可选）
-                fill: 'white',
-                fontSize: 32 * fontSize,
-                fontWeight: 'normal'
-            },
-            z: 100,
-            styleRich: {
-                rich: {
-                    // 可以单独控制样式
-                }
-            },
-            // 将第二个文字向下偏移
-            top: '55%'
         }],
         series: [
             {
@@ -108,7 +90,7 @@ function initTaskChart(val) {
                 center: ['50%', '50%'],
                 radius : ['65%', '90%'],
                 data: [
-                    { value: val, name: '采购冗余率', itemStyle: {color: '#28a745'}},
+                    { value: val, name: '采购冗余率', itemStyle: {color: '#60D040'}},
                     { value: (10000 - val * 100) / 100, name: '', itemStyle: {color: 'rgb(229, 229, 229)'}},
                 ],
                 label: {

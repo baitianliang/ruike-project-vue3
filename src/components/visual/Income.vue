@@ -94,15 +94,25 @@ function initTaskChart(val) {
                 type: "bar",
                 data: [
                     { value: val.NDXSSR_SJZ, itemStyle: {
+                        // color: new echarts.graphic.LinearGradient(0, 0, 1, 0, [
+                        //     { offset: 0, color: 'rgba(13, 218, 44, 0.5)' },
+                        //     { offset: 1, color: 'rgb(13, 218, 44)' }
+                        // ])
+                        barBorderRadius: 2,
                         color: new echarts.graphic.LinearGradient(0, 0, 1, 0, [
-                            { offset: 0, color: 'rgba(13, 218, 44, 0.5)' },
-                            { offset: 1, color: 'rgb(13, 218, 44)' }
+                            { offset: 0, color: '#00aa66' },
+                            { offset: 1, color: '#00c877' }
                         ])
                     }},
                     { value: val.NDXSSR_MBZ, itemStyle: {
+                        // color: new echarts.graphic.LinearGradient(0, 0, 1, 0, [
+                        //     { offset: 0, color: 'rgba(255, 130, 176, 0.5)' },
+                        //     { offset: 1, color: 'rgb(255, 130, 176)' }
+                        // ])
+                        barBorderRadius: 2,
                         color: new echarts.graphic.LinearGradient(0, 0, 1, 0, [
-                            { offset: 0, color: 'rgba(255, 130, 176, 0.5)' },
-                            { offset: 1, color: 'rgb(255, 130, 176)' }
+                            { offset: 0, color: '#0066cc' },
+                            { offset: 1, color: '#00a8dd' }
                         ])
                     }},
                 ],
@@ -115,12 +125,12 @@ function initTaskChart(val) {
                     },
                     position: 'inside',
                     textStyle: {
-                        fontSize: 16 * fontSize,
+                        fontSize: 24 * fontSize,
                     }
                 },
                 
                 barCategoryGap: 20 * fontSize,
-                barWidth: 20 * fontSize,
+                barWidth: 30 * fontSize,
             },
         ],
     };

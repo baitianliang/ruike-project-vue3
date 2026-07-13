@@ -111,12 +111,18 @@ function initTaskChart(val) {
                     }
                 },
                 itemStyle: {
+                    // color: new echarts.graphic.LinearGradient(0, 0, 1, 0, [
+                    //     { offset: 0, color: 'rgba(58, 255, 252, 0.3)' },
+                    //     { offset: 0.5, color: 'rgb(59, 222, 245)' },
+                    //     { offset: 1, color: 'rgb(58, 255, 252)' }
+                    // ])
+                    barBorderRadius: 2,
                     color: new echarts.graphic.LinearGradient(0, 0, 1, 0, [
-                        { offset: 0, color: 'rgba(58, 255, 252, 0.3)' },
-                        { offset: 0.5, color: 'rgb(59, 222, 245)' },
-                        { offset: 1, color: 'rgb(58, 255, 252)' }
+                        { offset: 0, color: '#0055aa' },
+                        { offset: 1, color: '#00a8dd' }
                     ])
                 },
+                barWidth: 20 * fontSize,
             },
         ],
     };

@@ -1427,7 +1427,7 @@ function dynamicData() {
         taskDetail.value.taskOwner = Number(taskDetail.value.taskOwner)
         taskDetail.value.progress *= 100
         taskDetail.value.targetEndDate = new Date(taskDetail.value.targetEndDate).getTime() - 24 * 60 * 60 * 1000
-        taskDetail.value.actEndDate = taskDetail.value.actEndDate && new Date(taskDetail.value.actEndDate).getTime() - 24 * 60 * 60 * 1000
+        taskDetail.value.actEndDate = taskDetail.value.actEndDate && new Date(taskDetail.value.actEndDate).getTime()
         // const targetEndDate = new Date(new Date(taskDetail.value.targetEndDate).getTime() - 24 * 60 * 60 * 1000)
         // taskDetail.value.targetEndDate = `${targetEndDate.getFullYear()}-${(targetEndDate.getMonth()+1).toString().padStart(2, '0')}-${targetEndDate.getDate().toString().padStart(2, '0')}`
         // const actEndDate = new Date(new Date(taskDetail.value.actEndDate).getTime() - 24 * 60 * 60 * 1000)
@@ -1521,7 +1521,6 @@ const deleteLinkIndex = (index) => {
     linkList.value.splice(index, 1)
 }
 const selectTask = (index) => {
-    // console.log(index, linkList.value[index].taskId)
     const taskData = Gantt.getTask(linkList.value[index].taskId)
     linkList.value[index].text = taskData.text
     linkList.value[index].taskCode = taskData.taskCode
@@ -2125,7 +2124,7 @@ function actStartDateLabel(task) {
 }
 function actWorkQtyLabel(task) {
     if(task.actStartDate && task.actWorkQty) {
-        task.actEndDate = new Date(new Date(task.actStartDate).getTime() + ((Number(task.actWorkQty)) * 24 * 60 * 60 * 1000))
+        task.actEndDate = new Date(new Date(task.actStartDate).getTime() + ((Number(task.actWorkQty) - 1) * 24 * 60 * 60 * 1000))
     }
     return task.actWorkQty
 }
@@ -2675,6 +2674,9 @@ function exportToPDF() {
 }
 function exportToExcel() {
     const data = buildExcelExportData()
+    data.forEach(el => {
+        el.targetEndDate = getYesterday(el.targetEndDate)
+    })
     Gantt.exportToExcel({
         server: "https://dls.4dlp.com.cn:7102/export/gantt",
         data,
@@ -2718,7 +2720,6 @@ function buildExcelExportData() {
             freeFloatHrCnt: getSlackValue(task, "free"),
             totalFloatHrCnt: getSlackValue(task, "total"),
         }
-        console.log(query)
         return query
     })
 }
@@ -2738,8 +2739,6 @@ function getServerListItem(listName, key) {
     return Gantt.serverList(listName).find(item => item.key == key) || null
 }
 function getExcelFirstItem(task, treeMeta) {
-    console.log(`${task.taskCode && `A${task.taskCode.padStart(4, '0')}` || projectCode + (task.wbsCode && task.wbsCode || "") }`)
-    debugger;
     task.wbsCode = task.wbsCode || ""
     task.taskCode = task.type === "project" ? "" : task.taskCode
     return `${task.taskCode && `A${task.taskCode.padStart(4, '0')}` || projectCode + (task.wbsCode && task.wbsCode || "") }`
@@ -2875,7 +2874,6 @@ function uploadProject(file, callback) {
                         el.taskStatus = "未开始"
                     }
                 })
-                console.log(project)
                 Gantt.parse(project.data);
                 // Gantt.sort("firstItem", true)
                 fileDnD.hideOverlay();
@@ -2923,7 +2921,6 @@ function uploadProjectLargeSafe(file, callback) {
                         el.taskStatus = "未开始"
                     }
                 })
-                console.log(project)
                 const projectTasks = project?.data?.data || []
                 const isLargeImport = projectTasks.length >= LARGE_PROJECT_IMPORT_SIZE
                 isLargeProjectImporting = isLargeImport
@@ -3028,7 +3025,6 @@ function uploadP6(file, callback) {
                         el.type = "milestone"
                     }
                 })
-                console.log(project)
                 Gantt.parse(project.data);
                 // Gantt.sort("firstItem", true)
                 fileDnD.hideOverlay();
@@ -3103,11 +3099,12 @@ function uploadExcel(file, callback) {
                     el.pmsWbsCode = el['PMS_WBS编码']
                     if(el['里程碑类型']) el.taskMilestoneType = el['里程碑类型']
                     // el.duration = el.targetDrtnHrCnt = el['计划工期']
-                    el.start_date = el['计划开始'] || nowDate
+                    el.start_date = el['计划开始']?.substring(0, 10) || nowDate
                     el.targetStartDate = el.start_date && el.start_date.substring(0, 10) || ""
                     if(el['计划完成']) {
                         el.targetEndDate = el['计划完成'].substring(0, 10)
-                        el.duration = el.targetDrtnHrCnt = Gantt.calculateDuration({start_date: new Date(el.start_date), end_date: new Date(el.targetEndDate)}) + 2
+                        el.duration = el.targetDrtnHrCnt = Gantt.calculateDuration({start_date: new Date(el.start_date), end_date: new Date(el.targetEndDate)}) + 1
+                        el.targetEndDate = gridDateToStr(new Date(new Date(el.targetEndDate).valueOf() + 24 * 60 * 60 * 1000))
                         el.type = "task"
                         el.taskStatus = "未开始"
                         el.taskCode = String(taskCode)
@@ -3128,6 +3125,13 @@ function uploadExcel(file, callback) {
                 Gantt.sort("firstItem", true)
                 fileDnD.hideOverlay();
                 open()
+                Gantt.batchUpdate(function () {
+                    Gantt.eachTask(function (task) {
+                        if (Gantt.hasChild(task.id)) {
+                            calculatePlannedDates(task.id)
+                        }
+                    })
+                })
                 loading.value = false
             } else {
                 ElMessage({
@@ -3150,7 +3154,8 @@ function saveTask() {
         // el.targetStartDate = `${el.start_date.substring(6, 10)}-${el.start_date.substring(3, 5)}-${el.start_date.substring(0, 2)}`
         el.targetStartDate = `${el.start_date.substring(0, 10)}`
         el.targetDrtnHrCnt = el.duration
-        el.targetEndDate = new Date(el.end_date)
+        el.targetEndDate = getYesterday(el.end_date)
+        el.end_date = el.targetEndDate
         let task = Gantt.getTask(el.id)
         el.drivingPathFlag = Gantt.isCriticalTask(task) && "Y" || "N"
         el.freeFloatHrCnt = Gantt.getFreeSlack(task)
@@ -3167,6 +3172,16 @@ function saveTask() {
             ElMessage.error(res.data.msg)
         }
     })
+}
+function getYesterday(date) {
+    const today = new Date(date);
+    const yesterday = new Date(today);
+    yesterday.setDate(today.getDate() - 1);
+    const year = yesterday.getFullYear();
+    const month = String(yesterday.getMonth() + 1).padStart(2, '0');
+    const day = String(yesterday.getDate()).padStart(2, '0');
+
+    return `${year}-${month}-${day}`;
 }
 </script>
 

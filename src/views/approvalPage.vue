@@ -76,7 +76,7 @@
         title="选择下一审批人"
         width="500">
         <div style="margin-bottom: 10px;">审批人</div>
-        <el-select v-model="value" placeholder="请选择审批人">
+        <el-select v-model="value" filterable placeholder="请选择审批人">
             <el-option
             v-for="item in options"
             :key="item.ID"
